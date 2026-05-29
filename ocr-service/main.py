@@ -75,6 +75,28 @@ def _preprocess(img_bytes: bytes) -> np.ndarray:
     return rgb
 
 
+def _parse_merchant(lines: list[str]) -> str | None:
+    """Return the first line that looks like a store name, skipping noise lines."""
+    skip = re.compile(
+        r'(payment\s*method|cash|gcash|maya|bank|credit|debit|'
+        r'tin\b|address|tel|phone|fax|email|www\.|http|'
+        r'receipt|invoice|official|or\s*no|transaction|'
+        r'thank\s*you|please\s*come|vat|tax|total|amount|'
+        r'^\d[\d\s\-]+$)',   # pure number/phone lines
+        re.IGNORECASE,
+    )
+    for line in lines[:8]:   # merchant is almost always in the first 8 lines
+        line = line.strip()
+        if len(line) < 3:
+            continue
+        if skip.search(line):
+            continue
+        if re.match(r'^[\d\s\-\+\(\)]+$', line):  # skip phone-number-only lines
+            continue
+        return line
+    return lines[0].strip() if lines else None
+
+
 def _parse_date(text: str) -> str | None:
     patterns = [
         (r'\b(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})\b', lambda m: f"{m.group(3)}-{int(m.group(1)):02d}-{int(m.group(2)):02d}"),
@@ -93,6 +115,11 @@ def _parse_date(text: str) -> str | None:
     return None
 
 
+def _normalise_number(s: str) -> str:
+    """Remove spaces OCR inserts inside numbers e.g. '4, 500.00' → '4,500.00'."""
+    return re.sub(r'(\d)\s*,\s*(\d)', r'\1,\2', s).replace(' ', '')
+
+
 def _parse_amount(lines: list[str]) -> float | None:
     # Philippine receipt keywords — ordered by specificity
     total_keywords = (
@@ -101,14 +128,15 @@ def _parse_amount(lines: list[str]) -> float | None:
         r'less\s*vat|amount\s*payable|payable\s*amount|total)'
     )
     # Match amounts with or without decimals, with or without peso sign
-    amount_pattern = r'[₱P]?\s*([\d,]+(?:\.\d{1,2})?)'
+    # Also handles OCR-spaced numbers like 'P4, 500.00'
+    amount_pattern = r'[₱P]?\s*([\d][,\s\d]*(?:\.\d{1,2})?)'
 
     for line in reversed(lines):
         if re.search(total_keywords, line, re.IGNORECASE):
             nums = re.findall(amount_pattern, line)
             if nums:
                 try:
-                    return float(nums[-1].replace(',', ''))
+                    return float(_normalise_number(nums[-1]))
                 except ValueError:
                     continue
 
@@ -117,7 +145,7 @@ def _parse_amount(lines: list[str]) -> float | None:
         nums = re.findall(amount_pattern, line)
         if nums:
             try:
-                val = float(nums[-1].replace(',', ''))
+                val = float(_normalise_number(nums[-1]))
                 if val > 0:
                     return val
             except ValueError:
@@ -127,13 +155,13 @@ def _parse_amount(lines: list[str]) -> float | None:
 
 def _parse_vat(lines: list[str]) -> float | None:
     vat_keywords = r'(vat|12%|output\s*tax|input\s*tax|value.added\s*tax|vatable)'
-    amount_pattern = r'[₱P]?\s*([\d,]+(?:\.\d{1,2})?)'
+    amount_pattern = r'[₱P]?\s*([\d][,\s\d]*(?:\.\d{1,2})?)'
     for line in lines:
         if re.search(vat_keywords, line, re.IGNORECASE):
             nums = re.findall(amount_pattern, line)
             if nums:
                 try:
-                    return float(nums[-1].replace(',', ''))
+                    return float(_normalise_number(nums[-1]))
                 except ValueError:
                     continue
     return None
@@ -224,7 +252,7 @@ def extract(req: ExtractRequest):
         full_text = "\n".join(text_lines)
         avg_confidence = float(np.mean(confidences)) if confidences else 0.0
 
-        merchant = text_lines[0].strip() if text_lines else None
+        merchant = _parse_merchant(text_lines)
         date = _parse_date(full_text)
         amount = _parse_amount(text_lines)
         vat_amount = _parse_vat(text_lines)
