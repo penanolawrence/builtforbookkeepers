@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
 use Tests\TestCase;
 
 class GetSignedUrlTest extends TestCase
@@ -33,7 +34,7 @@ class GetSignedUrlTest extends TestCase
         config(['filesystems.disks.s3.endpoint'   => 'http://minio:9000']);
         config(['filesystems.disks.s3.public_url' => 'http://localhost:9000']);
 
-        $mockDisk = \Mockery::mock(Filesystem::class);
+        $mockDisk = Mockery::mock(Filesystem::class);
         $mockDisk->shouldReceive('temporaryUrl')
             ->once()
             ->andReturn('http://minio:9000/sofia-documents/documents/test.png?X-Amz-Signature=abc');
@@ -50,8 +51,11 @@ class GetSignedUrlTest extends TestCase
             ->getJson("/api/documents/{$document->id}/image");
 
         $response->assertOk();
-        $this->assertStringContainsString('localhost:9000', $response->json('url'));
-        $this->assertStringNotContainsString('minio:9000', $response->json('url'));
+        $url = $response->json('url');
+        $this->assertStringStartsWith('http://localhost:9000/', $url);
+        $this->assertStringContainsString('sofia-documents/documents/test.png', $url);
+        $this->assertStringContainsString('X-Amz-Signature=abc', $url);
+        $this->assertStringNotContainsString('minio:9000', $url);
         $response->assertJsonStructure(['url', 'expiresAt']);
     }
 
@@ -62,7 +66,7 @@ class GetSignedUrlTest extends TestCase
 
         $rawUrl = 'https://s3.amazonaws.com/sofia-documents/documents/test.png?X-Amz-Signature=abc';
 
-        $mockDisk = \Mockery::mock(Filesystem::class);
+        $mockDisk = Mockery::mock(Filesystem::class);
         $mockDisk->shouldReceive('temporaryUrl')
             ->once()
             ->andReturn($rawUrl);
@@ -80,10 +84,13 @@ class GetSignedUrlTest extends TestCase
 
         $response->assertOk();
         $this->assertSame($rawUrl, $response->json('url'));
+        $this->assertNotNull($response->json('expiresAt'));
     }
 
     public function test_returns_null_url_for_no_receipt_document(): void
     {
+        Storage::shouldReceive('disk')->never();
+
         $document = Document::factory()->create([
             'company_id'    => $this->company->id,
             'is_no_receipt' => true,
