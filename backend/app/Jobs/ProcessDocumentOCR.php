@@ -13,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class ProcessDocumentOCR implements ShouldQueue
 {
@@ -46,7 +47,14 @@ class ProcessDocumentOCR implements ShouldQueue
             return;
         }
 
-        // STEP C — Save OCR result
+        // STEP C — Log and save OCR result
+        Log::channel('daily')->info('OCR extracted data', [
+            'document_id' => $this->document->id,
+            'company_id'  => $this->document->company_id,
+            'filename'    => $this->document->original_filename,
+            'result'      => $result,
+        ]);
+
         OcrResult::create([
             'document_id'    => $this->document->id,
             'extracted_data' => $result,
