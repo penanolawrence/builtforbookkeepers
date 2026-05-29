@@ -179,4 +179,65 @@ class TransactionLinesTest extends TestCase
             'outflow' => 0.0,
         ]);
     }
+
+    public function test_transaction_line_date_is_stored_and_cast(): void
+    {
+        $doc = Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'document_type' => 'income',
+            'document_date' => '2026-05-29',
+        ]);
+
+        TransactionLine::factory()->create([
+            'document_id' => $doc->id,
+            'type'        => 'income',
+            'amount'      => 2500.00,
+            'date'        => '2026-05-25',
+        ]);
+
+        $line = TransactionLine::where('document_id', $doc->id)->first();
+
+        $this->assertNotNull($line->date);
+        $this->assertInstanceOf(\Carbon\Carbon::class, $line->date);
+        $this->assertEquals('2026-05-25', $line->date->toDateString());
+    }
+
+    public function test_transaction_line_date_null_is_allowed_for_pre_classification_rows(): void
+    {
+        $doc = Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'document_date' => '2026-05-29',
+        ]);
+
+        $line = TransactionLine::factory()->create([
+            'document_id' => $doc->id,
+            'type'        => 'expense',
+            'amount'      => 100.00,
+            'date'        => null,
+        ]);
+
+        $this->assertNull($line->fresh()->date);
+    }
+
+    public function test_document_detail_includes_line_date(): void
+    {
+        $doc = Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'document_type' => 'income',
+            'status'        => 'approved',
+        ]);
+
+        TransactionLine::factory()->create([
+            'document_id' => $doc->id,
+            'type'        => 'income',
+            'amount'      => 1000.00,
+            'date'        => '2026-05-25',
+        ]);
+
+        $response = $this->actingAs($this->client)
+            ->getJson("/api/documents/{$doc->id}");
+
+        $response->assertOk();
+        $response->assertJsonPath('transactionLines.0.date', '2026-05-25');
+    }
 }

@@ -319,6 +319,7 @@ class DocumentController extends Controller
                 'category'    => $l->category,
                 'amount'      => (float) $l->amount,
                 'description' => $l->description,
+                'date'        => $l->date?->toDateString(),
             ])->values()->all(),
         ]);
     }
