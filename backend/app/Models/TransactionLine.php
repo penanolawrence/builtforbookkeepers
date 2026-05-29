@@ -19,10 +19,12 @@ class TransactionLine extends Model
         'category',
         'amount',
         'description',
+        'date',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'date'   => 'date',
     ];
 
     public function document(): BelongsTo
