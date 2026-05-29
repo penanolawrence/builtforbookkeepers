@@ -1,4 +1,5 @@
 import os
+import re
 import base64
 import numpy as np
 import cv2
@@ -9,7 +10,7 @@ import boto3
 
 app = FastAPI()
 
-ocr = PaddleOCR(use_angle_cls=True, lang='en', use_gpu=False)
+ocr = PaddleOCR(use_textline_orientation=True, lang='en')
 
 s3 = boto3.client(
     's3',
@@ -72,6 +73,20 @@ def _preprocess(img_bytes: bytes) -> np.ndarray:
     return cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
 
 
+def _section_lines(clean_lines: list) -> dict:
+    if len(clean_lines) < 5:
+        return {
+            "header": [],
+            "body":   [l["text"] for l in clean_lines],
+            "footer": [],
+        }
+    return {
+        "header": [l["text"] for l in clean_lines if l["y"] < 0.20],
+        "body":   [l["text"] for l in clean_lines if 0.20 <= l["y"] < 0.75],
+        "footer": [l["text"] for l in clean_lines if l["y"] >= 0.75],
+    }
+
+
 @app.post("/extract")
 def extract(req: ExtractRequest):
     try:
@@ -90,21 +105,35 @@ def extract(req: ExtractRequest):
         if not result or not result[0]:
             return {"raw_text": "", "raw_lines": [], "confidence": 0.0}
 
-        text_lines = []
-        confidences = []
-        raw_lines = []
+        all_lines = []
         for line in result[0]:
             if line and len(line) >= 2:
-                text = line[1][0]
-                conf = line[1][1]
-                text_lines.append(text)
-                confidences.append(conf)
-                raw_lines.append({"text": text, "confidence": round(float(conf), 4)})
+                text = line[1][0].strip()
+                conf = float(line[1][1])
+                all_lines.append({"text": text, "confidence": conf})
+
+        # Filter noise: drop lines that are clearly border/separator artifacts
+        # - confidence < 0.5  →  OCR isn't sure what it read
+        # - pure repetition of border chars (I, |, -, =, ., _) with no real text
+        _border_only = re.compile(r'^[I\|\-=\.\s_]+$')
+        clean_lines = [
+            l for l in all_lines
+            if l["confidence"] >= 0.5 and not _border_only.match(l["text"]) and len(l["text"]) >= 2
+        ]
+
+        # All lines (including noise) kept for raw_lines so nothing is hidden in logs
+        raw_lines = [
+            {"text": l["text"], "confidence": round(l["confidence"], 4)}
+            for l in all_lines
+        ]
+
+        text_for_ai = "\n".join(l["text"] for l in clean_lines)
+        all_confidences = [l["confidence"] for l in all_lines]
 
         return {
-            "raw_text":   "\n".join(text_lines),
+            "raw_text":   text_for_ai,
             "raw_lines":  raw_lines,
-            "confidence": round(float(np.mean(confidences)), 4) if confidences else 0.0,
+            "confidence": round(float(np.mean(all_confidences)), 4) if all_confidences else 0.0,
         }
 
     except HTTPException:
