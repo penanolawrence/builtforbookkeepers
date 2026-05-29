@@ -261,8 +261,15 @@ class DocumentController extends Controller
             return response()->json(['url' => null]);
         }
 
-        $url       = Storage::disk('s3')->temporaryUrl($document->storage_path, now()->addMinutes(15));
+        $disk      = 's3';
+        $url       = Storage::disk($disk)->temporaryUrl($document->storage_path, now()->addMinutes(15));
         $expiresAt = now()->addMinutes(15)->toIso8601String();
+
+        $publicBase   = config("filesystems.disks.$disk.public_url");
+        $internalBase = config("filesystems.disks.$disk.endpoint");
+        if ($publicBase && $internalBase) {
+            $url = str_replace(rtrim($internalBase, '/'), rtrim($publicBase, '/'), $url);
+        }
 
         return response()->json(['url' => $url, 'expiresAt' => $expiresAt]);
     }
