@@ -206,16 +206,20 @@ def extract(req: ExtractRequest):
                 "tin": None,
                 "line_items": [],
                 "confidence": 0.0,
+                "raw_text": "",
+                "raw_lines": [],
             }
 
         text_lines = []
         confidences = []
+        raw_lines = []
         for line in result[0]:
             if line and len(line) >= 2:
                 text = line[1][0]
                 conf = line[1][1]
                 text_lines.append(text)
                 confidences.append(conf)
+                raw_lines.append({"text": text, "confidence": round(float(conf), 4)})
 
         full_text = "\n".join(text_lines)
         avg_confidence = float(np.mean(confidences)) if confidences else 0.0
@@ -237,6 +241,8 @@ def extract(req: ExtractRequest):
             "tin": tin,
             "line_items": line_items,
             "confidence": round(avg_confidence, 4),
+            "raw_text": full_text,
+            "raw_lines": raw_lines,
         }
 
     except HTTPException:
