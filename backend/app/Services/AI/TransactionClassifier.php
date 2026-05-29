@@ -90,8 +90,8 @@ class TransactionClassifier
             $raw    = $response->content[0]->text;
             $result = json_decode($raw, true);
 
-            if ($result === null || !isset($result['lines']) || !is_array($result['lines'])) {
-                throw new \RuntimeException("Invalid AI response — expected 'lines' array: {$raw}");
+            if ($result === null || !isset($result['lines']) || !is_array($result['lines']) || empty($result['lines'])) {
+                throw new \RuntimeException("Invalid AI response — expected non-empty 'lines' array: {$raw}");
             }
 
             return $result;
