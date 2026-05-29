@@ -64,11 +64,10 @@ class ClassifyWithAI implements ShouldQueue
         if (!$this->document->is_no_receipt) {
             $aiType = $classification['lines'][0]['type'] ?? null;
             if ($aiType && $this->document->document_type && $this->document->document_type !== $aiType) {
-                $this->document->flag          = 'RED';
+                $this->document->flag           = 'RED';
                 $this->document->anomaly_reason = ['Upload area mismatch'];
             }
         } else {
-            // Manual entries are always YELLOW (no receipt)
             $this->document->flag = 'YELLOW';
         }
 
@@ -83,38 +82,39 @@ class ClassifyWithAI implements ShouldQueue
         // STEP E — Write TransactionLine records (delete+recreate = safe re-run)
         $this->document->transactionLines()->delete();
 
+        $docDate = $this->document->document_date?->format('Y-m-d');
+
         foreach ($classification['lines'] ?? [] as $line) {
             $accountId = Account::where('company_id', $company->id)
-                ->where('code', $line['accountCode'])
+                ->where('code', $line['account_code'] ?? '')
                 ->value('id');
 
             $this->document->transactionLines()->create([
                 'account_id'   => $accountId,
-                'account_code' => $line['accountCode'] ?? null,
+                'account_code' => $line['account_code'] ?? null,
                 'type'         => $line['type'],
                 'category'     => $line['category'] ?? null,
                 'amount'       => $line['amount'],
                 'description'  => $line['description'] ?? null,
+                'date'         => $line['date'] ?? $docDate,
             ]);
         }
 
         // Set document category to first line's category as a summary label
         $this->document->category = $classification['lines'][0]['category'] ?? $this->document->category;
 
-        // Apply cleaned OCR fields (OCR path only)
-        if (!$this->document->is_no_receipt && !empty($classification['cleanedFields'])) {
-            $cleaned = $classification['cleanedFields'];
-            $this->document->merchant_name = $cleaned['merchant']   ?? $this->document->merchant_name;
-            $this->document->document_date = $cleaned['date']       ?? $this->document->document_date;
-            $this->document->vat_amount    = $cleaned['vat_amount'] ?? $this->document->vat_amount;
+        // Apply cleaned fields from Claude (OCR path only)
+        if (!$this->document->is_no_receipt && !empty($classification['document'])) {
+            $doc = $classification['document'];
+            $this->document->merchant_name = $doc['merchant']     ?? $this->document->merchant_name;
+            $this->document->document_date = $doc['date']         ?? $this->document->document_date;
+            $this->document->vat_amount    = $doc['vat_amount']   ?? $this->document->vat_amount;
 
-            if (empty($this->document->ref_number) && !empty($cleaned['or_number'])) {
-                $this->document->ref_number = $cleaned['or_number'];
+            if (empty($this->document->ref_number) && !empty($doc['or_number'])) {
+                $this->document->ref_number = $doc['or_number'];
             }
-
-            // Update document amount from AI totalAmount (OCR path)
-            if (isset($classification['totalAmount'])) {
-                $this->document->amount = $classification['totalAmount'];
+            if (!empty($doc['total_amount'])) {
+                $this->document->amount = $doc['total_amount'];
             }
         }
 
