@@ -27,14 +27,15 @@ class TransactionClassifier
             "- Use multiple lines only when the document clearly covers multiple categories.\n" .
             "Respond ONLY with a JSON object. No explanation. No markdown. Raw JSON only.";
 
-        $isOcrPath = array_key_exists('or_number', $inputData)
-                  || array_key_exists('merchant', $inputData);
+        $isOcrPath = array_key_exists('raw_text', $inputData);
 
         if ($isOcrPath) {
-            $userPrompt = "Clean and classify this transaction extracted from a receipt via OCR. " .
-                "The text may be noisy — normalize dates to YYYY-MM-DD, amounts to float, " .
-                "merchant names to proper case.\n" .
-                "Raw OCR data: " . json_encode($inputData) . "\n\n" .
+            $rawText    = $inputData['raw_text'] ?? '';
+            $userPrompt = "You are reading a receipt photographed by a Philippine SME client.\n" .
+                "The text below was extracted by OCR — it may contain noise, misread characters, " .
+                "or garbled spacing. Use your best judgement to interpret it.\n\n" .
+                "Raw OCR text:\n\"\"\"\n{$rawText}\n\"\"\"\n\n" .
+                "From this text, extract the structured fields AND classify the transaction.\n" .
                 "Return JSON with EXACTLY these keys:\n" .
                 "{\n" .
                 "  \"lines\": [\n" .
@@ -49,14 +50,14 @@ class TransactionClassifier
                 "  \"totalAmount\": 0.00,\n" .
                 "  \"confidence\": 0.0 to 1.0,\n" .
                 "  \"cleanedFields\": {\n" .
-                "    \"merchant\": \"cleaned name or null\",\n" .
+                "    \"merchant\": \"store or business name, or null\",\n" .
                 "    \"date\": \"YYYY-MM-DD or null\",\n" .
                 "    \"vat_amount\": 0.00 or null,\n" .
-                "    \"or_number\": \"string or null\"\n" .
+                "    \"or_number\": \"OR/invoice number or null\"\n" .
                 "  }\n" .
                 "}";
         } else {
-            // Manual entry path: lines array is already provided by the client
+            // Manual entry path — client already split into lines, AI assigns account codes
             $userPrompt = "The client has already split this transaction into lines. " .
                 "Assign the correct account code and category to each line from the Chart of Accounts.\n" .
                 "Transaction data: " . json_encode($inputData) . "\n\n" .

@@ -308,12 +308,7 @@ class DocumentController extends Controller
             'returnedAt'       => $d->returned_at?->toIso8601String(),
             'rejectedAt'       => $d->rejected_at?->toIso8601String(),
             'ocrResult'        => $d->ocrResult ? [
-                'merchant'   => $d->ocrResult->extracted_data['merchant'] ?? null,
-                'date'       => $d->ocrResult->extracted_data['date'] ?? null,
-                'amount'     => $d->ocrResult->extracted_data['amount'] ?? null,
-                'vatAmount'  => $d->ocrResult->extracted_data['vat_amount'] ?? null,
-                'orNumber'   => $d->ocrResult->extracted_data['or_number'] ?? null,
-                'tin'        => $d->ocrResult->extracted_data['tin'] ?? null,
+                'rawText'    => $d->ocrResult->extracted_data['raw_text'] ?? null,
                 'confidence' => $d->ocrResult->confidence,
             ] : null,
             'transactionLines' => $d->transactionLines->map(fn($l) => [

@@ -1,7 +1,5 @@
 import os
-import re
 import base64
-import datetime
 import numpy as np
 import cv2
 from fastapi import FastAPI, HTTPException
@@ -60,10 +58,10 @@ def _preprocess(img_bytes: bytes) -> np.ndarray:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray = _deskew(gray)
 
-    # Gentle denoising — h=4 preserves thin text; h=10 blurs it
+    # Gentle denoising — h=4 preserves thin text
     gray = cv2.fastNlMeansDenoising(gray, h=4)
 
-    # CLAHE instead of equalizeHist — adapts locally, better for uneven receipt lighting
+    # CLAHE — adapts locally, better for uneven receipt lighting
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     gray = clahe.apply(gray)
 
@@ -71,142 +69,7 @@ def _preprocess(img_bytes: bytes) -> np.ndarray:
     blurred = cv2.GaussianBlur(gray, (0, 0), sigmaX=1.0)
     gray = cv2.addWeighted(gray, 1.5, blurred, -0.5, 0)
 
-    rgb = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
-    return rgb
-
-
-def _parse_merchant(lines: list[str]) -> str | None:
-    """Return the first line that looks like a store name, skipping noise lines."""
-    skip = re.compile(
-        r'(payment\s*method|cash|gcash|maya|bank|credit|debit|'
-        r'tin\b|address|tel|phone|fax|email|www\.|http|'
-        r'receipt|invoice|official|or\s*no|transaction|'
-        r'thank\s*you|please\s*come|vat|tax|total|amount|'
-        r'^\d[\d\s\-]+$)',   # pure number/phone lines
-        re.IGNORECASE,
-    )
-    for line in lines[:8]:   # merchant is almost always in the first 8 lines
-        line = line.strip()
-        if len(line) < 3:
-            continue
-        if skip.search(line):
-            continue
-        if re.match(r'^[\d\s\-\+\(\)]+$', line):  # skip phone-number-only lines
-            continue
-        return line
-    return lines[0].strip() if lines else None
-
-
-def _parse_date(text: str) -> str | None:
-    patterns = [
-        (r'\b(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})\b', lambda m: f"{m.group(3)}-{int(m.group(1)):02d}-{int(m.group(2)):02d}"),
-        (r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})\b',
-         lambda m: datetime.datetime.strptime(f"{m.group(1)} {m.group(2)} {m.group(3)}", "%B %d %Y").strftime("%Y-%m-%d")),
-        (r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),?\s+(\d{4})\b',
-         lambda m: datetime.datetime.strptime(f"{m.group(1)} {m.group(2)} {m.group(3)}", "%b %d %Y").strftime("%Y-%m-%d")),
-    ]
-    for pattern, formatter in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            try:
-                return formatter(match)
-            except Exception:
-                continue
-    return None
-
-
-def _normalise_number(s: str) -> str:
-    """Remove spaces OCR inserts inside numbers e.g. '4, 500.00' → '4,500.00'."""
-    return re.sub(r'(\d)\s*,\s*(\d)', r'\1,\2', s).replace(' ', '')
-
-
-def _parse_amount(lines: list[str]) -> float | None:
-    # Philippine receipt keywords — ordered by specificity
-    total_keywords = (
-        r'(grand\s*total|total\s*amount\s*due|total\s*amount|total\s*due|'
-        r'amount\s*due|net\s*amount|total\s*sales|total\s*purchase|'
-        r'less\s*vat|amount\s*payable|payable\s*amount|total)'
-    )
-    # Match amounts with or without decimals, with or without peso sign
-    # Also handles OCR-spaced numbers like 'P4, 500.00'
-    amount_pattern = r'[₱P]?\s*([\d][,\s\d]*(?:\.\d{1,2})?)'
-
-    for line in reversed(lines):
-        if re.search(total_keywords, line, re.IGNORECASE):
-            nums = re.findall(amount_pattern, line)
-            if nums:
-                try:
-                    return float(_normalise_number(nums[-1]))
-                except ValueError:
-                    continue
-
-    # Fallback: last line containing a number that looks like a total
-    for line in reversed(lines):
-        nums = re.findall(amount_pattern, line)
-        if nums:
-            try:
-                val = float(_normalise_number(nums[-1]))
-                if val > 0:
-                    return val
-            except ValueError:
-                continue
-    return None
-
-
-def _parse_vat(lines: list[str]) -> float | None:
-    vat_keywords = r'(vat|12%|output\s*tax|input\s*tax|value.added\s*tax|vatable)'
-    amount_pattern = r'[₱P]?\s*([\d][,\s\d]*(?:\.\d{1,2})?)'
-    for line in lines:
-        if re.search(vat_keywords, line, re.IGNORECASE):
-            nums = re.findall(amount_pattern, line)
-            if nums:
-                try:
-                    return float(_normalise_number(nums[-1]))
-                except ValueError:
-                    continue
-    return None
-
-
-def _parse_or_number(lines: list[str]) -> str | None:
-    pattern = r'(?:OR\s*No\.?|O\.R\.?|Receipt\s*No\.?|Invoice\s*No\.?)\s*[:\-]?\s*([A-Za-z0-9\-]+)'
-    for line in lines:
-        match = re.search(pattern, line, re.IGNORECASE)
-        if match:
-            return match.group(1).strip()
-    return None
-
-
-def _parse_tin(lines: list[str]) -> str | None:
-    tin_pattern = r'\b(\d{3}[-\s]\d{3}[-\s]\d{3}(?:[-\s]\d{4})?)\b'
-    for line in lines:
-        if re.search(r'\btin\b', line, re.IGNORECASE):
-            match = re.search(tin_pattern, line)
-            if match:
-                return match.group(1).strip()
-    for line in lines:
-        match = re.search(tin_pattern, line)
-        if match:
-            return match.group(1).strip()
-    return None
-
-
-def _parse_line_items(lines: list[str]) -> list[dict]:
-    items = []
-    item_pattern = re.compile(r'^(.+?)\s+([\d,]+\.\d{2})\s*$')
-    skip_keywords = re.compile(r'(total|vat|tax|amount|grand|subtotal|discount)', re.IGNORECASE)
-    for line in lines:
-        line = line.strip()
-        if len(line) < 5:
-            continue
-        if skip_keywords.search(line):
-            continue
-        match = item_pattern.match(line)
-        if match:
-            desc = match.group(1).strip()
-            amt = float(match.group(2).replace(',', ''))
-            if desc and amt > 0:
-                items.append({'description': desc, 'amount': amt})
-    return items
+    return cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
 
 
 @app.post("/extract")
@@ -225,18 +88,7 @@ def extract(req: ExtractRequest):
         result = ocr.ocr(img_array, cls=True)
 
         if not result or not result[0]:
-            return {
-                "merchant": None,
-                "date": None,
-                "amount": None,
-                "vat_amount": None,
-                "or_number": None,
-                "tin": None,
-                "line_items": [],
-                "confidence": 0.0,
-                "raw_text": "",
-                "raw_lines": [],
-            }
+            return {"raw_text": "", "raw_lines": [], "confidence": 0.0}
 
         text_lines = []
         confidences = []
@@ -249,28 +101,10 @@ def extract(req: ExtractRequest):
                 confidences.append(conf)
                 raw_lines.append({"text": text, "confidence": round(float(conf), 4)})
 
-        full_text = "\n".join(text_lines)
-        avg_confidence = float(np.mean(confidences)) if confidences else 0.0
-
-        merchant = _parse_merchant(text_lines)
-        date = _parse_date(full_text)
-        amount = _parse_amount(text_lines)
-        vat_amount = _parse_vat(text_lines)
-        or_number = _parse_or_number(text_lines)
-        tin = _parse_tin(text_lines)
-        line_items = _parse_line_items(text_lines)
-
         return {
-            "merchant": merchant,
-            "date": date,
-            "amount": amount,
-            "vat_amount": vat_amount,
-            "or_number": or_number,
-            "tin": tin,
-            "line_items": line_items,
-            "confidence": round(avg_confidence, 4),
-            "raw_text": full_text,
-            "raw_lines": raw_lines,
+            "raw_text":   "\n".join(text_lines),
+            "raw_lines":  raw_lines,
+            "confidence": round(float(np.mean(confidences)), 4) if confidences else 0.0,
         }
 
     except HTTPException:
