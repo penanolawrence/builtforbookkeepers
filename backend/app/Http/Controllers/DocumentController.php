@@ -168,49 +168,51 @@ class DocumentController extends Controller
 
     public function manualEntry(ManualEntryRequest $request): JsonResponse
     {
-        $user    = auth()->user();
-        $company = Company::findOrFail($user->company_id);
+        $user       = auth()->user();
+        $company    = Company::findOrFail($user->company_id);
         $refService = new RefSequenceService();
+        $ref        = $refService->nextRef($company, 'MNL');
 
-        $documentIds = [];
+        $totalAmount = collect($request->lines)->sum('amount');
 
-        foreach ($request->entries as $entry) {
-            $ref = $refService->nextRef($company, 'MNL');
+        $document = Document::create([
+            'company_id'        => $company->id,
+            'uploaded_by'       => $user->id,
+            'original_filename' => 'manual-entry',
+            'storage_path'      => '',
+            'document_type'     => $request->declared_type,
+            'status'            => 'processing',
+            'internal_status'   => 'OCR_COMPLETE',
+            'flag'              => null,
+            'is_no_receipt'     => true,
+            'is_ocr_failed'     => false,
+            'ref_number'        => $ref,
+            'file_hash'         => null,
+            'document_date'     => $request->date,
+            'amount'            => $totalAmount,
+            'payment_method'    => $request->payment_method,
+        ]);
 
-            $document = Document::create([
-                'company_id'        => $company->id,
-                'uploaded_by'       => $user->id,
-                'original_filename' => 'manual-entry',
-                'storage_path'      => '',
-                'document_type'     => $entry['declared_type'],
-                'status'            => 'processing',
-                'internal_status'   => 'OCR_COMPLETE',
-                'flag'              => null,
-                'is_no_receipt'     => true,
-                'is_ocr_failed'     => false,
-                'ref_number'        => $ref,
-                'file_hash'         => null,
-                'document_date'     => $entry['date'],
-                'amount'            => $entry['amount'],
-                'category'          => null,
-                'payment_method'    => $entry['payment_method'],
-                'note'              => $entry['note'] ?? null,
+        // Pre-create lines (description + amount only; AI will assign account codes)
+        foreach ($request->lines as $line) {
+            $document->transactionLines()->create([
+                'type'        => $request->declared_type,
+                'description' => $line['description'],
+                'amount'      => $line['amount'],
             ]);
-
-            ClassifyWithAI::dispatch($document, null);
-
-            rescue(fn () => event(new DocumentStageUpdated(
-                companyId:  $company->id,
-                documentId: $document->id,
-                stage:      'ai',
-                status:     'processing',
-                label:      'Categorizing...',
-            )));
-
-            $documentIds[] = $document->id;
         }
 
-        return response()->json(['documentIds' => $documentIds], 201);
+        ClassifyWithAI::dispatch($document, null);
+
+        rescue(fn () => event(new DocumentStageUpdated(
+            companyId:  $company->id,
+            documentId: $document->id,
+            stage:      'ai',
+            status:     'processing',
+            label:      'Categorizing...',
+        )));
+
+        return response()->json(['documentId' => $document->id], 201);
     }
 
     public function getSignedUrl(string $id): JsonResponse

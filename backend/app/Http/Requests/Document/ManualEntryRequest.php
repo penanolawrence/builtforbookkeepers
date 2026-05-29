@@ -14,23 +14,28 @@ class ManualEntryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'entries'                   => ['required', 'array', 'min:1', 'max:50'],
-            'entries.*.declared_type'   => ['required', 'in:income,expense'],
-            'entries.*.date'            => ['required', 'date', 'before_or_equal:today'],
-            'entries.*.amount'          => ['required', 'numeric', 'min:0.01'],
-            'entries.*.payment_method'  => ['required', 'in:Cash,GCash,Maya,Bank'],
-            'entries.*.note'            => ['nullable', 'string', 'max:500'],
+            'declared_type'           => ['required', 'in:income,expense'],
+            'date'                    => ['required', 'date', 'before_or_equal:today'],
+            'payment_method'          => ['required', 'in:Cash,GCash,Maya,Bank'],
+            'lines'                   => ['required', 'array', 'min:1', 'max:50'],
+            'lines.*.description'     => ['required', 'string', 'max:500'],
+            'lines.*.amount'          => ['required', 'numeric', 'min:0.01'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'entries.required'                  => 'At least one entry is required.',
-            'entries.*.declared_type.required'  => 'Each entry must have a type (income or expense).',
-            'entries.*.date.required'           => 'Each entry must have a date.',
-            'entries.*.amount.min'              => 'Each entry amount must be greater than zero.',
-            'entries.*.payment_method.in'       => 'Payment method must be Cash, GCash, Maya, or Bank.',
+            'declared_type.required'       => 'Transaction type (income or expense) is required.',
+            'declared_type.in'             => 'Type must be income or expense.',
+            'date.required'                => 'Date is required.',
+            'date.before_or_equal'         => 'Date cannot be in the future.',
+            'payment_method.required'      => 'Payment method is required.',
+            'payment_method.in'            => 'Payment method must be Cash, GCash, Maya, or Bank.',
+            'lines.required'               => 'At least one line is required.',
+            'lines.min'                    => 'At least one line is required.',
+            'lines.*.description.required' => 'Each line must have a description.',
+            'lines.*.amount.min'           => 'Each line amount must be greater than zero.',
         ];
     }
 }
