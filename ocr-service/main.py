@@ -10,7 +10,7 @@ import boto3
 
 app = FastAPI()
 
-ocr = PaddleOCR(use_textline_orientation=True, lang='en')
+ocr = PaddleOCR(use_textline_orientation=True, lang='en')  # use_angle_cls/use_gpu removed in PaddleOCR 2.8+
 
 s3 = boto3.client(
     's3',
@@ -25,6 +25,9 @@ s3 = boto3.client(
 class ExtractRequest(BaseModel):
     file_path: str | None = None
     image_base64: str | None = None
+
+
+_BORDER_ONLY = re.compile(r'^[I\|\-=\.\s_]+$')
 
 
 def _deskew(gray: np.ndarray) -> np.ndarray:
@@ -116,10 +119,9 @@ def extract(req: ExtractRequest):
                 y        = center_y / img_height
                 all_lines.append({"text": text, "confidence": conf, "y": y})
 
-        _border_only = re.compile(r'^[I\|\-=\.\s_]+$')
         clean_lines = [
             l for l in all_lines
-            if l["confidence"] >= 0.5 and not _border_only.match(l["text"]) and len(l["text"]) >= 2
+            if l["confidence"] >= 0.5 and not _BORDER_ONLY.match(l["text"]) and len(l["text"]) >= 2
         ]
 
         raw_text        = "\n".join(l["text"] for l in clean_lines)

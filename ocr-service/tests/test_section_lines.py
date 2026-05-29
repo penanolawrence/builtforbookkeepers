@@ -1,4 +1,3 @@
-import pytest
 from main import _section_lines
 
 

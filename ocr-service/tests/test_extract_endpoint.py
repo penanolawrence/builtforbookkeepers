@@ -118,3 +118,53 @@ def test_extract_short_receipt_all_lines_in_body():
     assert data["header"] == []
     assert data["footer"] == []
     assert len(data["body"]) == 4
+
+
+def test_extract_noise_filter_excludes_low_quality_lines():
+    # Lines that should be filtered out:
+    # - confidence 0.3 (< 0.5 threshold)
+    # - border-only text "------"
+    # - single character "X"
+    # Lines that should pass through:
+    # - "MERCHANT NAME" (high confidence, normal text, y → header)
+    # - "Item One" + "100.00" (body) and "TOTAL 100.00" (footer) to trigger full sectioning (≥ 5 clean)
+    fake_img = np.zeros((1000, 600, 3), dtype=np.uint8)
+
+    entries_all = [
+        ("MERCHANT NAME", 0.97, 50),    # y=0.05 → header — should pass
+        ("------",        0.92, 200),   # border-only → filtered
+        ("X",             0.95, 250),   # single char → filtered
+        ("Item One",      0.91, 310),   # y=0.31 → body — should pass
+        ("100.00",        0.95, 320),   # y=0.32 → body — should pass
+        ("NOISE",         0.30, 400),   # low confidence → filtered
+        ("Item Two",      0.90, 500),   # y=0.50 → body — should pass (5th clean line for sectioning)
+        ("TOTAL 100.00",  0.96, 820),   # y=0.82 → footer — should pass
+    ]
+
+    with patch.object(ocr_main, 's3') as mock_s3, \
+         patch.object(ocr_main, '_preprocess', return_value=fake_img), \
+         patch.object(ocr_main, 'ocr') as mock_ocr:
+
+        mock_s3.get_object.return_value = {"Body": MagicMock(read=lambda: b'x')}
+        mock_ocr.ocr.return_value = _make_paddle_result(entries_all)
+
+        response = client.post("/extract", json={"file_path": "receipts/noisy.jpg"})
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Filtered lines must not appear anywhere
+    all_text = data["header"] + data["body"] + data["footer"]
+    assert "------" not in all_text
+    assert "X" not in all_text
+    assert "NOISE" not in all_text
+
+    # Clean lines must appear in the right sections
+    assert "MERCHANT NAME" in data["header"]
+    assert "Item One" in data["body"]
+    assert "100.00" in data["body"]
+    assert "TOTAL 100.00" in data["footer"]
+
+    # raw_text must not contain filtered lines
+    assert "------" not in data["raw_text"]
+    assert "NOISE" not in data["raw_text"]
