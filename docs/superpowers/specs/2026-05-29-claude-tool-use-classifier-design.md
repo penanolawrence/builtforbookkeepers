@@ -1,7 +1,7 @@
 # TransactionClassifier — Tool Use + Structured OCR Input Design
 
 **Date:** 2026-05-29
-**Scope:** `TransactionClassifier.php`, `ClassifyWithAI.php`
+**Scope:** `TransactionClassifier.php`, `ClassifyWithAI.php`, `TransactionLine` model + migration
 
 ---
 
@@ -13,6 +13,8 @@ Two compounding issues:
 1. Flat `raw_text` input gives Claude no spatial context — it can't tell which line is the merchant, which is an item, which is the total.
 2. No schema enforcement — `type` can come back as `"Income"` (breaks DB enum), `amount` as `"₱220.00"` (breaks decimal cast).
 
+A third issue discovered via a daily sales record scenario: `TransactionLine` has no `date` field, so multi-date summary documents (e.g. "DAILY SALES RECORD: 05/25 ₱2,500 / 05/26 ₱3,000 …") can't be posted per line on the correct date. The same problem applies to manual entry when a user writes a description like "kita ko kahapon 5-28-2026" — the date in the description should be the line's posting date, not the document's submission date.
+
 ---
 
 ## Goal
@@ -20,6 +22,7 @@ Two compounding issues:
 - **Zero JSON parse failures** — use Claude tool use (`tool_choice: force`) so the response is always a typed PHP array, never a string to decode.
 - **Always generate `TransactionLine` records** — schema enforces `lines[]` is non-empty.
 - **Better OCR extraction accuracy** — send `header` / `body` / `footer` sections so Claude knows where to look for each field.
+- **Per-line date** — Claude always tries to assign a date to each line (from the document itself, or from text in the user's description). Laravel falls back to `document_date` only when Claude returns null.
 
 ---
 
@@ -27,8 +30,10 @@ Two compounding issues:
 
 | File | Change |
 |---|---|
-| `backend/app/Services/AI/TransactionClassifier.php` | Full rewrite — tool use, sectioned OCR input |
-| `backend/app/Jobs/ClassifyWithAI.php` | Update field reading (`document` replaces `cleanedFields`, `total_amount` replaces `totalAmount`) |
+| `backend/app/Services/AI/TransactionClassifier.php` | Full rewrite — tool use, sectioned OCR input, `date` per line |
+| `backend/app/Jobs/ClassifyWithAI.php` | Update field reading (`document` replaces `cleanedFields`, `total_amount` replaces `totalAmount`); pass `date` when creating lines |
+| `backend/database/migrations/xxxx_add_date_to_transaction_lines_table.php` | Create — add nullable `date` column |
+| `backend/app/Models/TransactionLine.php` | Add `date` to `$fillable` and `$casts` |
 
 ---
 
@@ -99,6 +104,13 @@ A single tool named `classify_transaction` used for both paths.
                             'account_code' => ['type' => 'string', 'description' => 'Code from the Chart of Accounts'],
                             'type'         => ['type' => 'string', 'enum' => ['income', 'expense']],
                             'category'     => ['type' => 'string', 'description' => 'Short category label'],
+                            'date'         => [
+                                'type'        => ['string', 'null'],
+                                'description' => 'YYYY-MM-DD date for this specific line. ' .
+                                                 'Extract from the document (e.g. daily sales rows each have their own date) ' .
+                                                 'or from the description text (e.g. "kita kahapon 2026-05-28" → 2026-05-28). ' .
+                                                 'Return null only if you cannot determine a date for this specific line.',
+                            ],
                         ],
                     ],
                 ],
@@ -145,8 +157,20 @@ No `json_decode`, no markdown stripping, no null checks on the outer structure.
 | `lines[].account_code` | `transaction_lines.account_code` + lookup for `account_id` |
 | `lines[].type` | `transaction_lines.type` |
 | `lines[].category` | `transaction_lines.category` |
+| `lines[].date` | `transaction_lines.date` — falls back to `document_date` when null |
 | `confidence` | flag logic (< 0.6 → YELLOW) |
 | `lines[0].category` | `documents.category` (summary label) |
+
+#### Per-line date rule
+
+`transaction_lines.date` is the **authoritative posting date** for all ledger entries and reports — not `documents.document_date`.
+
+- Claude always attempts to assign a date per line.
+  - OCR path: extracted from the document (e.g. each row of a daily sales record has its own date).
+  - Manual path: extracted from the user's description text (e.g. "kita ko kahapon 2026-05-28" → `2026-05-28`).
+- If Claude returns `null` for a line's date, `ClassifyWithAI` fills it with `document_date` before writing the row.
+- After `ClassifyWithAI` completes, `transaction_lines.date` is **never null**.
+- The `transaction_lines` table column is nullable to allow the transient pre-classification rows (created by `manualEntry()` before the AI job runs) to exist without a date. ClassifyWithAI deletes and recreates all lines, so the final rows always have a date.
 
 ### 6. ClassifyWithAI Changes
 
@@ -178,13 +202,49 @@ if (!$this->document->is_no_receipt && !empty($classification['document'])) {
 }
 ```
 
-No other changes to `ClassifyWithAI.php` — line creation loop is unchanged.
+The line creation loop gains one field:
 
-### 7. maxTokens
+```php
+// STEP E — Write TransactionLine records
+$this->document->transactionLines()->delete();
+
+$docDate = $this->document->document_date?->format('Y-m-d');
+
+foreach ($classification['lines'] ?? [] as $line) {
+    $accountId = Account::where('company_id', $company->id)
+        ->where('code', $line['accountCode'] ?? $line['account_code'])
+        ->value('id');
+
+    $this->document->transactionLines()->create([
+        'account_id'   => $accountId,
+        'account_code' => $line['account_code'] ?? null,
+        'type'         => $line['type'],
+        'category'     => $line['category'] ?? null,
+        'amount'       => $line['amount'],
+        'description'  => $line['description'] ?? null,
+        'date'         => $line['date'] ?? $docDate,   // ← always non-null after this
+    ]);
+}
+```
+
+### 7. Migration — Add `date` to `transaction_lines`
+
+```php
+Schema::table('transaction_lines', function (Blueprint $table) {
+    $table->date('date')->nullable()->after('description');
+});
+```
+
+### 8. TransactionLine Model
+
+Add to `$fillable`: `'date'`
+Add to `$casts`: `'date' => 'date'`
+
+### 9. maxTokens
 
 Bump from `1024` to `1536`. Tool use schemas add overhead; large Charts of Accounts in the system prompt also consume space.
 
-### 8. Error Handling
+### 10. Error Handling
 
 - If `toolBlock` is null → throw `RuntimeException("Claude did not call classify_transaction tool")` — existing `failed()` handler catches this, parks document as YELLOW.
 - Individual lines with `amount <= 0` or missing `account_code` — skip silently (defensive `continue` in the loop).
