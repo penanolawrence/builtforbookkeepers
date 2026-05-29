@@ -99,41 +99,41 @@ def extract(req: ExtractRequest):
         else:
             raise HTTPException(status_code=422, detail="OCR extraction failed")
 
-        img_array = _preprocess(img_bytes)
-        result = ocr.ocr(img_array, cls=True)
+        img_array  = _preprocess(img_bytes)
+        img_height = img_array.shape[0]
+        result     = ocr.ocr(img_array, cls=True)
 
         if not result or not result[0]:
-            return {"raw_text": "", "raw_lines": [], "confidence": 0.0}
+            return {"header": [], "body": [], "footer": [], "raw_text": "", "confidence": 0.0}
 
         all_lines = []
         for line in result[0]:
             if line and len(line) >= 2:
-                text = line[1][0].strip()
-                conf = float(line[1][1])
-                all_lines.append({"text": text, "confidence": conf})
+                box      = line[0]
+                text     = line[1][0].strip()
+                conf     = float(line[1][1])
+                center_y = sum(pt[1] for pt in box) / 4
+                y        = center_y / img_height
+                all_lines.append({"text": text, "confidence": conf, "y": y})
 
-        # Filter noise: drop lines that are clearly border/separator artifacts
-        # - confidence < 0.5  →  OCR isn't sure what it read
-        # - pure repetition of border chars (I, |, -, =, ., _) with no real text
         _border_only = re.compile(r'^[I\|\-=\.\s_]+$')
         clean_lines = [
             l for l in all_lines
             if l["confidence"] >= 0.5 and not _border_only.match(l["text"]) and len(l["text"]) >= 2
         ]
 
-        # All lines (including noise) kept for raw_lines so nothing is hidden in logs
-        raw_lines = [
-            {"text": l["text"], "confidence": round(l["confidence"], 4)}
-            for l in all_lines
-        ]
-
-        text_for_ai = "\n".join(l["text"] for l in clean_lines)
+        raw_text        = "\n".join(l["text"] for l in clean_lines)
         all_confidences = [l["confidence"] for l in all_lines]
+        avg_confidence  = round(float(np.mean(all_confidences)), 4) if all_confidences else 0.0
+
+        sections = _section_lines(clean_lines)
 
         return {
-            "raw_text":   text_for_ai,
-            "raw_lines":  raw_lines,
-            "confidence": round(float(np.mean(all_confidences)), 4) if all_confidences else 0.0,
+            "header":     sections["header"],
+            "body":       sections["body"],
+            "footer":     sections["footer"],
+            "raw_text":   raw_text,
+            "confidence": avg_confidence,
         }
 
     except HTTPException:
