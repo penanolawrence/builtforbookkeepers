@@ -166,6 +166,22 @@ class DocumentController extends Controller
         return response()->json(['documentId' => $document->id]);
     }
 
+    public function cancel(string $id): JsonResponse
+    {
+        $user     = auth()->user();
+        $document = Document::where('id', $id)
+            ->where('company_id', $user->company_id)
+            ->firstOrFail();
+
+        if (!in_array($document->status, ['processing', 'parked', 'returned'])) {
+            return response()->json(['message' => 'This document cannot be cancelled.'], 422);
+        }
+
+        $document->update(['status' => 'cancelled']);
+
+        return response()->json(['message' => 'Document withdrawn.']);
+    }
+
     public function manualEntry(ManualEntryRequest $request): JsonResponse
     {
         $user       = auth()->user();

@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/documents/{id}/status',    [DocumentController::class, 'getStatus']);
         Route::get('/documents/{id}/image',     [DocumentController::class, 'getSignedUrl']);
         Route::post('/documents/{id}/reupload', [DocumentController::class, 'reupload']);
+        Route::post('/documents/{id}/cancel',   [DocumentController::class, 'cancel']);
 
         Route::get('/reports/income-statement',      [ReportController::class, 'incomeStatement']);
         Route::get('/reports/expense-breakdown',     [ReportController::class, 'expenseBreakdown']);
