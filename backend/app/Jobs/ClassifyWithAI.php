@@ -86,7 +86,7 @@ class ClassifyWithAI implements ShouldQueue
 
         foreach ($classification['lines'] ?? [] as $line) {
             $accountId = Account::where('company_id', $company->id)
-                ->where('code', $line['account_code'] ?? '')
+                ->where('code', $line['account_code'] ?? null)
                 ->value('id');
 
             $this->document->transactionLines()->create([
