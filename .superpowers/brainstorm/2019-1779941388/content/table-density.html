@@ -1,0 +1,122 @@
+<h2>How should tables and lists look?</h2>
+<p class="subtitle">Your admin has a lot of tables — clients, accountants, billing, queue. Pick the density that feels right.</p>
+
+<div class="cards">
+
+  <!-- Option A: Comfortable / Spacious -->
+  <div class="card" data-choice="comfortable" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;font-size:10px;">
+        <!-- Search bar -->
+        <div style="background:#f9fafb;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;gap:6px;align-items:center;">
+          <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:4px 8px;font-size:8px;color:#9ca3af;flex:1;">Search business name...</div>
+          <div style="background:#6366f1;color:#fff;font-size:8px;padding:4px 10px;border-radius:6px;font-weight:600;">+ New Client</div>
+        </div>
+        <!-- Table header -->
+        <div style="display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 1fr;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:8px 12px;">
+          <div style="font-size:8px;font-weight:600;color:#374151;">Business Name</div>
+          <div style="font-size:8px;font-weight:600;color:#374151;">Accountant</div>
+          <div style="font-size:8px;font-weight:600;color:#374151;">Plan</div>
+          <div style="font-size:8px;font-weight:600;color:#374151;">Status</div>
+          <div style="font-size:8px;font-weight:600;color:#374151;">Created</div>
+        </div>
+        <!-- Row 1 -->
+        <div style="display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 1fr;padding:10px 12px;border-bottom:1px solid #f3f4f6;align-items:center;">
+          <div>
+            <div style="font-size:9px;font-weight:600;color:#111827;">ABC Trading Corp.</div>
+            <div style="font-size:7px;color:#9ca3af;">@abc_trading</div>
+          </div>
+          <div style="font-size:8px;color:#374151;">Maria Santos</div>
+          <div style="font-size:8px;color:#6b7280;">Growth</div>
+          <div><span style="background:#dcfce7;color:#166534;font-size:7px;padding:2px 7px;border-radius:20px;font-weight:600;">Active</span></div>
+          <div style="font-size:7px;color:#9ca3af;">Jan 12, 2026</div>
+        </div>
+        <!-- Row 2 -->
+        <div style="display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 1fr;padding:10px 12px;border-bottom:1px solid #f3f4f6;align-items:center;background:#fafafa;">
+          <div>
+            <div style="font-size:9px;font-weight:600;color:#111827;">Santos Bakery Inc.</div>
+            <div style="font-size:7px;color:#9ca3af;">@santos_bakery</div>
+          </div>
+          <div style="font-size:8px;color:#374151;">Juan Dela Cruz</div>
+          <div style="font-size:8px;color:#6b7280;">Starter</div>
+          <div><span style="background:#fef3c7;color:#92400e;font-size:7px;padding:2px 7px;border-radius:20px;font-weight:600;">Overdue</span></div>
+          <div style="font-size:7px;color:#9ca3af;">Mar 3, 2026</div>
+        </div>
+        <!-- Row 3 -->
+        <div style="display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr 1fr;padding:10px 12px;align-items:center;">
+          <div>
+            <div style="font-size:9px;font-weight:600;color:#111827;">Reyes Logistics</div>
+            <div style="font-size:7px;color:#9ca3af;">@reyes_logistics</div>
+          </div>
+          <div style="font-size:8px;color:#374151;">Maria Santos</div>
+          <div style="font-size:8px;color:#6b7280;">Premium</div>
+          <div><span style="background:#ffedd5;color:#9a3412;font-size:7px;padding:2px 7px;border-radius:20px;font-weight:600;">Suspended</span></div>
+          <div style="font-size:7px;color:#9ca3af;">Apr 18, 2026</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Comfortable</h3>
+      <p>More row height, subtle name + username stacked, pill-shaped status badges. Easier to scan at a glance. Good if you're not looking at hundreds of rows at once.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Compact -->
+  <div class="card" data-choice="compact" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;font-size:10px;">
+        <!-- Toolbar -->
+        <div style="background:#fff;padding:6px 10px;border-bottom:1px solid #e5e7eb;display:flex;gap:5px;align-items:center;">
+          <div style="background:#fff;border:1px solid #d1d5db;border-radius:5px;padding:3px 7px;font-size:7px;color:#9ca3af;flex:1;">Search...</div>
+          <div style="border:1px solid #d1d5db;border-radius:5px;padding:3px 7px;font-size:7px;color:#374151;">All statuses ▾</div>
+          <div style="border:1px solid #d1d5db;border-radius:5px;padding:3px 7px;font-size:7px;color:#374151;">Accountant ▾</div>
+          <div style="background:#6366f1;color:#fff;font-size:7px;padding:3px 8px;border-radius:5px;font-weight:600;">+ New</div>
+        </div>
+        <!-- Table header -->
+        <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.8fr;background:#f9fafb;border-bottom:1px solid #e5e7eb;padding:5px 10px;">
+          <div style="font-size:7px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Business</div>
+          <div style="font-size:7px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Accountant</div>
+          <div style="font-size:7px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Plan</div>
+          <div style="font-size:7px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Status</div>
+          <div style="font-size:7px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.4px;">Date</div>
+        </div>
+        <!-- Rows -->
+        <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.8fr;padding:5px 10px;border-bottom:1px solid #f3f4f6;align-items:center;">
+          <div style="font-size:8px;font-weight:500;color:#111827;">ABC Trading Corp.</div>
+          <div style="font-size:7px;color:#6b7280;">Maria Santos</div>
+          <div style="font-size:7px;color:#6b7280;">Growth</div>
+          <div><span style="background:#dcfce7;color:#166534;font-size:6px;padding:1px 5px;border-radius:3px;font-weight:600;">Active</span></div>
+          <div style="font-size:7px;color:#9ca3af;">Jan 12</div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.8fr;padding:5px 10px;border-bottom:1px solid #f3f4f6;align-items:center;background:#fafafa;">
+          <div style="font-size:8px;font-weight:500;color:#111827;">Santos Bakery Inc.</div>
+          <div style="font-size:7px;color:#6b7280;">Juan Dela Cruz</div>
+          <div style="font-size:7px;color:#6b7280;">Starter</div>
+          <div><span style="background:#fef3c7;color:#92400e;font-size:6px;padding:1px 5px;border-radius:3px;font-weight:600;">Overdue</span></div>
+          <div style="font-size:7px;color:#9ca3af;">Mar 3</div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.8fr;padding:5px 10px;border-bottom:1px solid #f3f4f6;align-items:center;">
+          <div style="font-size:8px;font-weight:500;color:#111827;">Reyes Logistics</div>
+          <div style="font-size:7px;color:#6b7280;">Maria Santos</div>
+          <div style="font-size:7px;color:#6b7280;">Premium</div>
+          <div><span style="background:#ffedd5;color:#9a3412;font-size:6px;padding:1px 5px;border-radius:3px;font-weight:600;">Suspended</span></div>
+          <div style="font-size:7px;color:#9ca3af;">Apr 18</div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1.2fr 0.8fr 0.8fr 0.8fr;padding:5px 10px;align-items:center;background:#fafafa;">
+          <div style="font-size:8px;font-weight:500;color:#111827;">Cruz Hardware Store</div>
+          <div style="font-size:7px;color:#6b7280;">Maria Santos</div>
+          <div style="font-size:7px;color:#6b7280;">Growth</div>
+          <div><span style="background:#dcfce7;color:#166534;font-size:6px;padding:1px 5px;border-radius:3px;font-weight:600;">Active</span></div>
+          <div style="font-size:7px;color:#9ca3af;">May 2</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Compact</h3>
+      <p>Tight row height, uppercase column headers, fits more rows on screen. Good for power users managing many clients. Similar to GitHub Issues or Jira.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Click your preference, then tell me in the terminal.</p>

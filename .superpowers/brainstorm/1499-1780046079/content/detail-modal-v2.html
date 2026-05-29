@@ -1,0 +1,119 @@
+<h2>Section 3 (v2) — Document Detail as Centered Modal</h2>
+<p class="subtitle">Clicking a row opens a centered dialog over the documents table.</p>
+
+<div style="margin-top: 20px; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #f9fafb; position: relative; min-height: 520px;">
+
+  <!-- Page header -->
+  <div style="background: white; border-bottom: 1px solid #e5e7eb; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="font-size: 14px; font-weight: 700; color: #111827;">My Documents</div>
+    <div style="font-size: 11px; color: #6b7280;">Filters ▾</div>
+  </div>
+
+  <!-- Documents table (dimmed) -->
+  <div style="opacity: 0.25; padding: 12px 16px; filter: blur(1px);">
+    <div style="display: grid; grid-template-columns: 80px 60px 90px 80px 80px 70px; gap: 8px; font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; padding: 0 4px; margin-bottom: 6px;">
+      <span>Reference</span><span>Source</span><span>Date</span><span style="text-align:right;">Inflow</span><span style="text-align:right;">Outflow</span><span>Status</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: grid; grid-template-columns: 80px 60px 90px 80px 80px 70px; gap: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 4px; font-size: 11px; align-items: center;">
+        <span style="color: #374151; font-weight: 600;">MNL-0012</span>
+        <span style="background: #dbeafe; color: #1d4ed8; font-size: 10px; padding: 1px 5px; border-radius: 3px;">Manual</span>
+        <span style="color: #374151;">May 29</span>
+        <span style="color: #374151; text-align:right;">—</span>
+        <span style="color: #ef4444; font-weight: 600; text-align:right;">₱350.00</span>
+        <span style="background: #fef9c3; color: #a16207; font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 600;">PARKED</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 80px 60px 90px 80px 80px 70px; gap: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 4px; font-size: 11px; align-items: center;">
+        <span style="color: #374151; font-weight: 600;">OR-00421</span>
+        <span style="background: #f3f4f6; color: #6b7280; font-size: 10px; padding: 1px 5px; border-radius: 3px;">Upload</span>
+        <span style="color: #374151;">May 28</span>
+        <span style="color: #16a34a; font-weight: 600; text-align:right;">₱1,000</span>
+        <span style="color: #374151; text-align:right;">—</span>
+        <span style="background: #dcfce7; color: #16a34a; font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 600;">APPROVED</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 80px 60px 90px 80px 80px 70px; gap: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 4px; font-size: 11px; align-items: center;">
+        <span style="color: #374151; font-weight: 600;">OR-00420</span>
+        <span style="background: #f3f4f6; color: #6b7280; font-size: 10px; padding: 1px 5px; border-radius: 3px;">Upload</span>
+        <span style="color: #374151;">May 25</span>
+        <span style="color: #374151; text-align:right;">—</span>
+        <span style="color: #ef4444; font-weight: 600; text-align:right;">₱200.00</span>
+        <span style="background: #fee2e2; color: #dc2626; font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 600;">RETURNED</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dark backdrop -->
+  <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; padding: 20px;">
+
+    <!-- Centered modal -->
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; max-height: 480px; display: flex; flex-direction: column;">
+
+      <!-- Modal header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #e5e7eb;">
+        <div>
+          <div style="font-size: 14px; font-weight: 700; color: #111827;">MNL-0012</div>
+          <div style="font-size: 10px; color: #6b7280; margin-top: 2px;">May 29, 2026 · Cash · Manual Entry · Expense</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="background: #fef9c3; color: #a16207; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px;">PARKED</span>
+          <span style="font-size: 18px; color: #9ca3af; cursor: pointer; line-height: 1;">×</span>
+        </div>
+      </div>
+
+      <!-- Modal body (scrollable) -->
+      <div style="flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+
+        <!-- No-receipt placeholder -->
+        <div style="background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 8px; padding: 12px; text-align: center;">
+          <div style="font-size: 22px;">📋</div>
+          <div style="font-size: 11px; color: #9ca3af; margin-top: 3px;">Manual Entry — no receipt</div>
+        </div>
+
+        <!-- Lines table -->
+        <div>
+          <div style="font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Transaction Lines</div>
+          <div style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; background: #f9fafb; padding: 6px 10px; font-size: 9px; font-weight: 600; color: #6b7280; text-transform: uppercase; gap: 8px;">
+              <span>Your Description</span>
+              <span>AI Category</span>
+              <span style="text-align:right;">Amount</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 9px 10px; font-size: 11px; border-top: 1px solid #e5e7eb; gap: 8px; align-items: center;">
+              <span style="color: #374151;">Bayad kuryente</span>
+              <span style="background: #f3f4f6; color: #6b7280; padding: 2px 6px; border-radius: 4px; font-size: 9px; white-space: nowrap;">Utilities Expense</span>
+              <span style="color: #374151; text-align:right; white-space:nowrap; font-weight: 600;">₱200.00</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 9px 10px; font-size: 11px; border-top: 1px solid #e5e7eb; gap: 8px; align-items: center;">
+              <span style="color: #374151;">Supplies sa opisina</span>
+              <span style="background: #f3f4f6; color: #6b7280; padding: 2px 6px; border-radius: 4px; font-size: 9px; white-space: nowrap;">Supplies Expense</span>
+              <span style="color: #374151; text-align:right; white-space:nowrap; font-weight: 600;">₱150.00</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 9px 10px; font-size: 11px; border-top: 2px solid #e5e7eb; background: #f9fafb; gap: 8px;">
+              <span style="font-weight: 700; color: #374151; grid-column: 1/3;">Total Expense</span>
+              <span style="font-weight: 700; color: #ef4444; text-align:right; white-space:nowrap;">₱350.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status banner -->
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; font-size: 11px; color: #92400e;">
+          ⏳ Your accountant is reviewing this entry.
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Modal behavior</h3>
+  <ul style="font-size: 13px; color: #374151; line-height: 1.8;">
+    <li>Clicking any row opens this <strong>centered dialog</strong> over a dark backdrop — no page navigation</li>
+    <li>Closes with <strong>× button</strong> or clicking the backdrop</li>
+    <li>Uses the existing <code>shadcn/ui Dialog</code> component — already in the project</li>
+    <li>The existing <code>/client/documents/[id]/page.tsx</code> route is <strong>removed</strong></li>
+    <li>For receipt uploads: the image placeholder is replaced with the actual receipt thumbnail from <code>getSignedUrl()</code></li>
+    <li>RETURNED state: accountant note appears above the lines table; re-upload button appears at the bottom of the modal</li>
+  </ul>
+</div>

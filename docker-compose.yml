@@ -1,0 +1,196 @@
+version: "3.9"
+
+x-backend-base: &backend-base
+  build:
+    context: ./backend
+    dockerfile: Dockerfile
+  env_file: .env
+  environment:
+    APP_KEY: ${APP_KEY}
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: 5432
+    DB_DATABASE: ${DB_DATABASE}
+    DB_USERNAME: ${DB_USERNAME}
+    DB_PASSWORD: ${DB_PASSWORD}
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    FILESYSTEM_DISK: s3
+    AWS_ENDPOINT: http://minio:9000
+    AWS_USE_PATH_STYLE_ENDPOINT: "true"
+    BROADCAST_CONNECTION: reverb
+    REVERB_HOST: reverb
+    REVERB_PORT: 6001
+    REVERB_SCHEME: http
+    QUEUE_CONNECTION: redis
+    MAIL_MAILER: smtp
+    MAIL_HOST: mailpit
+    MAIL_PORT: 1025
+    MAIL_FROM_ADDRESS: noreply@sofiabooks.local
+    OCR_SERVICE_URL: http://ocr-service:8001
+  volumes:
+    - ./backend:/var/www/html   # bind mount — vendor is checked-in to host
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    minio:
+      condition: service_started
+  networks:
+    - sofia-net
+
+services:
+
+  # ── Laravel API ─────────────────────────────────────────
+  backend:
+    <<: *backend-base
+    container_name: sofia-backend
+    ports:
+      - "8000:8000"
+
+  # ── Horizon (queue worker) ───────────────────────────────
+  horizon:
+    <<: *backend-base
+    container_name: sofia-horizon
+    command: ["php", "artisan", "horizon"]
+    restart: unless-stopped
+
+  # ── Reverb (WebSocket server) ────────────────────────────
+  reverb:
+    <<: *backend-base
+    container_name: sofia-reverb
+    # --host=0.0.0.0 sets the bind address directly; REVERB_HOST=reverb from
+    # x-backend-base is the connect target for other containers and is harmless here
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001"]
+    ports:
+      - "6001:6001"
+    restart: unless-stopped
+
+  # ── Scheduler (cron every minute) ───────────────────────
+  scheduler:
+    <<: *backend-base
+    container_name: sofia-scheduler
+    # Runs schedule:run every 60 seconds in a shell loop
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction;
+        sleep 60;
+      done"
+    restart: unless-stopped
+
+  # ── Next.js Frontend ─────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev              # uses the dev stage — runs npm run dev
+    container_name: sofia-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app        # bind mount — Next.js changes hot-reload instantly
+      - /app/node_modules      # anonymous vol keeps node_modules inside container
+      - /app/.next             # anonymous vol keeps build cache inside container
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+      NEXT_PUBLIC_REVERB_APP_KEY: ${REVERB_APP_KEY}
+      NEXT_PUBLIC_REVERB_HOST: localhost
+      NEXT_PUBLIC_REVERB_PORT: "6001"
+      NEXT_PUBLIC_APP_NAME: "Sofia Books"
+    networks:
+      - sofia-net
+
+  # ── OCR Microservice ─────────────────────────────────────
+  ocr-service:
+    build:
+      context: ./ocr-service
+      dockerfile: Dockerfile
+    container_name: sofia-ocr
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_ENDPOINT_URL: http://minio:9000
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_BUCKET: ${AWS_BUCKET}
+    volumes:
+      - paddleocr_models:/root/.paddleocr   # model weights persist across rebuilds
+    depends_on:
+      - minio
+    ports:
+      - "8001:8001"
+    networks:
+      - sofia-net
+    restart: unless-stopped
+
+  # ── PostgreSQL 16 ────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: sofia-postgres
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sofia-net
+
+  # ── Redis 7 ──────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: sofia-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - sofia-net
+
+  # ── MinIO (local S3) ─────────────────────────────────────
+  minio:
+    image: minio/minio:RELEASE.2024-07-04T14-25-45Z
+    container_name: sofia-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"   # S3 API (used by Laravel)
+      - "9001:9001"   # MinIO web console (browser)
+    volumes:
+      - minio_data:/data
+    networks:
+      - sofia-net
+
+  # ── Mailpit (dev email catcher) ──────────────────────────
+  mailpit:
+    image: axllent/mailpit:v1.20.0
+    container_name: sofia-mailpit
+    ports:
+      - "1025:1025"   # SMTP (used by Laravel)
+      - "8025:8025"   # Web inbox (browser)
+    networks:
+      - sofia-net
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  paddleocr_models:   # PaddleOCR model weights (~200MB) — downloaded on first startup
+
+networks:
+  sofia-net:
+    driver: bridge

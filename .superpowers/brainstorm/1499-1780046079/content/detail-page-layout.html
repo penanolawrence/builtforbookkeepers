@@ -1,0 +1,127 @@
+<h2>Document Detail — Lines Display</h2>
+<p class="subtitle">How should transaction lines appear when a client views their submitted document?</p>
+
+<div class="split" style="margin-top: 24px; gap: 20px;">
+
+  <!-- Option A: Table with description + AI category -->
+  <div class="mockup" onclick="toggleSelect(this)" data-choice="a" style="cursor:pointer; border-radius: 10px; overflow: hidden;">
+    <div class="mockup-header">A — Description + AI Category table</div>
+    <div class="mockup-body" style="padding: 14px; background: #fff;">
+
+      <!-- Doc header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #111827;">MNL-0012</div>
+          <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">May 29, 2026 · Cash · Manual Entry</div>
+        </div>
+        <span style="background: #fef9c3; color: #a16207; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px;">PARKED</span>
+      </div>
+
+      <!-- Lines table -->
+      <div style="font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Transaction Lines</div>
+      <div style="border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; background: #f9fafb; padding: 6px 10px; font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; gap: 8px;">
+          <span>Your Description</span>
+          <span>AI Category</span>
+          <span style="text-align:right;">Amount</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 8px 10px; font-size: 11px; border-top: 1px solid #e5e7eb; gap: 8px; align-items: center;">
+          <span style="color: #374151;">Bayad kuryente</span>
+          <span style="color: #6b7280; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Utilities Expense</span>
+          <span style="color: #374151; text-align:right; white-space: nowrap;">₱200.00</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 8px 10px; font-size: 11px; border-top: 1px solid #e5e7eb; gap: 8px; align-items: center;">
+          <span style="color: #374151;">Supplies sa opisina</span>
+          <span style="color: #6b7280; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Supplies Expense</span>
+          <span style="color: #374151; text-align:right; white-space: nowrap;">₱150.00</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 8px 10px; font-size: 11px; border-top: 2px solid #e5e7eb; gap: 8px; background: #f9fafb;">
+          <span style="font-weight: 700; color: #374151; grid-column: 1 / 3;">Total</span>
+          <span style="font-weight: 700; color: #ef4444; text-align:right; white-space: nowrap;">₱350.00</span>
+        </div>
+      </div>
+
+      <!-- Status note -->
+      <div style="margin-top: 10px; padding: 8px 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; font-size: 11px; color: #92400e;">
+        ⏳ Your accountant is reviewing this entry.
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B: Card list, description is the headline -->
+  <div class="mockup" onclick="toggleSelect(this)" data-choice="b" style="cursor:pointer; border-radius: 10px; overflow: hidden;">
+    <div class="mockup-header">B — Description-first card rows</div>
+    <div class="mockup-body" style="padding: 14px; background: #fff;">
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #111827;">MNL-0012</div>
+          <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">May 29, 2026 · Cash · Manual Entry</div>
+        </div>
+        <span style="background: #fef9c3; color: #a16207; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px;">PARKED</span>
+      </div>
+
+      <div style="font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Transaction Lines</div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 9px 11px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #111827;">Bayad kuryente</div>
+            <div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">AI: Utilities Expense (5001)</div>
+          </div>
+          <div style="font-size: 13px; font-weight: 700; color: #ef4444;">₱200.00</div>
+        </div>
+        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 9px 11px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #111827;">Supplies sa opisina</div>
+            <div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">AI: Supplies Expense (5002)</div>
+          </div>
+          <div style="font-size: 13px; font-weight: 700; color: #ef4444;">₱150.00</div>
+        </div>
+      </div>
+
+      <!-- Total bar -->
+      <div style="margin-top: 8px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 11px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 11px; font-weight: 600; color: #374151;">Total Expense</span>
+        <span style="font-size: 14px; font-weight: 700; color: #ef4444;">₱350.00</span>
+      </div>
+
+      <div style="margin-top: 10px; padding: 8px 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; font-size: 11px; color: #92400e;">
+        ⏳ Your accountant is reviewing this entry.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Also show how a receipt upload looks with B -->
+<div style="margin-top: 28px;">
+  <div class="section">
+    <div style="font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">For receipt uploads, layout B would look like this:</div>
+    <div style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; max-width: 400px;">
+      <div style="background: #f9fafb; padding: 8px 12px; font-size: 11px; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Juan's Sari-Sari Store · OR-00421 · May 28, 2026</div>
+      <div style="padding: 10px 12px;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 11px; font-weight: 600; color: #111827;">Services rendered</div>
+              <div style="font-size: 10px; color: #9ca3af;">AI: Service Revenue (4002)</div>
+            </div>
+            <div style="font-size: 12px; font-weight: 700; color: #16a34a;">₱500.00</div>
+          </div>
+          <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 11px; font-weight: 600; color: #111827;">Product sales</div>
+              <div style="font-size: 10px; color: #9ca3af;">AI: Sales Revenue (4001)</div>
+            </div>
+            <div style="font-size: 12px; font-weight: 700; color: #16a34a;">₱500.00</div>
+          </div>
+        </div>
+        <div style="margin-top: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 7px 10px; display: flex; justify-content: space-between;">
+          <span style="font-size: 11px; font-weight: 600; color: #374151;">Total Income</span>
+          <span style="font-size: 13px; font-weight: 700; color: #16a34a;">₱1,000.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

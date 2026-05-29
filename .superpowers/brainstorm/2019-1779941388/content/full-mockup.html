@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sofia Books — Admin Portal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; color: #111827; }
+
+  /* ── TOP NAV ── */
+  .topnav { background:#fff; border-bottom:1px solid #e5e7eb; padding:0 24px; display:flex; align-items:center; gap:0; height:48px; position:sticky; top:0; z-index:10; }
+  .topnav-brand { font-size:14px; font-weight:800; color:#111827; display:flex; align-items:center; gap:6px; margin-right:16px; }
+  .topnav-brand-dot { width:8px; height:8px; background:#6366f1; border-radius:2px; }
+  .topnav-link { font-size:13px; color:#6b7280; padding:0 12px; height:48px; display:flex; align-items:center; border-bottom:2px solid transparent; white-space:nowrap; cursor:pointer; }
+  .topnav-link:hover { color:#374151; }
+  .topnav-link.active { color:#6366f1; font-weight:600; border-bottom-color:#6366f1; }
+  .topnav-spacer { flex:1; }
+  .topnav-bell { width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#9ca3af; font-size:14px; position:relative; margin-right:6px; }
+  .topnav-bell-dot { position:absolute; top:4px; right:4px; width:7px; height:7px; background:#ef4444; border-radius:50%; border:1.5px solid #fff; }
+  .topnav-avatar { width:28px; height:28px; background:#eef2ff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#6366f1; cursor:pointer; }
+  .avatar-dropdown { display:none; position:absolute; right:0; top:36px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,.12); min-width:170px; z-index:300; overflow:hidden; }
+  .avatar-menu-user { padding:12px 14px; border-bottom:1px solid #f3f4f6; }
+  .avatar-menu-user-name { font-size:13px; font-weight:600; color:#111827; }
+  .avatar-menu-user-email { font-size:11px; color:#9ca3af; margin-top:1px; }
+  .avatar-menu-item { padding:9px 14px; font-size:13px; color:#374151; cursor:pointer; display:flex; align-items:center; gap:8px; }
+  .avatar-menu-item:hover { background:#f9fafb; }
+  .avatar-menu-item.danger { color:#dc2626; }
+  .avatar-menu-item.danger:hover { background:#fff5f5; }
+
+  /* ── PAGE WRAPPER ── */
+  .page { max-width:1100px; margin:0 auto; padding:24px; }
+  .page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; }
+  .page-title { font-size:18px; font-weight:700; color:#111827; letter-spacing:-0.3px; }
+  .page-subtitle { font-size:12px; color:#9ca3af; margin-top:2px; }
+  .breadcrumb { font-size:12px; color:#9ca3af; margin-bottom:4px; }
+  .breadcrumb a { color:#6366f1; cursor:pointer; font-weight:500; }
+
+  /* ── STAT CARDS ── */
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .stat-card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:14px 16px; }
+  .stat-label { font-size:11px; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+  .stat-value { font-size:26px; font-weight:800; color:#111827; letter-spacing:-1px; line-height:1; }
+  .stat-value.red { color:#dc2626; }
+  .stat-value.indigo { color:#6366f1; }
+  .stat-value.green { color:#16a34a; }
+  .stat-delta { font-size:11px; color:#9ca3af; margin-top:4px; }
+  .stat-delta .up { color:#16a34a; }
+  .stat-delta .dn { color:#dc2626; }
+
+  /* ── SECTION CARD ── */
+  .section-card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden; margin-bottom:16px; }
+  .section-card-header { padding:12px 16px; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; justify-content:space-between; }
+  .section-card-title { font-size:13px; font-weight:600; color:#111827; }
+  .section-card-hint { font-size:11px; color:#9ca3af; }
+
+  /* ── WORKLOAD GRID ── */
+  .workload-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:14px 16px; }
+  .workload-card { border:1px solid #e5e7eb; border-radius:7px; padding:12px; cursor:pointer; transition:box-shadow .15s; }
+  .workload-card:hover { box-shadow:0 2px 8px rgba(0,0,0,.07); }
+  .workload-name { font-size:12px; font-weight:600; color:#111827; margin-bottom:3px; }
+  .workload-sub { font-size:11px; color:#9ca3af; margin-bottom:8px; }
+  .workload-badges { display:flex; gap:5px; flex-wrap:wrap; }
+
+  /* ── BADGES ── */
+  .badge { display:inline-flex; align-items:center; font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px; }
+  .b-red { background:#fee2e2; color:#991b1b; }
+  .b-yellow { background:#fef3c7; color:#92400e; }
+  .b-green { background:#dcfce7; color:#166534; }
+  .b-blue { background:#dbeafe; color:#1d4ed8; }
+  .b-gray { background:#f3f4f6; color:#374151; }
+  .b-orange { background:#ffedd5; color:#9a3412; }
+  .b-indigo { background:#eef2ff; color:#4338ca; }
+
+  /* ── TOOLBAR ── */
+  .toolbar { padding:10px 14px; border-bottom:1px solid #f3f4f6; display:flex; gap:8px; align-items:center; background:#fafafa; }
+  .toolbar-input { border:1px solid #e5e7eb; border-radius:6px; padding:5px 10px; font-size:12px; color:#374151; background:#fff; outline:none; width:200px; }
+  .toolbar-input::placeholder { color:#d1d5db; }
+  .toolbar-select { border:1px solid #e5e7eb; border-radius:6px; padding:5px 8px; font-size:12px; color:#374151; background:#fff; cursor:pointer; }
+  .toolbar-spacer { flex:1; }
+
+  /* ── BUTTONS ── */
+  .btn { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; }
+  .btn-primary { background:#6366f1; color:#fff; }
+  .btn-primary:hover { background:#4f46e5; }
+  .btn-outline { background:#fff; border:1.5px solid #e5e7eb; color:#374151; }
+  .btn-outline:hover { background:#f9fafb; }
+  .btn-danger { background:#fee2e2; color:#dc2626; border:1.5px solid #fecaca; }
+  .btn-sm { padding:4px 10px; font-size:11px; }
+
+  /* ── COMPACT TABLE ── */
+  .table { width:100%; border-collapse:collapse; font-size:12px; }
+  .table th { background:#f9fafb; padding:7px 12px; text-align:left; font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e5e7eb; white-space:nowrap; }
+  .table td { padding:7px 12px; border-bottom:1px solid #f3f4f6; color:#374151; vertical-align:middle; }
+  .table tr:last-child td { border-bottom:none; }
+  .table tr:hover td { background:#fafafa; cursor:pointer; }
+  .td-primary { font-weight:500; color:#111827; }
+  .td-muted { color:#9ca3af; font-size:11px; }
+
+  /* ── TABS ── */
+  .tabs { display:flex; border-bottom:1px solid #e5e7eb; padding:0 14px; background:#fff; }
+  .tab { padding:10px 14px; font-size:13px; color:#9ca3af; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; }
+  .tab.active { color:#6366f1; font-weight:600; border-bottom-color:#6366f1; }
+
+  /* ── PAGINATION ── */
+  .pagination { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #f3f4f6; background:#fafafa; }
+  .pagination-info { font-size:11px; color:#9ca3af; }
+  .pagination-btns { display:flex; gap:4px; }
+  .pg-btn { width:26px; height:26px; border:1px solid #e5e7eb; border-radius:5px; font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; background:#fff; color:#374151; }
+  .pg-btn.active { background:#6366f1; color:#fff; border-color:#6366f1; font-weight:700; }
+
+  /* ── QUEUE FLAGS ── */
+  .flag-red { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; background:#fee2e2; color:#991b1b; }
+  .flag-yellow { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; background:#fef3c7; color:#92400e; }
+  .flag-green { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; background:#dcfce7; color:#166534; }
+
+  /* ── ENTRY LINES ── */
+  .entry-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; margin-bottom:16px; }
+  .entry-info-item { display:flex; flex-direction:column; gap:2px; }
+  .entry-info-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; }
+  .entry-info-value { font-size:13px; color:#111827; font-weight:500; }
+  .je-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .je-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; padding:6px 10px; border-bottom:1px solid #e5e7eb; text-align:left; }
+  .je-table th:last-child,.je-table th:nth-last-child(2) { text-align:right; }
+  .je-table td { padding:8px 10px; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+  .je-table tr:last-child td { border-bottom:none; }
+  .je-table tfoot td { background:#f9fafb; border-top:1px solid #e5e7eb; font-weight:600; padding:7px 10px; }
+  .je-amount { text-align:right; font-variant-numeric:tabular-nums; }
+  .je-input { width:100%; border:1.5px solid #e5e7eb; border-radius:5px; padding:4px 8px; font-size:12px; color:#111827; outline:none; font-family:inherit; text-align:right; }
+  .je-input:focus { border-color:#a5b4fc; }
+  .je-account-select { width:100%; border:1.5px solid #e5e7eb; border-radius:5px; padding:4px 8px; font-size:12px; color:#111827; outline:none; font-family:inherit; background:#fff; }
+  .je-account-select:focus { border-color:#a5b4fc; }
+  .balance-bar { display:flex; align-items:center; gap:16px; padding:10px 12px; border-radius:7px; font-size:12px; margin-top:10px; }
+  .balance-bar.balanced { background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; }
+  .balance-bar.unbalanced { background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; }
+  .balance-bar-item { display:flex; flex-direction:column; gap:1px; }
+  .balance-bar-label { font-size:10px; opacity:0.7; }
+  .balance-bar-value { font-weight:700; font-size:13px; }
+  /* ── ENTRY STATUS ── */
+  .es-pending { background:#fef3c7; color:#92400e; }
+  .es-approved { background:#dcfce7; color:#166534; }
+  .es-rejected { background:#fee2e2; color:#991b1b; }
+  .es-draft { background:#f3f4f6; color:#374151; }
+  .entry-filter-tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .efilter-btn { padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1.5px solid #e5e7eb; background:#fff; color:#6b7280; }
+  .efilter-btn.active { background:#eef2ff; color:#6366f1; border-color:#c7d2fe; }
+
+  /* ── REPORTS ── */
+  .report-hub { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:8px; }
+  .report-card { background:#fff; border:1.5px solid #e5e7eb; border-radius:10px; padding:22px 20px; cursor:pointer; transition:border-color .15s, box-shadow .15s; display:flex; flex-direction:column; }
+  .report-card:hover { border-color:#a5b4fc; box-shadow:0 0 0 3px #eef2ff; }
+  .report-card-icon { font-size:28px; margin-bottom:12px; }
+  .report-card-title { font-size:14px; font-weight:700; color:#111827; margin-bottom:5px; }
+  .report-card-desc { font-size:12px; color:#6b7280; line-height:1.5; flex:1; }
+  .report-card-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:12px; }
+  .report-card-tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:3px; background:#f3f4f6; color:#6b7280; }
+  .report-card-cta { margin-top:14px; font-size:12px; font-weight:700; color:#6366f1; }
+
+  /* ── SETTINGS ── */
+  .settings-card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:24px; max-width:480px; }
+  .settings-field { margin-bottom:16px; }
+  .settings-label { font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; display:block; }
+  .settings-input { width:100%; border:1.5px solid #e5e7eb; border-radius:7px; padding:8px 12px; font-size:13px; color:#111827; outline:none; font-family:inherit; }
+  .settings-input:focus { border-color:#a5b4fc; box-shadow:0 0 0 3px #eef2ff; }
+  .settings-hint { font-size:11px; color:#9ca3af; margin-top:4px; }
+
+  /* ── CLIENT DETAIL ── */
+  .detail-layout { display:grid; grid-template-columns:1fr 300px; gap:16px; align-items:start; }
+  .form-field { margin-bottom:14px; }
+  .form-label { font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; display:block; }
+  .form-input { width:100%; border:1.5px solid #e5e7eb; border-radius:7px; padding:7px 11px; font-size:13px; color:#111827; outline:none; font-family:inherit; }
+  .form-input:focus { border-color:#a5b4fc; box-shadow:0 0 0 3px #eef2ff; }
+  .form-input[readonly] { background:#f9fafb; color:#9ca3af; cursor:default; }
+  .form-hint { font-size:11px; color:#9ca3af; margin-top:3px; }
+  .sidebar-card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px; margin-bottom:12px; }
+  .sidebar-card-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; margin-bottom:10px; }
+  .quick-actions { display:flex; flex-direction:column; gap:6px; }
+  .btn-warning { background:#fff7ed; border:1.5px solid #fed7aa; color:#9a3412; }
+  .btn-warning:hover { background:#ffedd5; }
+  .btn-destructive { background:#fff5f5; border:1.5px solid #fecaca; color:#dc2626; }
+  .btn-destructive:hover { background:#fee2e2; }
+  .btn-success { background:#f0fdf4; border:1.5px solid #bbf7d0; color:#15803d; }
+  .invite-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:7px; padding:10px 12px; margin-top:8px; }
+  .invite-url { font-size:11px; color:#374151; word-break:break-all; margin-bottom:6px; font-family:monospace; }
+
+  /* ── COA TABLE ── */
+  .coa-section-hd { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#6b7280; padding:8px 12px; background:#f9fafb; border-bottom:1px solid #e5e7eb; border-top:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; }
+  .coa-section-hd:hover { background:#f3f4f6; }
+  .coa-chevron { font-size:9px; color:#9ca3af; margin-right:7px; transition:transform 0.18s; display:inline-block; }
+  .coa-section-hd.collapsed .coa-chevron { transform:rotate(-90deg); }
+  .coa-body { overflow:hidden; }
+  .coa-row { display:flex; align-items:center; padding:7px 12px; border-bottom:1px solid #f3f4f6; gap:8px; }
+  .coa-row:last-child { border-bottom:none; }
+  .coa-code { font-size:11px; color:#9ca3af; width:42px; flex-shrink:0; }
+  .coa-name-input { flex:1; border:1.5px solid transparent; border-radius:5px; padding:4px 7px; font-size:12px; color:#111827; background:transparent; outline:none; font-family:inherit; }
+  .coa-name-input:focus { border-color:#a5b4fc; background:#fff; }
+  .coa-name-input[readonly] { color:#9ca3af; cursor:default; }
+  .coa-del { background:none; border:none; cursor:pointer; color:#d1d5db; font-size:13px; padding:0 4px; }
+  .coa-del:hover { color:#ef4444; }
+  .coa-sys-label { font-size:10px; color:#d1d5db; margin-left:auto; }
+  .add-account-btn { margin:8px 12px; padding:5px 12px; font-size:11px; font-weight:600; background:#f9fafb; border:1.5px dashed #d1d5db; border-radius:6px; color:#6b7280; cursor:pointer; }
+  .add-account-btn:hover { border-color:#a5b4fc; color:#6366f1; background:#f5f3ff; }
+
+  /* ── MODALS ── */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:200; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:#fff; border-radius:12px; box-shadow:0 8px 40px rgba(0,0,0,.18); width:100%; max-width:440px; overflow:hidden; }
+  .modal-header { padding:16px 20px; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; justify-content:space-between; }
+  .modal-title { font-size:15px; font-weight:700; color:#111827; }
+  .modal-close { font-size:16px; color:#9ca3af; cursor:pointer; line-height:1; }
+  .modal-close:hover { color:#374151; }
+  .modal-body { padding:20px; }
+  .modal-footer { padding:14px 20px; border-top:1px solid #f3f4f6; display:flex; gap:8px; justify-content:flex-end; }
+  .modal-field { margin-bottom:16px; }
+  .modal-label { font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; display:block; }
+  .modal-input { width:100%; border:1.5px solid #e5e7eb; border-radius:7px; padding:8px 12px; font-size:13px; color:#111827; outline:none; font-family:inherit; }
+  .modal-input:focus { border-color:#a5b4fc; box-shadow:0 0 0 3px #eef2ff; }
+  .modal-hint { font-size:11px; color:#9ca3af; margin-top:4px; }
+  .modal-info-row { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:7px; margin-bottom:14px; }
+  .modal-info-label { font-size:11px; color:#9ca3af; }
+  .modal-info-value { font-size:13px; font-weight:600; color:#111827; }
+  .modal-warning { background:#fff7ed; border:1px solid #fed7aa; border-radius:7px; padding:9px 12px; font-size:11px; color:#9a3412; margin-top:14px; }
+  .bulk-row:hover { background:#f9fafb; }
+  .bulk-row:has(.bulk-cb:checked) { background:#eef2ff; }
+  /* ── REVIEW MODAL SPLIT ── */
+  .modal-split { display:grid; grid-template-columns:220px 1fr; min-height:320px; }
+  .modal-left { background:#f9fafb; border-right:1px solid #e5e7eb; padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .modal-right { padding:16px 20px; overflow-y:auto; }
+  .doc-preview { background:#fff; border:1px solid #e5e7eb; border-radius:8px; flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px; color:#9ca3af; font-size:11px; min-height:160px; }
+  .doc-preview-icon { font-size:32px; }
+  .doc-meta-row { display:flex; justify-content:space-between; font-size:11px; }
+  .doc-meta-label { color:#9ca3af; }
+  .doc-meta-value { color:#111827; font-weight:500; text-align:right; max-width:120px; }
+  .review-field { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid #f3f4f6; }
+  .review-field:last-child { border-bottom:none; }
+  .review-field-label { font-size:11px; color:#9ca3af; width:110px; flex-shrink:0; }
+  .review-field-input { flex:1; border:1.5px solid transparent; border-radius:5px; padding:4px 8px; font-size:12px; color:#111827; background:transparent; outline:none; font-family:inherit; }
+  .review-field-input:focus { border-color:#a5b4fc; background:#fff; }
+  .ai-table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:4px; }
+  .ai-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#9ca3af; padding:5px 8px; border-bottom:1px solid #e5e7eb; text-align:left; }
+  .ai-table th:last-child { text-align:right; }
+  .ai-table td { padding:7px 8px; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+  .ai-table tr:last-child td { border-bottom:none; }
+  .ai-table tfoot td { padding:7px 8px; border-top:1px solid #e5e7eb; background:#f9fafb; }
+  .ai-input { width:100%; border:1.5px solid transparent; border-radius:5px; padding:3px 6px; font-size:12px; color:#111827; background:transparent; outline:none; font-family:inherit; text-align:right; }
+  .ai-input:focus { border-color:#a5b4fc; background:#fff; }
+  .queue-data-row { cursor:pointer; }
+  .queue-data-row:hover { background:#f9fafb !important; }
+  .review-note-area { margin-top:12px; padding-top:12px; border-top:1px solid #f3f4f6; }
+  .review-note-label { font-size:12px; font-weight:600; color:#374151; margin-bottom:6px; display:block; }
+  .review-note-input { width:100%; border:1.5px solid #e5e7eb; border-radius:7px; padding:9px 12px; font-size:12px; color:#111827; outline:none; font-family:inherit; resize:vertical; min-height:72px; }
+  .review-note-input:focus { border-color:#a5b4fc; box-shadow:0 0 0 3px #eef2ff; }
+  .review-note-input.danger:focus { border-color:#fca5a5; box-shadow:0 0 0 3px #fee2e2; }
+  .queue-group-hd td { padding:7px 12px; font-size:11px; font-weight:600; border-bottom:none; }
+  .queue-group-red td { background:#fff5f5; border-top:2px solid #fecaca; }
+  .queue-group-yellow td { background:#fffbeb; border-top:2px solid #fde68a; }
+  .queue-group-green td { background:#f0fdf4; border-top:2px solid #bbf7d0; }
+  .amount-wrap { display:flex; align-items:center; border:1.5px solid #e5e7eb; border-radius:7px; overflow:hidden; }
+  .amount-wrap:focus-within { border-color:#a5b4fc; box-shadow:0 0 0 3px #eef2ff; }
+  .amount-currency { padding:0 12px; font-size:13px; font-weight:700; color:#6b7280; background:#f9fafb; border-right:1px solid #e5e7eb; align-self:stretch; display:flex; align-items:center; }
+  .amount-input { border:none; outline:none; padding:8px 12px; font-size:13px; color:#111827; width:100%; font-family:inherit; }
+
+  /* ── CREATE CLIENT ── */
+  .create-form { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:24px; max-width:560px; }
+  .create-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-row-full { grid-column:1/-1; }
+  .required-star { color:#ef4444; }
+  .success-screen { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:32px; max-width:500px; text-align:center; }
+  .success-icon { font-size:48px; margin-bottom:16px; }
+  .success-title { font-size:20px; font-weight:700; color:#111827; margin-bottom:6px; }
+  .success-sub { font-size:13px; color:#6b7280; margin-bottom:20px; }
+  .username-box { background:#f9fafb; border:1px solid #e5e7eb; border-radius:7px; padding:10px 14px; margin-bottom:14px; text-align:left; }
+  .username-label { font-size:11px; color:#9ca3af; margin-bottom:2px; }
+  .username-val { font-size:14px; font-weight:700; color:#111827; font-family:monospace; }
+  .copy-row { display:flex; gap:8px; align-items:center; }
+  .copy-input { flex:1; border:1.5px solid #e5e7eb; border-radius:6px; padding:6px 10px; font-size:11px; color:#374151; background:#f9fafb; font-family:monospace; }
+  .copy-btn { padding:6px 12px; background:#6366f1; color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .success-actions { display:flex; gap:8px; justify-content:center; margin-top:20px; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="topnav-brand"><div class="topnav-brand-dot"></div>Sofia Books</div>
+  <a class="topnav-link" id="nav-dashboard" onclick="showPage('dashboard')">Dashboard</a>
+  <a class="topnav-link" id="nav-clients" onclick="showPage('clients')">Clients</a>
+  <a class="topnav-link" id="nav-accountants" onclick="showPage('accountants')">Accountants</a>
+  <a class="topnav-link" id="nav-billing" onclick="showPage('billing')">Billing</a>
+  <a class="topnav-link" id="nav-queue" onclick="showPage('queue')">Queue</a>
+  <a class="topnav-link" id="nav-entries" onclick="showPage('entries')">Adj. Entries</a>
+  <a class="topnav-link" id="nav-reports" onclick="showPage('reports')">Reports</a>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-bell">🔔<div class="topnav-bell-dot"></div></div>
+  <div style="position:relative;" id="avatar-menu-wrap">
+    <div class="topnav-avatar" onclick="toggleAvatarMenu()">LA</div>
+    <div class="avatar-dropdown" id="avatar-dropdown">
+      <div class="avatar-menu-user">
+        <div class="avatar-menu-user-name">Lawrence Peñano</div>
+        <div class="avatar-menu-user-email">penanolawrence@gmail.com</div>
+      </div>
+      <div class="avatar-menu-item" onclick="showPage('settings');toggleAvatarMenu()">⚙ Settings</div>
+      <div style="height:1px;background:#f3f4f6;"></div>
+      <div class="avatar-menu-item danger">↩ Log out</div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+<!-- ══ DASHBOARD ══ -->
+<div id="pg-dashboard">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-subtitle">Wednesday, May 28, 2026</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Clients</div>
+      <div class="stat-value">148</div>
+      <div class="stat-delta"><span class="up">+4</span> this month</div>
+    </div>
+    <div class="stat-card" style="border-top:3px solid #ef4444;">
+      <div class="stat-label">Open RED Items</div>
+      <div class="stat-value red">12</div>
+      <div class="stat-delta"><span class="dn">+3</span> since yesterday</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Accountants</div>
+      <div class="stat-value indigo">6</div>
+      <div class="stat-delta">2 at capacity</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Revenue (May)</div>
+      <div class="stat-value green">₱48k</div>
+      <div class="stat-delta"><span class="up">+12%</span> vs Apr</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <div class="section-card-title">Accountant Workload</div>
+      <a onclick="showPage('accountants')" style="font-size:12px;color:#6366f1;cursor:pointer;font-weight:500;">View all →</a>
+    </div>
+    <div class="workload-grid">
+      <div class="workload-card" style="border-top:3px solid #ef4444;" onclick="showPage('accountants')">
+        <div class="workload-name">Maria Santos</div>
+        <div class="workload-sub">28 clients · 6 pending entries</div>
+        <div class="workload-badges">
+          <span class="badge b-red">3 RED</span>
+          <span class="badge b-yellow">5 YEL</span>
+          <span class="badge b-green">20 GRN</span>
+        </div>
+      </div>
+      <div class="workload-card" onclick="showPage('accountants')">
+        <div class="workload-name">Juan Dela Cruz</div>
+        <div class="workload-sub">18 clients · 2 pending entries</div>
+        <div class="workload-badges">
+          <span class="badge b-red">0 RED</span>
+          <span class="badge b-yellow">3 YEL</span>
+          <span class="badge b-green">15 GRN</span>
+        </div>
+      </div>
+      <div class="workload-card" style="border-top:3px solid #f59e0b;" onclick="showPage('accountants')">
+        <div class="workload-name">Ana Reyes</div>
+        <div class="workload-sub">22 clients · 4 pending entries</div>
+        <div class="workload-badges">
+          <span class="badge b-red">2 RED</span>
+          <span class="badge b-yellow">7 YEL</span>
+          <span class="badge b-green">13 GRN</span>
+        </div>
+      </div>
+      <div class="workload-card" onclick="showPage('accountants')">
+        <div class="workload-name">Carlos Bautista</div>
+        <div class="workload-sub">15 clients · 1 pending entry</div>
+        <div class="workload-badges">
+          <span class="badge b-red">1 RED</span>
+          <span class="badge b-yellow">2 YEL</span>
+          <span class="badge b-green">12 GRN</span>
+        </div>
+      </div>
+      <div class="workload-card" style="border-top:3px solid #ef4444;" onclick="showPage('accountants')">
+        <div class="workload-name">Liza Fernandez</div>
+        <div class="workload-sub">20 clients · 3 pending entries</div>
+        <div class="workload-badges">
+          <span class="badge b-red">4 RED</span>
+          <span class="badge b-yellow">4 YEL</span>
+          <span class="badge b-green">12 GRN</span>
+        </div>
+      </div>
+      <div class="workload-card" onclick="showPage('accountants')">
+        <div class="workload-name">Roberto Sy</div>
+        <div class="workload-sub">12 clients · 0 pending entries</div>
+        <div class="workload-badges">
+          <span class="badge b-red">0 RED</span>
+          <span class="badge b-yellow">1 YEL</span>
+          <span class="badge b-green">11 GRN</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <div class="section-card-title">Recent Payments</div>
+      <a onclick="showPage('billing')" style="font-size:12px;color:#6366f1;cursor:pointer;font-weight:500;">View all →</a>
+    </div>
+    <table class="table">
+      <thead><tr><th>Client</th><th>Amount</th><th>Ref No.</th><th>Date</th><th>Recorded By</th></tr></thead>
+      <tbody>
+        <tr><td class="td-primary">ABC Trading Corp.</td><td>₱3,500.00</td><td class="td-muted">REF-2026-0421</td><td class="td-muted">May 27</td><td class="td-muted">L. Peñano</td></tr>
+        <tr><td class="td-primary">Cruz Hardware Store</td><td>₱2,200.00</td><td class="td-muted">REF-2026-0418</td><td class="td-muted">May 25</td><td class="td-muted">L. Peñano</td></tr>
+        <tr><td class="td-primary">Reyes Logistics</td><td>₱5,000.00</td><td class="td-muted">REF-2026-0415</td><td class="td-muted">May 24</td><td class="td-muted">L. Peñano</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ CLIENTS ══ -->
+<div id="pg-clients" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Clients</div>
+      <div class="page-subtitle">148 total</div>
+    </div>
+    <button class="btn btn-primary" onclick="showPage('client-create')">+ New Client</button>
+  </div>
+  <div class="section-card">
+    <div class="toolbar">
+      <input class="toolbar-input" placeholder="Search business name…" />
+      <select class="toolbar-select">
+        <option>All statuses</option><option>Active</option><option>Overdue</option><option>Suspended</option><option>Inactive</option>
+      </select>
+      <select class="toolbar-select">
+        <option>All accountants</option><option>Maria Santos</option><option>Juan Dela Cruz</option><option>Ana Reyes</option><option>Carlos Bautista</option><option>Liza Fernandez</option><option>Roberto Sy</option>
+      </select>
+      <div class="toolbar-spacer"></div>
+      <button class="btn btn-outline btn-sm">Export CSV</button>
+    </div>
+    <table class="table">
+      <thead><tr><th>Business Name</th><th>Accountant</th><th>Plan</th><th>VAT</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>
+        <tr onclick="showPage('client-detail')"><td class="td-primary">ABC Trading Corp.</td><td>Maria Santos</td><td class="td-muted">Growth</td><td class="td-muted">VAT</td><td><span class="badge b-green">Active</span></td><td class="td-muted">Jan 12, 2026</td></tr>
+        <tr onclick="showPage('client-detail')"><td class="td-primary">Santos Bakery Inc.</td><td>Juan Dela Cruz</td><td class="td-muted">Starter</td><td class="td-muted">Non-VAT</td><td><span class="badge b-yellow">Overdue</span></td><td class="td-muted">Mar 3, 2026</td></tr>
+        <tr onclick="showPage('client-detail')"><td class="td-primary">Reyes Logistics</td><td>Maria Santos</td><td class="td-muted">Premium</td><td class="td-muted">VAT</td><td><span class="badge b-orange">Suspended</span></td><td class="td-muted">Apr 18, 2026</td></tr>
+        <tr onclick="showPage('client-detail')"><td class="td-primary">Cruz Hardware Store</td><td>Ana Reyes</td><td class="td-muted">Growth</td><td class="td-muted">Non-VAT</td><td><span class="badge b-green">Active</span></td><td class="td-muted">May 2, 2026</td></tr>
+        <tr onclick="showPage('client-detail')"><td class="td-primary">Lim's General Merchandise</td><td>Carlos Bautista</td><td class="td-muted">Starter</td><td class="td-muted">Non-VAT</td><td><span class="badge b-green">Active</span></td><td class="td-muted">May 10, 2026</td></tr>
+        <tr onclick="showPage('client-detail')"><td class="td-primary">Dela Cruz Poultry Farm</td><td>Liza Fernandez</td><td class="td-muted">Growth</td><td class="td-muted">VAT</td><td><span class="badge b-gray">Inactive</span></td><td class="td-muted">Feb 14, 2026</td></tr>
+        <tr onclick="showPage('client-detail')"><td class="td-primary">Gonzales Auto Parts</td><td>Roberto Sy</td><td class="td-muted">Premium</td><td class="td-muted">VAT</td><td><span class="badge b-green">Active</span></td><td class="td-muted">Jan 28, 2026</td></tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+      <div class="pagination-info">Showing 1–7 of 148</div>
+      <div class="pagination-btns">
+        <div class="pg-btn">‹</div><div class="pg-btn active">1</div><div class="pg-btn">2</div><div class="pg-btn">3</div><div class="pg-btn">…</div><div class="pg-btn">21</div><div class="pg-btn">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ACCOUNTANTS ══ -->
+<div id="pg-accountants" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Accountants</div>
+      <div class="page-subtitle">6 active · 1 pending invite</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-invite-accountant')">+ Invite Accountant</button>
+  </div>
+  <div class="section-card">
+    <table class="table">
+      <thead><tr><th>Name / Email</th><th>Clients</th><th>Open RED</th><th>Pending Entries</th><th>Joined</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr style="cursor:pointer;" onclick="showPage('accountant-detail')">
+          <td><div class="td-primary" style="color:#6366f1;">Maria Santos</div><div class="td-muted">maria@sofiabooks.ph</div></td>
+          <td>28</td>
+          <td><span class="flag-red">3</span></td>
+          <td><span class="badge b-indigo">6</span></td>
+          <td class="td-muted">Jan 12, 2024</td>
+          <td><span class="badge b-green">Active</span></td>
+          <td><button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fca5a5;" onclick="event.stopPropagation();openModal('modal-deactivate-accountant')">Deactivate</button></td>
+        </tr>
+        <tr style="cursor:pointer;" onclick="showPage('accountant-detail')">
+          <td><div class="td-primary" style="color:#6366f1;">Juan Dela Cruz</div><div class="td-muted">juan@sofiabooks.ph</div></td>
+          <td>18</td>
+          <td><span class="badge b-gray">0</span></td>
+          <td><span class="badge b-indigo">2</span></td>
+          <td class="td-muted">Feb 3, 2024</td>
+          <td><span class="badge b-green">Active</span></td>
+          <td><button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fca5a5;" onclick="event.stopPropagation();openModal('modal-deactivate-accountant')">Deactivate</button></td>
+        </tr>
+        <tr style="cursor:pointer;" onclick="showPage('accountant-detail')">
+          <td><div class="td-primary" style="color:#6366f1;">Ana Reyes</div><div class="td-muted">ana@sofiabooks.ph</div></td>
+          <td>22</td>
+          <td><span class="flag-red">2</span></td>
+          <td><span class="badge b-indigo">4</span></td>
+          <td class="td-muted">Feb 20, 2024</td>
+          <td><span class="badge b-green">Active</span></td>
+          <td><button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fca5a5;" onclick="event.stopPropagation();openModal('modal-deactivate-accountant')">Deactivate</button></td>
+        </tr>
+        <tr style="cursor:pointer;" onclick="showPage('accountant-detail')">
+          <td><div class="td-primary" style="color:#6366f1;">Carlos Bautista</div><div class="td-muted">carlos@sofiabooks.ph</div></td>
+          <td>15</td>
+          <td><span class="flag-red">1</span></td>
+          <td><span class="badge b-indigo">1</span></td>
+          <td class="td-muted">Mar 8, 2024</td>
+          <td><span class="badge b-green">Active</span></td>
+          <td><button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fca5a5;" onclick="event.stopPropagation();openModal('modal-deactivate-accountant')">Deactivate</button></td>
+        </tr>
+        <tr style="cursor:pointer;" onclick="showPage('accountant-detail')">
+          <td><div class="td-primary" style="color:#6366f1;">Liza Fernandez</div><div class="td-muted">liza@sofiabooks.ph</div></td>
+          <td>20</td>
+          <td><span class="flag-red">4</span></td>
+          <td><span class="badge b-indigo">3</span></td>
+          <td class="td-muted">Apr 1, 2024</td>
+          <td><span class="badge b-green">Active</span></td>
+          <td><button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fca5a5;" onclick="event.stopPropagation();openModal('modal-deactivate-accountant')">Deactivate</button></td>
+        </tr>
+        <tr style="cursor:pointer;" onclick="showPage('accountant-detail')">
+          <td><div class="td-primary" style="color:#6366f1;">Roberto Sy</div><div class="td-muted">roberto@sofiabooks.ph</div></td>
+          <td>12</td>
+          <td><span class="badge b-gray">0</span></td>
+          <td><span class="badge b-gray">0</span></td>
+          <td class="td-muted">May 15, 2024</td>
+          <td><span class="badge b-green">Active</span></td>
+          <td><button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#fca5a5;" onclick="event.stopPropagation();openModal('modal-deactivate-accountant')">Deactivate</button></td>
+        </tr>
+        <tr style="opacity:0.65;">
+          <td><div class="td-primary">Grace Ocampo</div><div class="td-muted">grace@sofiabooks.ph</div></td>
+          <td class="td-muted">—</td>
+          <td class="td-muted">—</td>
+          <td class="td-muted">—</td>
+          <td class="td-muted">Invited May 27</td>
+          <td><span class="badge b-yellow">Pending Invite</span></td>
+          <td><button class="btn btn-outline btn-sm">Resend</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ ACCOUNTANT DETAIL ══ -->
+<div id="pg-accountant-detail" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><a onclick="showPage('accountants')">Accountants</a> › Maria Santos</div>
+      <div class="page-title">Maria Santos</div>
+      <div class="page-subtitle">Joined Jan 12, 2024</div>
+    </div>
+  </div>
+
+  <div class="section-card" style="margin-bottom:16px;">
+    <div style="padding:20px;">
+      <div class="detail-layout">
+        <!-- Left: profile form -->
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #f3f4f6;">Accountant Information</div>
+          <div class="form-field">
+            <label class="form-label">Full Name <span class="required-star">*</span></label>
+            <input class="form-input" value="Maria Santos" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Email Address <span class="required-star">*</span></label>
+            <input class="form-input" value="maria@sofiabooks.ph" />
+          </div>
+          <button class="btn btn-primary" style="margin-top:4px;">Save Changes</button>
+        </div>
+
+        <!-- Right: sidebar -->
+        <div>
+          <!-- Status -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Account Status</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span class="badge b-green" style="font-size:12px;padding:4px 10px;">Active</span>
+              <span style="font-size:11px;color:#9ca3af;">Since Jan 12, 2024</span>
+            </div>
+            <div style="font-size:11px;color:#9ca3af;">Last login: May 28, 2026 at 8:41 AM</div>
+          </div>
+
+          <!-- Workload -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Workload</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+              <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;padding:10px 6px;">
+                <div style="font-size:20px;font-weight:800;color:#111827;line-height:1;">28</div>
+                <div style="font-size:10px;color:#9ca3af;margin-top:2px;">Clients</div>
+              </div>
+              <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:7px;padding:10px 6px;">
+                <div style="font-size:20px;font-weight:800;color:#dc2626;line-height:1;">3</div>
+                <div style="font-size:10px;color:#9ca3af;margin-top:2px;">Open RED</div>
+              </div>
+              <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:7px;padding:10px 6px;">
+                <div style="font-size:20px;font-weight:800;color:#6366f1;line-height:1;">6</div>
+                <div style="font-size:10px;color:#9ca3af;margin-top:2px;">Pending Entries</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Actions</div>
+            <div class="quick-actions">
+              <button class="btn btn-destructive btn-sm" style="text-align:left;" onclick="openModal('modal-deactivate-accountant')">✕ Deactivate Accountant</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assigned Clients -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <div class="section-card-title">Assigned Clients <span style="font-weight:400;color:#9ca3af;margin-left:6px;">28</span></div>
+      <button class="btn btn-outline btn-sm" onclick="openModal('modal-bulk-reassign')">Bulk Reassign</button>
+    </div>
+    <table class="table">
+      <thead><tr><th>Business Name</th><th>Plan</th><th>Status</th><th>Open RED</th><th>Last Activity</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="td-primary">ABC Trading Corp.</div><div class="td-muted">abc@trading.ph</div></td>
+          <td class="td-muted">Growth · VAT</td>
+          <td><span class="badge b-green">Active</span></td>
+          <td><span class="flag-red">2</span></td>
+          <td class="td-muted">May 28, 2026</td>
+          <td><button class="btn btn-outline btn-sm" onclick="showPage('client-detail')">View</button></td>
+        </tr>
+        <tr>
+          <td><div class="td-primary">Cruz General Mdse.</div><div class="td-muted">No email</div></td>
+          <td class="td-muted">Starter · Non-VAT</td>
+          <td><span class="badge b-yellow">Overdue</span></td>
+          <td><span class="badge b-gray">0</span></td>
+          <td class="td-muted">May 25, 2026</td>
+          <td><button class="btn btn-outline btn-sm" onclick="showPage('client-detail')">View</button></td>
+        </tr>
+        <tr>
+          <td><div class="td-primary">Santos Hardware</div><div class="td-muted">santos@hardware.ph</div></td>
+          <td class="td-muted">Premium · VAT</td>
+          <td><span class="badge b-green">Active</span></td>
+          <td><span class="flag-red">1</span></td>
+          <td class="td-muted">May 27, 2026</td>
+          <td><button class="btn btn-outline btn-sm" onclick="showPage('client-detail')">View</button></td>
+        </tr>
+        <tr>
+          <td><div class="td-primary">Dela Cruz Bakery</div><div class="td-muted">bakery@delacruzbakery.ph</div></td>
+          <td class="td-muted">Starter · Non-VAT</td>
+          <td><span class="badge b-red">Suspended</span></td>
+          <td><span class="badge b-gray">0</span></td>
+          <td class="td-muted">May 10, 2026</td>
+          <td><button class="btn btn-outline btn-sm" onclick="showPage('client-detail')">View</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+      <div class="pagination-info">Showing 1–4 of 28</div>
+      <div class="pagination-btns"><div class="pg-btn">‹</div><div class="pg-btn active">1</div><div class="pg-btn">2</div><div class="pg-btn">3</div><div class="pg-btn">›</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BILLING ══ -->
+<div id="pg-billing" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Billing</div>
+      <div class="page-subtitle">All payment records</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-payment')">+ Receive Payment</button>
+  </div>
+  <div class="section-card">
+    <div class="toolbar">
+      <select class="toolbar-select" style="width:180px;">
+        <option>All clients</option><option>ABC Trading Corp.</option><option>Santos Bakery Inc.</option><option>Cruz Hardware Store</option>
+      </select>
+      <input type="date" class="toolbar-input" value="2026-05-01" style="width:130px;" />
+      <span style="font-size:12px;color:#9ca3af;">–</span>
+      <input type="date" class="toolbar-input" value="2026-05-31" style="width:130px;" />
+      <div class="toolbar-spacer"></div>
+      <button class="btn btn-outline btn-sm">Export CSV</button>
+    </div>
+    <table class="table">
+      <thead><tr><th>Client</th><th>Amount</th><th>Date Received</th><th>Ref No.</th><th>Recorded By</th></tr></thead>
+      <tbody>
+        <tr><td class="td-primary">ABC Trading Corp.</td><td style="font-weight:600;">₱3,500.00</td><td class="td-muted">May 27, 2026</td><td class="td-muted">GCash-0421</td><td class="td-muted">L. Peñano</td></tr>
+        <tr><td class="td-primary">Cruz Hardware Store</td><td style="font-weight:600;">₱2,200.00</td><td class="td-muted">May 25, 2026</td><td class="td-muted">BDO-0418</td><td class="td-muted">L. Peñano</td></tr>
+        <tr><td class="td-primary">Reyes Logistics</td><td style="font-weight:600;">₱5,000.00</td><td class="td-muted">May 24, 2026</td><td class="td-muted">GCash-0415</td><td class="td-muted">L. Peñano</td></tr>
+        <tr><td class="td-primary">Gonzales Auto Parts</td><td style="font-weight:600;">₱3,500.00</td><td class="td-muted">May 20, 2026</td><td class="td-muted">Maya-0410</td><td class="td-muted">L. Peñano</td></tr>
+        <tr><td class="td-primary">Santos Bakery Inc.</td><td style="font-weight:600;">₱1,800.00</td><td class="td-muted">May 15, 2026</td><td class="td-muted">Cash-0401</td><td class="td-muted">L. Peñano</td></tr>
+        <tr><td class="td-primary">Lim's General Merchandise</td><td style="font-weight:600;">₱2,200.00</td><td class="td-muted">May 10, 2026</td><td class="td-muted">GCash-0398</td><td class="td-muted">L. Peñano</td></tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+      <div class="pagination-info">Showing 1–6 of 42</div>
+      <div class="pagination-btns">
+        <div class="pg-btn">‹</div><div class="pg-btn active">1</div><div class="pg-btn">2</div><div class="pg-btn">3</div><div class="pg-btn">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUEUE ══ -->
+<div id="pg-queue" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Queue</div>
+      <div class="page-subtitle">12 items — <span style="color:#dc2626;font-weight:600;">3 RED</span> · <span style="color:#d97706;font-weight:600;">4 YELLOW</span> · <span style="color:#16a34a;font-weight:600;">5 GREEN</span></div>
+    </div>
+    <button class="btn btn-primary" id="queue-approve-btn" onclick="approveSelected()">Approve Selected (5)</button>
+  </div>
+  <div class="section-card">
+    <div class="toolbar">
+      <select class="toolbar-select" style="width:180px;">
+        <option>All clients</option><option>ABC Trading Corp.</option><option>Cruz Hardware Store</option><option>Santos Bakery Inc.</option>
+      </select>
+      <select class="toolbar-select">
+        <option>All flags</option><option>🔴 RED</option><option>🟡 YELLOW</option><option>🟢 GREEN</option>
+      </select>
+      <select class="toolbar-select">
+        <option>All accountants</option><option>Maria Santos</option><option>Juan Dela Cruz</option>
+      </select>
+      <div class="toolbar-spacer"></div>
+    </div>
+    <table class="table" id="queue-table">
+      <thead>
+        <tr>
+          <th style="width:36px;"></th>
+          <th>Client</th>
+          <th>Document</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Uploaded</th>
+          <th>Accountant</th>
+          <th>Flag</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ── RED GROUP ── -->
+        <tr class="queue-group-hd queue-group-red">
+          <td colspan="9">
+            <span class="flag-red" style="font-size:11px;">⚠ RED — 3 items</span>
+            <span style="font-size:11px;color:#9ca3af;margin-left:8px;">Must be reviewed individually · not eligible for batch approval</span>
+          </td>
+        </tr>
+        <tr style="border-left:3px solid #ef4444;">
+          <td></td>
+          <td><div class="td-primary">ABC Trading Corp.</div></td>
+          <td><div style="font-size:12px;">OR-2026-0441-B.jpg</div></td>
+          <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+          <td style="font-size:12px;font-weight:600;">₱14,800.00</td>
+          <td class="td-muted">May 25</td>
+          <td class="td-muted">Maria Santos</td>
+          <td><div><span class="flag-red">⚠ RED</span><div style="font-size:10px;color:#dc2626;margin-top:2px;">Spending spike</div></div></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr style="border-left:3px solid #ef4444;">
+          <td></td>
+          <td><div class="td-primary">Cruz Hardware Store</div></td>
+          <td><div style="font-size:12px;">INV-2026-0112.pdf</div></td>
+          <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+          <td style="font-size:12px;font-weight:600;">₱3,200.00</td>
+          <td class="td-muted">May 26</td>
+          <td class="td-muted">Ana Reyes</td>
+          <td><div><span class="flag-red">⚠ RED</span><div style="font-size:10px;color:#dc2626;margin-top:2px;">Possible duplicate</div></div></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr style="border-left:3px solid #ef4444;">
+          <td></td>
+          <td><div class="td-primary">Reyes Logistics</div></td>
+          <td><div style="font-size:12px;">OR-2026-0309.jpg</div></td>
+          <td><span class="badge" style="background:#dcfce7;color:#166534;font-size:10px;">Income</span></td>
+          <td style="font-size:12px;font-weight:600;">₱22,000.00</td>
+          <td class="td-muted">May 27</td>
+          <td class="td-muted">Liza Fernandez</td>
+          <td><div><span class="flag-red">⚠ RED</span><div style="font-size:10px;color:#dc2626;margin-top:2px;">VAT mismatch</div></div></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+
+        <!-- ── YELLOW GROUP ── -->
+        <tr class="queue-group-hd queue-group-yellow">
+          <td colspan="9">
+            <span class="flag-yellow" style="font-size:11px;">● YELLOW — 4 items</span>
+            <span style="font-size:11px;color:#9ca3af;margin-left:8px;">Must be reviewed individually · not eligible for batch approval</span>
+          </td>
+        </tr>
+        <tr style="border-left:3px solid #f59e0b;">
+          <td></td>
+          <td><div class="td-primary">Santos Bakery Inc.</div></td>
+          <td><div style="font-size:12px;">OR-2026-0205.jpg</div></td>
+          <td><span class="badge" style="background:#dcfce7;color:#166534;font-size:10px;">Income</span></td>
+          <td style="font-size:12px;font-weight:600;">₱4,500.00</td>
+          <td class="td-muted">May 27</td>
+          <td class="td-muted">Juan Dela Cruz</td>
+          <td><div><span class="flag-yellow">● YEL</span><div style="font-size:10px;color:#d97706;margin-top:2px;">Low AI confidence</div></div></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr style="border-left:3px solid #f59e0b;">
+          <td></td>
+          <td><div class="td-primary">Gonzales Auto Parts</div></td>
+          <td><div style="font-size:12px;">OR-2026-0388.jpg</div></td>
+          <td><span class="badge" style="background:#dcfce7;color:#166534;font-size:10px;">Income</span></td>
+          <td style="font-size:12px;font-weight:600;">₱9,200.00</td>
+          <td class="td-muted">May 27</td>
+          <td class="td-muted">Roberto Sy</td>
+          <td><div><span class="flag-yellow">● YEL</span><div style="font-size:10px;color:#d97706;margin-top:2px;">No receipt</div></div></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr style="border-left:3px solid #f59e0b;">
+          <td></td>
+          <td><div class="td-primary">Dela Cruz Bakery</div></td>
+          <td><div style="font-size:12px;">IMG_20260526.jpg</div></td>
+          <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+          <td style="font-size:12px;font-weight:600;">₱1,050.00</td>
+          <td class="td-muted">May 26</td>
+          <td class="td-muted">Maria Santos</td>
+          <td><div><span class="flag-yellow">● YEL</span><div style="font-size:10px;color:#d97706;margin-top:2px;">OCR failed</div></div></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr style="border-left:3px solid #f59e0b;">
+          <td></td>
+          <td><div class="td-primary">Lim Auto Parts</div></td>
+          <td><div style="font-size:12px;">REC-2026-0071.pdf</div></td>
+          <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+          <td style="font-size:12px;font-weight:600;">₱780.00</td>
+          <td class="td-muted">May 28</td>
+          <td class="td-muted">Carlos Bautista</td>
+          <td><div><span class="flag-yellow">● YEL</span><div style="font-size:10px;color:#d97706;margin-top:2px;">Low AI confidence</div></div></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+
+        <!-- ── GREEN GROUP ── -->
+        <tr class="queue-group-hd queue-group-green">
+          <td colspan="9">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <span class="flag-green" style="font-size:11px;">✓ GREEN — 5 items</span>
+                <span style="font-size:11px;color:#9ca3af;margin-left:8px;">Pre-selected for batch approval</span>
+              </div>
+              <div style="font-size:11px;color:#6366f1;cursor:pointer;display:flex;gap:10px;">
+                <span onclick="selectAllGreen()">Select all</span>
+                <span style="color:#d1d5db;">|</span>
+                <span onclick="deselectAllGreen()">Deselect all</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr class="queue-green-row" style="border-left:3px solid #16a34a;background:#f0fdf4;">
+          <td style="text-align:center;"><input type="checkbox" class="queue-cb" checked onchange="updateQueueApprove()" /></td>
+          <td><div class="td-primary">Lim's General Merchandise</div></td>
+          <td><div style="font-size:12px;">REC-2026-0044.jpg</div></td>
+          <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+          <td style="font-size:12px;font-weight:600;">₱1,200.00</td>
+          <td class="td-muted">May 28</td>
+          <td class="td-muted">Carlos Bautista</td>
+          <td><span class="flag-green">✓ GRN</span></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr class="queue-green-row" style="border-left:3px solid #16a34a;background:#f0fdf4;">
+          <td style="text-align:center;"><input type="checkbox" class="queue-cb" checked onchange="updateQueueApprove()" /></td>
+          <td><div class="td-primary">ABC Trading Corp.</div></td>
+          <td><div style="font-size:12px;">OR-2026-0441.jpg</div></td>
+          <td><span class="badge" style="background:#dcfce7;color:#166534;font-size:10px;">Income</span></td>
+          <td style="font-size:12px;font-weight:600;">₱6,800.00</td>
+          <td class="td-muted">May 27</td>
+          <td class="td-muted">Maria Santos</td>
+          <td><span class="flag-green">✓ GRN</span></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr class="queue-green-row" style="border-left:3px solid #16a34a;background:#f0fdf4;">
+          <td style="text-align:center;"><input type="checkbox" class="queue-cb" checked onchange="updateQueueApprove()" /></td>
+          <td><div class="td-primary">Santos Bakery Inc.</div></td>
+          <td><div style="font-size:12px;">OR-2026-0199.jpg</div></td>
+          <td><span class="badge" style="background:#dcfce7;color:#166534;font-size:10px;">Income</span></td>
+          <td style="font-size:12px;font-weight:600;">₱2,350.00</td>
+          <td class="td-muted">May 26</td>
+          <td class="td-muted">Juan Dela Cruz</td>
+          <td><span class="flag-green">✓ GRN</span></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr class="queue-green-row" style="border-left:3px solid #16a34a;background:#f0fdf4;">
+          <td style="text-align:center;"><input type="checkbox" class="queue-cb" checked onchange="updateQueueApprove()" /></td>
+          <td><div class="td-primary">Cruz Hardware Store</div></td>
+          <td><div style="font-size:12px;">REC-2026-0088.jpg</div></td>
+          <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+          <td style="font-size:12px;font-weight:600;">₱540.00</td>
+          <td class="td-muted">May 25</td>
+          <td class="td-muted">Ana Reyes</td>
+          <td><span class="flag-green">✓ GRN</span></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+        <tr class="queue-green-row" style="border-left:3px solid #16a34a;background:#f0fdf4;">
+          <td style="text-align:center;"><input type="checkbox" class="queue-cb" checked onchange="updateQueueApprove()" /></td>
+          <td><div class="td-primary">Gonzales Auto Parts</div></td>
+          <td><div style="font-size:12px;">OR-2026-0401.jpg</div></td>
+          <td><span class="badge" style="background:#dcfce7;color:#166534;font-size:10px;">Income</span></td>
+          <td style="font-size:12px;font-weight:600;">₱3,100.00</td>
+          <td class="td-muted">May 24</td>
+          <td class="td-muted">Roberto Sy</td>
+          <td><span class="flag-green">✓ GRN</span></td>
+          <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openModal('modal-review')">Review</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ ADJUSTING ENTRIES ══ -->
+<div id="pg-entries" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Adjusting Entries</div>
+      <div class="page-subtitle">Review accountant submissions and create your own</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('modal-new-entry')">+ New Entry</button>
+  </div>
+
+  <div class="entry-filter-tabs">
+    <button class="efilter-btn active">Pending <span style="background:#fbbf24;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:4px;">5</span></button>
+    <button class="efilter-btn">Approved</button>
+    <button class="efilter-btn">Rejected</button>
+    <button class="efilter-btn">All</button>
+  </div>
+
+  <div class="section-card">
+    <div class="toolbar">
+      <select class="toolbar-select" style="width:160px;"><option>All accountants</option><option>Maria Santos</option><option>Ana Reyes</option></select>
+      <select class="toolbar-select" style="width:180px;"><option>All clients</option><option>ABC Trading Corp.</option></select>
+      <div class="toolbar-spacer"></div>
+    </div>
+    <table class="table">
+      <thead><tr><th>Date</th><th>Client</th><th>Accountant</th><th>Memo</th><th>Type</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-muted">May 28</td>
+          <td class="td-primary">ABC Trading Corp.</td>
+          <td class="td-muted">Maria Santos</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">Reclassify May 15 expense from Supplies to Utilities</td>
+          <td><span class="badge b-indigo">Reclassification</span></td>
+          <td><span class="badge es-pending">Pending</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openModal('modal-entry-review')">Review</button></td>
+        </tr>
+        <tr>
+          <td class="td-muted">May 27</td>
+          <td class="td-primary">Santos Bakery Inc.</td>
+          <td class="td-muted">Juan Dela Cruz</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">Reverse incorrect double-entry for OR-2026-0199</td>
+          <td><span class="badge b-indigo">Reversal</span></td>
+          <td><span class="badge es-pending">Pending</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openModal('modal-entry-review')">Review</button></td>
+        </tr>
+        <tr>
+          <td class="td-muted">May 26</td>
+          <td class="td-primary">Cruz Hardware Store</td>
+          <td class="td-muted">Ana Reyes</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">Bank service charge for May — not captured by receipt</td>
+          <td><span class="badge b-indigo">Adjustment</span></td>
+          <td><span class="badge es-pending">Pending</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openModal('modal-entry-review')">Review</button></td>
+        </tr>
+        <tr>
+          <td class="td-muted">May 25</td>
+          <td class="td-primary">Gonzales Auto Parts</td>
+          <td class="td-muted">Roberto Sy</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">Opening balance adjustment for Cash on Hand</td>
+          <td><span class="badge b-indigo">Adjustment</span></td>
+          <td><span class="badge es-pending">Pending</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openModal('modal-entry-review')">Review</button></td>
+        </tr>
+        <tr>
+          <td class="td-muted">May 24</td>
+          <td class="td-primary">Lim's General Merchandise</td>
+          <td class="td-muted">Carlos Bautista</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">Correct May 10 petty cash — wrong account used</td>
+          <td><span class="badge b-indigo">Reclassification</span></td>
+          <td><span class="badge es-pending">Pending</span></td>
+          <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openModal('modal-entry-review')">Review</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+      <div class="pagination-info">Showing 1–5 of 5 pending</div>
+      <div class="pagination-btns">
+        <div class="pg-btn active">1</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REPORTS ══ -->
+<div id="pg-reports" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Reports</div>
+      <div class="page-subtitle">Generate reports and BIR books for any client</div>
+    </div>
+  </div>
+
+  <div class="section-card" style="padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+    <span style="font-size:12px;font-weight:600;color:#374151;white-space:nowrap;">Select client</span>
+    <select class="toolbar-select" style="width:260px;font-size:13px;padding:7px 10px;">
+      <option>ABC Trading Corp. — VAT</option>
+      <option>Santos Bakery Inc. — Non-VAT</option>
+      <option>Cruz Hardware Store — Non-VAT</option>
+      <option>Gonzales Auto Parts — VAT</option>
+      <option>Lim's General Merchandise — Non-VAT</option>
+    </select>
+    <span style="font-size:11px;color:#9ca3af;">Assigned to: Maria Santos</span>
+  </div>
+
+  <div class="report-hub">
+    <div class="report-card">
+      <div class="report-card-icon">📊</div>
+      <div class="report-card-title">Income Statement</div>
+      <div class="report-card-desc">Compare total income against expenses for any period. Shows net profit or loss.</div>
+      <div class="report-card-tags">
+        <span class="report-card-tag">Profit &amp; Loss</span>
+        <span class="report-card-tag">Any date range</span>
+        <span class="report-card-tag">PDF export</span>
+      </div>
+      <div class="report-card-cta">View Report →</div>
+    </div>
+    <div class="report-card">
+      <div class="report-card-icon">🧾</div>
+      <div class="report-card-title">Expense Breakdown</div>
+      <div class="report-card-desc">See where money went, grouped by expense category with percentage totals.</div>
+      <div class="report-card-tags">
+        <span class="report-card-tag">By category</span>
+        <span class="report-card-tag">Any date range</span>
+        <span class="report-card-tag">PDF export</span>
+      </div>
+      <div class="report-card-cta">View Report →</div>
+    </div>
+    <div class="report-card">
+      <div class="report-card-icon">📚</div>
+      <div class="report-card-title">BIR Books</div>
+      <div class="report-card-desc">Cash books and journals formatted for BIR loose-leaf submission.</div>
+      <div class="report-card-tags">
+        <span class="report-card-tag">CRB</span>
+        <span class="report-card-tag">CDB</span>
+        <span class="report-card-tag">GJ</span>
+        <span class="report-card-tag">GL</span>
+        <span class="report-card-tag">PDF export</span>
+      </div>
+      <div class="report-card-cta">Open Books →</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS ══ -->
+<div id="pg-settings" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Settings</div>
+      <div class="page-subtitle">Your admin account details</div>
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f3f4f6;">Profile</div>
+    <div class="settings-field">
+      <label class="settings-label">Full Name</label>
+      <input class="settings-input" value="Lawrence Peñano" />
+    </div>
+    <div class="settings-field">
+      <label class="settings-label">Email</label>
+      <input class="settings-input" value="penanolawrence@gmail.com" />
+    </div>
+    <div class="settings-field">
+      <label class="settings-label">Mobile</label>
+      <input class="settings-input" value="+63 917 000 0000" />
+      <div class="settings-hint">Used for SMS notifications and login</div>
+    </div>
+    <div class="settings-field">
+      <label class="settings-label">Role</label>
+      <input class="settings-input" value="Admin" style="background:#f9fafb;color:#9ca3af;" readonly />
+      <div class="settings-hint">Admin role is developer-managed and cannot be changed here</div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:4px;">Save Changes</button>
+  </div>
+</div>
+
+<!-- ══ CLIENT DETAIL ══ -->
+<div id="pg-client-detail" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><a onclick="showPage('clients')">Clients</a> › ABC Trading Corp.</div>
+      <div class="page-title">ABC Trading Corp.</div>
+      <div class="page-subtitle">Client since Jan 12, 2026 · Growth Plan · VAT</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="tabs">
+      <div class="tab active" onclick="showClientTab('overview',this)">Overview</div>
+      <div class="tab" onclick="showClientTab('documents',this)">Documents</div>
+      <div class="tab" onclick="showClientTab('coa',this)">Chart of Accounts</div>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div id="ctab-overview" style="padding:20px;">
+      <div class="detail-layout">
+        <!-- Left: editable form -->
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #f3f4f6;">Client Information</div>
+          <div class="form-field">
+            <label class="form-label">Business Name <span class="required-star">*</span></label>
+            <input class="form-input" value="ABC Trading Corp." />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-field">
+              <label class="form-label">Mobile <span class="required-star">*</span></label>
+              <input class="form-input" value="+63 917 555 1234" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">Email</label>
+              <input class="form-input" value="abc@trading.ph" />
+              <div class="form-hint">Optional — leave blank if client has no email</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-field">
+              <label class="form-label">Contact Person</label>
+              <input class="form-input" value="Juan dela Cruz" />
+            </div>
+            <div class="form-field">
+              <label class="form-label">TIN</label>
+              <input class="form-input" value="123-456-789-000" />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Username</label>
+            <input class="form-input" value="abc_trading_001" readonly />
+            <div class="form-hint">System-generated — cannot be changed</div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:4px;">Save Changes</button>
+        </div>
+
+        <!-- Right: sidebar -->
+        <div>
+          <!-- Status -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Account Status</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <span class="badge b-green" style="font-size:12px;padding:4px 10px;">Active</span>
+              <span style="font-size:11px;color:#9ca3af;">Plan: Growth · VAT</span>
+            </div>
+            <div style="font-size:11px;color:#9ca3af;">Last login: May 28, 2026 at 9:14 AM</div>
+          </div>
+
+          <!-- Accountant -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Assigned Accountant</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#111827;">Maria Santos</div>
+                <div style="font-size:11px;color:#9ca3af;">maria@sofiabooks.ph</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openModal('modal-reassign')">Reassign</button>
+            </div>
+          </div>
+
+          <!-- Payment -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Billing</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div>
+                <div style="font-size:11px;color:#9ca3af;">Last payment</div>
+                <div style="font-size:13px;font-weight:600;color:#111827;">₱3,500.00 · May 27</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openModal('modal-payment')">Receive Payment</button>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Quick Actions</div>
+            <div class="quick-actions">
+              <button class="btn btn-warning btn-sm" style="text-align:left;">⏸ Mark as Overdue</button>
+              <button class="btn btn-warning btn-sm" style="text-align:left;">🔒 Suspend Client</button>
+              <button class="btn btn-outline btn-sm" style="text-align:left;">🔗 Reset Access Link</button>
+              <button class="btn btn-destructive btn-sm" style="text-align:left;">✕ Deactivate Client</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTS TAB -->
+    <div id="ctab-documents" style="display:none;">
+      <div class="toolbar">
+        <select class="toolbar-select"><option>All statuses</option><option>Processing</option><option>In Review</option><option>Posted</option><option>Returned</option></select>
+        <select class="toolbar-select"><option>All types</option><option>Income</option><option>Expense</option></select>
+        <input type="date" class="toolbar-input" value="2026-05-01" style="width:130px;" />
+        <span style="font-size:12px;color:#9ca3af;">–</span>
+        <input type="date" class="toolbar-input" value="2026-05-31" style="width:130px;" />
+      </div>
+      <table class="table">
+        <thead><tr><th>Filename</th><th>Type</th><th>Amount</th><th>Merchant</th><th>Uploaded</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="td-primary">OR-2026-0441.jpg</td><td><span class="badge b-green">Income</span></td><td style="font-size:12px;font-weight:500;">₱1,200.00</td><td class="td-muted">ABC Customer #44</td><td class="td-muted">May 27</td><td><span class="badge b-green">Posted</span></td></tr>
+          <tr><td class="td-primary">INV-2026-0089.pdf</td><td><span class="badge b-red">Expense</span></td><td style="font-size:12px;font-weight:500;">₱3,200.00</td><td class="td-muted">Meralco</td><td class="td-muted">May 26</td><td><span class="badge b-blue">Processing</span></td></tr>
+          <tr><td class="td-primary">OR-2026-0441-B.jpg</td><td><span class="badge b-red">Expense</span></td><td style="font-size:12px;font-weight:500;">₱14,800.00</td><td class="td-muted">ABC Suppliers</td><td class="td-muted">May 25</td><td><span class="badge b-yellow">In Review</span></td></tr>
+          <tr><td class="td-primary">OR-2026-0391.jpg</td><td><span class="badge b-green">Income</span></td><td class="td-muted">—</td><td class="td-muted">Not detected</td><td class="td-muted">May 24</td><td><span class="badge b-red">Returned</span></td></tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <div class="pagination-info">Showing 1–4 of 24</div>
+        <div class="pagination-btns"><div class="pg-btn">‹</div><div class="pg-btn active">1</div><div class="pg-btn">2</div><div class="pg-btn">3</div><div class="pg-btn">›</div></div>
+      </div>
+    </div>
+
+    <!-- CHART OF ACCOUNTS TAB -->
+    <div id="ctab-coa" style="display:none;padding-bottom:16px;">
+      <!-- Income -->
+      <div class="coa-section-hd" onclick="toggleCoaSection(this)">
+        <span><span class="coa-chevron">▼</span>Income Accounts</span>
+        <button class="add-account-btn" style="margin:0;border-style:dashed;" onclick="event.stopPropagation()">+ Add Account</button>
+      </div>
+      <div class="coa-body">
+        <div class="coa-row"><span class="coa-code">4001</span><input class="coa-name-input" value="Sales Revenue" /><button class="coa-del" title="Remove">✕</button></div>
+        <div class="coa-row"><span class="coa-code">4002</span><input class="coa-name-input" value="Service Revenue" /><button class="coa-del" title="Remove">✕</button></div>
+        <div class="coa-row"><span class="coa-code">4003</span><input class="coa-name-input" value="Other Income" /><button class="coa-del" title="Remove">✕</button></div>
+      </div>
+
+      <!-- Expenses -->
+      <div class="coa-section-hd" style="margin-top:4px;" onclick="toggleCoaSection(this)">
+        <span><span class="coa-chevron">▼</span>Expense Accounts</span>
+        <button class="add-account-btn" style="margin:0;border-style:dashed;" onclick="event.stopPropagation()">+ Add Account</button>
+      </div>
+      <div class="coa-body">
+        <div class="coa-row"><span class="coa-code">5001</span><input class="coa-name-input" value="Utilities Expense" /><button class="coa-del">✕</button></div>
+        <div class="coa-row"><span class="coa-code">5002</span><input class="coa-name-input" value="Supplies Expense" /><button class="coa-del">✕</button></div>
+        <div class="coa-row"><span class="coa-code">5003</span><input class="coa-name-input" value="Rent Expense" /><button class="coa-del">✕</button></div>
+        <div class="coa-row"><span class="coa-code">5004</span><input class="coa-name-input" value="Transportation Expense" /><button class="coa-del">✕</button></div>
+        <div class="coa-row"><span class="coa-code">5005</span><input class="coa-name-input" value="Meals and Entertainment" /><button class="coa-del">✕</button></div>
+        <div class="coa-row"><span class="coa-code">5006</span><input class="coa-name-input" value="Communication Expense" /><button class="coa-del">✕</button></div>
+        <div class="coa-row"><span class="coa-code">5007</span><input class="coa-name-input" value="Taxes and Licenses" /><button class="coa-del">✕</button></div>
+        <div class="coa-row"><span class="coa-code">5008</span><input class="coa-name-input" value="Other Expense" /><button class="coa-del">✕</button></div>
+      </div>
+
+      <!-- Cash (read-only) -->
+      <div class="coa-section-hd" style="margin-top:4px;" onclick="toggleCoaSection(this)">
+        <span><span class="coa-chevron">▼</span>Cash / Payment Accounts</span>
+        <span style="font-size:10px;color:#d1d5db;">System managed</span>
+      </div>
+      <div class="coa-body">
+        <div class="coa-row"><span class="coa-code">1001</span><input class="coa-name-input" value="Cash on Hand" readonly /><span class="coa-sys-label">🔒</span></div>
+        <div class="coa-row"><span class="coa-code">1002</span><input class="coa-name-input" value="GCash" readonly /><span class="coa-sys-label">🔒</span></div>
+        <div class="coa-row"><span class="coa-code">1003</span><input class="coa-name-input" value="Maya" readonly /><span class="coa-sys-label">🔒</span></div>
+        <div class="coa-row"><span class="coa-code">1004</span><input class="coa-name-input" value="Bank" readonly /><span class="coa-sys-label">🔒</span></div>
+      </div>
+
+      <!-- VAT (read-only, VAT clients only) -->
+      <div class="coa-section-hd" style="margin-top:4px;" onclick="toggleCoaSection(this)">
+        <span><span class="coa-chevron">▼</span>VAT Accounts</span>
+        <span style="font-size:10px;color:#d1d5db;">System managed · VAT clients only</span>
+      </div>
+      <div class="coa-body">
+        <div class="coa-row"><span class="coa-code">1101</span><input class="coa-name-input" value="Input VAT" readonly /><span class="coa-sys-label">🔒</span></div>
+        <div class="coa-row"><span class="coa-code">2101</span><input class="coa-name-input" value="Output VAT" readonly /><span class="coa-sys-label">🔒</span></div>
+      </div>
+
+      <div style="padding:12px 16px;border-top:1px solid #f3f4f6;background:#fafafa;display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary">Save Chart of Accounts</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CREATE CLIENT ══ -->
+<div id="pg-client-create" style="display:none;">
+  <div class="page-header">
+    <div>
+      <div class="breadcrumb"><a onclick="showPage('clients')">Clients</a> › New Client</div>
+      <div class="page-title">New Client</div>
+    </div>
+  </div>
+
+  <!-- Form state -->
+  <div id="create-form-state">
+    <div class="create-form">
+      <div class="create-form-grid">
+        <div class="form-row-full form-field">
+          <label class="form-label">Business Name <span class="required-star">*</span></label>
+          <input class="form-input" placeholder="e.g. ABC Trading Corp." />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Mobile <span class="required-star">*</span></label>
+          <input class="form-input" placeholder="+63 9XX XXX XXXX" />
+          <div class="form-hint">Required — used for login and SMS</div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Email</label>
+          <input class="form-input" placeholder="Optional" />
+          <div class="form-hint">Invite link sent automatically if provided</div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Contact Person</label>
+          <input class="form-input" placeholder="Owner's name" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">TIN</label>
+          <input class="form-input" placeholder="123-456-789-000" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Plan <span class="required-star">*</span></label>
+          <select class="form-input"><option>Starter</option><option selected>Growth</option><option>Premium</option></select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">VAT Registration <span class="required-star">*</span></label>
+          <select class="form-input"><option>Non-VAT</option><option>VAT</option></select>
+        </div>
+        <div class="form-row-full form-field">
+          <label class="form-label">Assign Accountant <span class="required-star">*</span></label>
+          <select class="form-input">
+            <option>— Select accountant —</option>
+            <option>Maria Santos</option><option>Juan Dela Cruz</option><option>Ana Reyes</option>
+            <option>Carlos Bautista</option><option>Liza Fernandez</option><option>Roberto Sy</option>
+            <option>Assign to myself (Admin)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:20px;">
+        <button class="btn btn-outline" onclick="showPage('clients')">Cancel</button>
+        <button class="btn btn-primary" onclick="showCreateSuccess()">Create Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success state (hidden until form submitted) -->
+  <div id="create-success-state" style="display:none;">
+    <div class="success-screen">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Client Created!</div>
+      <div class="success-sub">ABC Trading Corp. has been added to the system.</div>
+
+      <div class="username-box">
+        <div class="username-label">Login username</div>
+        <div class="username-val">abc_trading_002</div>
+      </div>
+
+      <div style="text-align:left;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">Invite Link</div>
+        <div class="copy-row">
+          <input class="copy-input" value="https://app.sofiabooks.ph/setup?token=eyJhbGci..." readonly />
+          <button class="copy-btn">Copy Link</button>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:6px;">⚠️ No email provided — share this link via Viber, SMS, or in person. Expires in 30 days.</div>
+      </div>
+
+      <div class="success-actions">
+        <button class="btn btn-outline" onclick="showPage('client-create');resetCreateForm()">Create Another</button>
+        <button class="btn btn-primary" onclick="showPage('client-detail')">View Client Profile</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .page -->
+
+<!-- ══ MODAL: Reassign Accountant ══ -->
+<div class="modal-overlay" id="modal-reassign" onclick="closeModalOutside(event,'modal-reassign')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Reassign Accountant</div>
+      <div class="modal-close" onclick="closeModal('modal-reassign')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info-row">
+        <span class="modal-info-label">Client</span>
+        <span class="modal-info-value">ABC Trading Corp.</span>
+      </div>
+      <div class="modal-info-row">
+        <span class="modal-info-label">Current accountant</span>
+        <span class="modal-info-value">Maria Santos</span>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Assign to</label>
+        <select class="modal-input">
+          <option value="">— Select accountant —</option>
+          <option>Juan Dela Cruz</option>
+          <option>Ana Reyes</option>
+          <option>Carlos Bautista</option>
+          <option>Liza Fernandez</option>
+          <option>Roberto Sy</option>
+          <option>Assign to myself (Admin)</option>
+        </select>
+      </div>
+      <div class="modal-warning">
+        ⚠️ &nbsp;Maria Santos will immediately lose access to ABC Trading Corp. upon reassignment. This change is logged.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-reassign')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-reassign')">Reassign</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Bulk Reassign Clients ══ -->
+<div class="modal-overlay" id="modal-bulk-reassign" onclick="closeModalOutside(event,'modal-bulk-reassign')">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <div class="modal-title">Bulk Reassign Clients</div>
+      <div class="modal-close" onclick="closeModal('modal-bulk-reassign')">✕</div>
+    </div>
+    <div class="modal-body" style="padding-bottom:12px;">
+      <div class="modal-field" style="margin-bottom:14px;">
+        <label class="modal-label">Reassign selected clients to</label>
+        <select class="modal-input" id="bulk-reassign-target" onchange="updateBulkBtn()">
+          <option value="">— Select accountant —</option>
+          <option>Juan Dela Cruz (18 clients)</option>
+          <option>Ana Reyes (22 clients)</option>
+          <option>Carlos Bautista (15 clients)</option>
+          <option>Liza Fernandez (20 clients)</option>
+          <option>Roberto Sy (12 clients)</option>
+          <option>Assign to myself (Admin)</option>
+        </select>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:600;color:#374151;">Clients <span style="font-weight:400;color:#9ca3af;">(28)</span></div>
+        <div style="font-size:11px;color:#6366f1;cursor:pointer;display:flex;gap:10px;">
+          <span onclick="selectAllBulk()">Select all</span>
+          <span style="color:#d1d5db;">|</span>
+          <span onclick="deselectAllBulk()">Deselect all</span>
+        </div>
+      </div>
+
+      <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;max-height:280px;overflow-y:auto;" id="bulk-client-list">
+        <!-- row -->
+        <label class="bulk-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;">
+          <input type="checkbox" class="bulk-cb" onchange="updateBulkBtn()" />
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;">ABC Trading Corp.</div><div style="font-size:11px;color:#9ca3af;">Growth · VAT</div></div>
+          <span class="badge b-green" style="font-size:10px;">Active</span>
+        </label>
+        <label class="bulk-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;">
+          <input type="checkbox" class="bulk-cb" onchange="updateBulkBtn()" />
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;">Cruz General Mdse.</div><div style="font-size:11px;color:#9ca3af;">Starter · Non-VAT</div></div>
+          <span class="badge b-yellow" style="font-size:10px;">Overdue</span>
+        </label>
+        <label class="bulk-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;">
+          <input type="checkbox" class="bulk-cb" onchange="updateBulkBtn()" />
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;">Santos Hardware</div><div style="font-size:11px;color:#9ca3af;">Premium · VAT</div></div>
+          <span class="badge b-green" style="font-size:10px;">Active</span>
+        </label>
+        <label class="bulk-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;">
+          <input type="checkbox" class="bulk-cb" onchange="updateBulkBtn()" />
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;">Dela Cruz Bakery</div><div style="font-size:11px;color:#9ca3af;">Starter · Non-VAT</div></div>
+          <span class="badge b-red" style="font-size:10px;">Suspended</span>
+        </label>
+        <label class="bulk-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;">
+          <input type="checkbox" class="bulk-cb" onchange="updateBulkBtn()" />
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;">Reyes Catering Services</div><div style="font-size:11px;color:#9ca3af;">Growth · Non-VAT</div></div>
+          <span class="badge b-green" style="font-size:10px;">Active</span>
+        </label>
+        <label class="bulk-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;">
+          <input type="checkbox" class="bulk-cb" onchange="updateBulkBtn()" />
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;">Lim Auto Parts</div><div style="font-size:11px;color:#9ca3af;">Premium · VAT</div></div>
+          <span class="badge b-green" style="font-size:10px;">Active</span>
+        </label>
+        <label class="bulk-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f3f4f6;cursor:pointer;">
+          <input type="checkbox" class="bulk-cb" onchange="updateBulkBtn()" />
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;">Fernandez Pharmacy</div><div style="font-size:11px;color:#9ca3af;">Growth · VAT</div></div>
+          <span class="badge b-green" style="font-size:10px;">Active</span>
+        </label>
+        <label class="bulk-row" style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;">
+          <input type="checkbox" class="bulk-cb" onchange="updateBulkBtn()" />
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:#111827;">Gonzales Sari-Sari Store</div><div style="font-size:11px;color:#9ca3af;">Starter · Non-VAT</div></div>
+          <span class="badge b-green" style="font-size:10px;">Active</span>
+        </label>
+      </div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:7px;padding-left:2px;">Showing 8 of 28 — all 28 will be available when selecting.</div>
+
+      <div class="modal-warning" style="margin-top:12px;">
+        ⚠️ &nbsp;Maria Santos will immediately lose access to all reassigned clients. This action is logged.
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <span id="bulk-selected-count" style="font-size:12px;color:#9ca3af;align-self:center;">0 clients selected</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="closeModal('modal-bulk-reassign')">Cancel</button>
+        <button class="btn btn-primary" id="bulk-reassign-btn" disabled onclick="confirmBulkReassign()">Reassign Selected</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Receive Payment ══ -->
+<div class="modal-overlay" id="modal-payment" onclick="closeModalOutside(event,'modal-payment')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Receive Payment</div>
+      <div class="modal-close" onclick="closeModal('modal-payment')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="modal-label">Client <span class="required-star">*</span></label>
+        <select class="modal-input">
+          <option value="">— Select client —</option>
+          <option selected>ABC Trading Corp.</option>
+          <option>Cruz Hardware Store</option>
+          <option>Reyes Logistics</option>
+          <option>Gonzales Auto Parts</option>
+          <option>Santos Bakery Inc.</option>
+          <option>Lim's General Merchandise</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Amount Received <span class="required-star">*</span></label>
+        <div class="amount-wrap">
+          <div class="amount-currency">₱</div>
+          <input class="amount-input" type="text" inputmode="decimal" placeholder="0.00" />
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Date Received <span class="required-star">*</span></label>
+        <input class="modal-input" type="date" value="2026-05-28" />
+      </div>
+      <div class="modal-field" style="margin-bottom:0;">
+        <label class="modal-label">Reference Number <span class="required-star">*</span></label>
+        <input class="modal-input" type="text" placeholder="e.g. GCash ref, bank transfer ref, receipt no." />
+        <div class="modal-hint">GCash, Maya, bank transfer, or cash receipt number</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-payment')">Cancel</button>
+      <button class="btn btn-primary" onclick="recordPayment()">Record Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Review Document ══ -->
+<div class="modal-overlay" id="modal-review" onclick="closeModalOutside(event,'modal-review')">
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-header">
+      <div class="modal-title">Review Document</div>
+      <div class="modal-close" onclick="closeReviewModal()">✕</div>
+    </div>
+
+    <div class="modal-split">
+      <!-- Left: preview + metadata -->
+      <div class="modal-left">
+        <div class="doc-preview">
+          <div class="doc-preview-icon">🧾</div>
+          <div>OR-2026-0441-B.jpg</div>
+        </div>
+        <div class="doc-meta-row"><span class="doc-meta-label">Client</span><span class="doc-meta-value">ABC Trading Corp.</span></div>
+        <div class="doc-meta-row"><span class="doc-meta-label">Uploaded</span><span class="doc-meta-value">May 25, 2026</span></div>
+        <div class="doc-meta-row"><span class="doc-meta-label">Accountant</span><span class="doc-meta-value">Maria Santos</span></div>
+        <div class="doc-meta-row"><span class="doc-meta-label">Flag</span><span class="doc-meta-value"><span class="flag-red">⚠ RED</span></span></div>
+        <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:6px;padding:7px 9px;font-size:11px;color:#991b1b;margin-top:2px;">Spending spike — 3× above monthly average for this category</div>
+      </div>
+
+      <!-- Right: editable classifications + transaction fields + note -->
+      <div class="modal-right">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;margin-bottom:8px;">AI Classifications <span style="font-weight:400;color:#d1d5db;margin-left:4px;">· amounts are editable</span></div>
+
+        <table class="ai-table">
+          <thead>
+            <tr><th>#</th><th>Classification</th><th>Type</th><th>Amount (₱)</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:#9ca3af;width:24px;">1</td>
+              <td>Utilities — Electricity</td>
+              <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+              <td><input class="ai-input" value="12,500.00" /></td>
+            </tr>
+            <tr>
+              <td style="color:#9ca3af;">2</td>
+              <td>Meter Charge</td>
+              <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+              <td><input class="ai-input" value="1,800.00" /></td>
+            </tr>
+            <tr>
+              <td style="color:#9ca3af;">3</td>
+              <td>VAT (Input)</td>
+              <td><span class="badge" style="background:#fee2e2;color:#991b1b;font-size:10px;">Expense</span></td>
+              <td><input class="ai-input" value="500.00" /></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" style="text-align:right;font-size:11px;color:#9ca3af;">Total</td>
+              <td style="text-align:right;font-weight:700;color:#111827;">₱14,800.00</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;">
+          <div class="review-field">
+            <span class="review-field-label">Date</span>
+            <input class="review-field-input" type="date" value="2026-05-24" />
+          </div>
+          <div class="review-field">
+            <span class="review-field-label">Merchant</span>
+            <input class="review-field-input" value="Meralco" />
+          </div>
+          <div class="review-field" style="border-bottom:none;">
+            <span class="review-field-label">Payment Method</span>
+            <select class="review-field-input">
+              <option>GCash</option><option>Cash on Hand</option><option>Maya</option><option>Bank</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Note area — hidden by default, shown on Return or Reject -->
+        <div class="review-note-area" id="review-note-area" style="display:none;">
+          <label class="review-note-label" id="review-note-label">Note to client</label>
+          <textarea class="review-note-input" id="review-note-input" placeholder="Explain what the client needs to correct or why this is being rejected…"></textarea>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px;" id="review-note-hint">Required before confirming.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer — default actions -->
+    <div class="modal-footer" id="review-footer-default" style="justify-content:space-between;">
+      <button class="btn btn-danger" onclick="setReviewAction('reject')">Reject</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" style="color:#d97706;border-color:#fde68a;" onclick="setReviewAction('return')">Return for Re-upload</button>
+        <button class="btn btn-primary" onclick="setReviewAction('approve')">Approve</button>
+      </div>
+    </div>
+
+    <!-- Footer — confirm state (shown after Return/Reject selected) -->
+    <div class="modal-footer" id="review-footer-confirm" style="display:none;justify-content:space-between;">
+      <span id="review-confirm-label" style="font-size:12px;font-weight:600;color:#374151;align-self:center;"></span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="cancelReviewAction()">Cancel</button>
+        <button class="btn btn-primary" id="review-confirm-btn" onclick="confirmReviewAction()">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Entry Review ══ -->
+<div class="modal-overlay" id="modal-entry-review" onclick="closeModalOutside(event,'modal-entry-review')">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <div class="modal-title">Review Entry</div>
+      <div class="modal-close" onclick="closeEntryReview()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="entry-info-grid">
+        <div class="entry-info-item"><span class="entry-info-label">Client</span><span class="entry-info-value">ABC Trading Corp.</span></div>
+        <div class="entry-info-item"><span class="entry-info-label">Submitted by</span><span class="entry-info-value">Maria Santos</span></div>
+        <div class="entry-info-item"><span class="entry-info-label">Date</span><span class="entry-info-value">May 28, 2026</span></div>
+        <div class="entry-info-item"><span class="entry-info-label">Type</span><span class="entry-info-value"><span class="badge b-indigo">Reclassification</span></span></div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;padding:10px 12px;font-size:12px;color:#374151;margin-bottom:14px;">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#9ca3af;display:block;margin-bottom:4px;">Description / Memo</span>
+        Reclassify May 15 expense from Supplies Expense to Utilities Expense — item was posted to the wrong account.
+      </div>
+
+      <table class="je-table">
+        <thead><tr><th>Account</th><th>Debit (₱)</th><th>Credit (₱)</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Utilities Expense <span style="font-size:10px;color:#9ca3af;">#5001</span></td>
+            <td class="je-amount" style="color:#111827;font-weight:500;">2,500.00</td>
+            <td class="je-amount" style="color:#d1d5db;">—</td>
+          </tr>
+          <tr>
+            <td>Supplies Expense <span style="font-size:10px;color:#9ca3af;">#5002</span></td>
+            <td class="je-amount" style="color:#d1d5db;">—</td>
+            <td class="je-amount" style="color:#111827;font-weight:500;">2,500.00</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td style="color:#9ca3af;font-weight:400;font-size:11px;">Total</td>
+            <td class="je-amount">2,500.00</td>
+            <td class="je-amount">2,500.00</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="balance-bar balanced" style="margin-bottom:0;">
+        <span>✓ Balanced</span>
+        <div class="balance-bar-item"><span class="balance-bar-label">Total Debits</span><span class="balance-bar-value">₱2,500.00</span></div>
+        <div class="balance-bar-item"><span class="balance-bar-label">Total Credits</span><span class="balance-bar-value">₱2,500.00</span></div>
+      </div>
+
+      <!-- Rejection reason — hidden by default -->
+      <div id="entry-reject-area" style="display:none;margin-top:14px;">
+        <label class="review-note-label">Rejection reason <span class="required-star">*</span></label>
+        <textarea class="review-note-input danger" id="entry-reject-note" placeholder="Explain why this entry is being rejected. The accountant will be notified and can edit and resubmit."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer" id="entry-review-footer-default" style="justify-content:space-between;">
+      <button class="btn btn-danger" onclick="setEntryAction('reject')">Reject</button>
+      <button class="btn btn-primary" onclick="setEntryAction('approve')">Approve &amp; Post</button>
+    </div>
+    <div class="modal-footer" id="entry-review-footer-confirm" style="display:none;justify-content:space-between;">
+      <span style="font-size:12px;font-weight:600;color:#dc2626;align-self:center;">Rejecting entry</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="cancelEntryAction()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmEntryReject()">Confirm Rejection</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: New Adjusting Entry ══ -->
+<div class="modal-overlay" id="modal-new-entry" onclick="closeModalOutside(event,'modal-new-entry')">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <div class="modal-title">New Adjusting Entry</div>
+      <div class="modal-close" onclick="closeModal('modal-new-entry')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="modal-field" style="margin-bottom:0;">
+          <label class="modal-label">Client <span class="required-star">*</span></label>
+          <select class="modal-input">
+            <option value="">— Select client —</option>
+            <option>ABC Trading Corp.</option>
+            <option>Santos Bakery Inc.</option>
+            <option>Cruz Hardware Store</option>
+            <option>Gonzales Auto Parts</option>
+            <option>Lim's General Merchandise</option>
+          </select>
+        </div>
+        <div class="modal-field" style="margin-bottom:0;">
+          <label class="modal-label">Entry Date <span class="required-star">*</span></label>
+          <input class="modal-input" type="date" value="2026-05-28" />
+        </div>
+      </div>
+      <div class="modal-field" style="margin-top:12px;">
+        <label class="modal-label">Description / Memo <span class="required-star">*</span></label>
+        <textarea class="review-note-input" placeholder="Explain the purpose of this adjusting entry…" style="min-height:56px;"></textarea>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;margin-top:4px;">Journal Lines</div>
+      <table class="je-table" style="margin-bottom:4px;">
+        <thead><tr><th style="width:44%;">Account</th><th>Debit (₱)</th><th>Credit (₱)</th><th style="width:32px;"></th></tr></thead>
+        <tbody id="je-lines-body">
+          <tr class="je-line-row">
+            <td><select class="je-account-select" onchange="recalcBalance()">
+              <option value="">— Select account —</option>
+              <optgroup label="Income"><option>Sales Revenue #4001</option><option>Service Revenue #4002</option><option>Other Income #4003</option></optgroup>
+              <optgroup label="Expense"><option>Utilities Expense #5001</option><option>Supplies Expense #5002</option><option>Rent Expense #5003</option><option>Transportation Expense #5004</option><option>Meals and Entertainment #5005</option><option>Communication Expense #5006</option><option>Taxes and Licenses #5007</option><option>Other Expense #5008</option></optgroup>
+              <optgroup label="Cash / Payment"><option>Cash on Hand #1001</option><option>GCash #1002</option><option>Maya #1003</option><option>Bank #1004</option></optgroup>
+              <optgroup label="VAT"><option>Input VAT #1101</option><option>Output VAT #2101</option></optgroup>
+            </select></td>
+            <td><input class="je-input" placeholder="0.00" oninput="recalcBalance()" /></td>
+            <td><input class="je-input" placeholder="0.00" oninput="recalcBalance()" /></td>
+            <td style="text-align:center;"><button style="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:14px;" onclick="removeJeLine(this)">✕</button></td>
+          </tr>
+          <tr class="je-line-row">
+            <td><select class="je-account-select" onchange="recalcBalance()">
+              <option value="">— Select account —</option>
+              <optgroup label="Income"><option>Sales Revenue #4001</option><option>Service Revenue #4002</option><option>Other Income #4003</option></optgroup>
+              <optgroup label="Expense"><option>Utilities Expense #5001</option><option>Supplies Expense #5002</option><option>Rent Expense #5003</option><option>Transportation Expense #5004</option><option>Meals and Entertainment #5005</option><option>Communication Expense #5006</option><option>Taxes and Licenses #5007</option><option>Other Expense #5008</option></optgroup>
+              <optgroup label="Cash / Payment"><option>Cash on Hand #1001</option><option>GCash #1002</option><option>Maya #1003</option><option>Bank #1004</option></optgroup>
+              <optgroup label="VAT"><option>Input VAT #1101</option><option>Output VAT #2101</option></optgroup>
+            </select></td>
+            <td><input class="je-input" placeholder="0.00" oninput="recalcBalance()" /></td>
+            <td><input class="je-input" placeholder="0.00" oninput="recalcBalance()" /></td>
+            <td style="text-align:center;"><button style="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:14px;" onclick="removeJeLine(this)">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-outline btn-sm" style="margin-bottom:10px;" onclick="addJeLine()">+ Add Line</button>
+
+      <div class="balance-bar unbalanced" id="je-balance-bar">
+        <span id="je-balance-status">⚠ Not balanced</span>
+        <div class="balance-bar-item"><span class="balance-bar-label">Total Debits</span><span class="balance-bar-value" id="je-total-dr">₱0.00</span></div>
+        <div class="balance-bar-item"><span class="balance-bar-label">Total Credits</span><span class="balance-bar-value" id="je-total-cr">₱0.00</span></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-outline" onclick="closeModal('modal-new-entry')">Cancel</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="saveEntryDraft()">Save as Draft</button>
+        <button class="btn btn-primary" onclick="approveEntryNow()">Approve Immediately</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Invite Accountant ══ -->
+<div class="modal-overlay" id="modal-invite-accountant" onclick="closeModalOutside(event,'modal-invite-accountant')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Invite Accountant</div>
+      <div class="modal-close" onclick="closeModal('modal-invite-accountant')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label class="modal-label">Full Name</label>
+        <input class="modal-input" type="text" placeholder="e.g. Grace Ocampo" />
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Email Address</label>
+        <input class="modal-input" type="email" placeholder="grace@sofiabooks.ph" />
+        <div class="modal-hint">An invite email will be sent. They'll set their password on first login.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-invite-accountant')">Cancel</button>
+      <button class="btn btn-primary" onclick="sendInvite()">Send Invite</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Deactivate Accountant ══ -->
+<div class="modal-overlay" id="modal-deactivate-accountant" onclick="closeModalOutside(event,'modal-deactivate-accountant')">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title">Deactivate Accountant</div>
+      <div class="modal-close" onclick="closeModal('modal-deactivate-accountant')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:7px;padding:10px 13px;font-size:12px;color:#9a3412;margin-bottom:16px;">
+        ⚠️ <strong>Maria Santos</strong> has <strong>28 assigned clients.</strong> All clients must be reassigned to another accountant before deactivation can proceed.
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Reassign all clients to</label>
+        <select class="modal-input">
+          <option value="">— Select accountant —</option>
+          <option>Juan Dela Cruz (18 clients)</option>
+          <option>Ana Reyes (22 clients)</option>
+          <option>Carlos Bautista (15 clients)</option>
+          <option>Liza Fernandez (20 clients)</option>
+          <option>Roberto Sy (12 clients)</option>
+        </select>
+        <div class="modal-hint">This action is logged. The accountant will immediately lose access to all assigned clients.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-deactivate-accountant')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeactivate()">Confirm Deactivation</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleCoaSection(hd) {
+  const body = hd.nextElementSibling;
+  if (!body || !body.classList.contains('coa-body')) return;
+  const collapsed = hd.classList.toggle('collapsed');
+  body.style.display = collapsed ? 'none' : '';
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOutside(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+function recordPayment() {
+  const btn = document.querySelector('#modal-payment .btn-primary');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+  setTimeout(() => {
+    closeModal('modal-payment');
+    btn.textContent = 'Record Payment';
+    btn.disabled = false;
+  }, 800);
+}
+function sendInvite() {
+  const btn = document.querySelector('#modal-invite-accountant .btn-primary');
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  setTimeout(() => {
+    closeModal('modal-invite-accountant');
+    btn.textContent = 'Send Invite';
+    btn.disabled = false;
+  }, 800);
+}
+function initQueueRows() {
+  document.querySelectorAll('#queue-table tbody tr:not(.queue-group-hd)').forEach(tr => {
+    tr.classList.add('queue-data-row');
+    tr.addEventListener('click', function(e) {
+      if (e.target.closest('button') || e.target.closest('input')) return;
+      openModal('modal-review');
+    });
+  });
+}
+/* ── Entry Review ── */
+function closeEntryReview() { closeModal('modal-entry-review'); cancelEntryAction(); }
+function setEntryAction(action) {
+  if (action === 'approve') {
+    const btn = document.querySelector('#entry-review-footer-default .btn-primary');
+    btn.textContent = 'Posting…'; btn.disabled = true;
+    setTimeout(() => { closeEntryReview(); btn.textContent = 'Approve & Post'; btn.disabled = false; }, 800);
+    return;
+  }
+  document.getElementById('entry-reject-area').style.display = 'block';
+  document.getElementById('entry-review-footer-default').style.display = 'none';
+  document.getElementById('entry-review-footer-confirm').style.display = 'flex';
+  document.getElementById('entry-reject-note').focus();
+}
+function cancelEntryAction() {
+  document.getElementById('entry-reject-area').style.display = 'none';
+  document.getElementById('entry-reject-note').value = '';
+  document.getElementById('entry-review-footer-default').style.display = 'flex';
+  document.getElementById('entry-review-footer-confirm').style.display = 'none';
+}
+function confirmEntryReject() {
+  const note = document.getElementById('entry-reject-note').value.trim();
+  if (!note) { document.getElementById('entry-reject-note').style.borderColor = '#ef4444'; document.getElementById('entry-reject-note').focus(); return; }
+  const btn = document.querySelector('#entry-review-footer-confirm .btn-danger');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  setTimeout(() => { closeEntryReview(); btn.textContent = 'Confirm Rejection'; btn.disabled = false; }, 900);
+}
+
+/* ── New Entry Form ── */
+const jeLineTemplate = `<tr class="je-line-row">
+  <td><select class="je-account-select" onchange="recalcBalance()">
+    <option value="">— Select account —</option>
+    <optgroup label="Income"><option>Sales Revenue #4001</option><option>Service Revenue #4002</option><option>Other Income #4003</option></optgroup>
+    <optgroup label="Expense"><option>Utilities Expense #5001</option><option>Supplies Expense #5002</option><option>Rent Expense #5003</option><option>Transportation Expense #5004</option><option>Meals and Entertainment #5005</option><option>Communication Expense #5006</option><option>Taxes and Licenses #5007</option><option>Other Expense #5008</option></optgroup>
+    <optgroup label="Cash / Payment"><option>Cash on Hand #1001</option><option>GCash #1002</option><option>Maya #1003</option><option>Bank #1004</option></optgroup>
+    <optgroup label="VAT"><option>Input VAT #1101</option><option>Output VAT #2101</option></optgroup>
+  </select></td>
+  <td><input class="je-input" placeholder="0.00" oninput="recalcBalance()" /></td>
+  <td><input class="je-input" placeholder="0.00" oninput="recalcBalance()" /></td>
+  <td style="text-align:center;"><button style="background:none;border:none;cursor:pointer;color:#d1d5db;font-size:14px;" onclick="removeJeLine(this)">✕</button></td>
+</tr>`;
+function addJeLine() {
+  const tbody = document.getElementById('je-lines-body');
+  const tmp = document.createElement('tbody');
+  tmp.innerHTML = jeLineTemplate;
+  tbody.appendChild(tmp.firstElementChild);
+}
+function removeJeLine(btn) {
+  const rows = document.querySelectorAll('#je-lines-body .je-line-row');
+  if (rows.length <= 1) return;
+  btn.closest('tr').remove();
+  recalcBalance();
+}
+function recalcBalance() {
+  let dr = 0, cr = 0;
+  document.querySelectorAll('#je-lines-body .je-line-row').forEach(row => {
+    const inputs = row.querySelectorAll('.je-input');
+    dr += parseFloat(inputs[0].value.replace(/,/g,'')) || 0;
+    cr += parseFloat(inputs[1].value.replace(/,/g,'')) || 0;
+  });
+  const fmt = n => '₱' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  document.getElementById('je-total-dr').textContent = fmt(dr);
+  document.getElementById('je-total-cr').textContent = fmt(cr);
+  const bar = document.getElementById('je-balance-bar');
+  const status = document.getElementById('je-balance-status');
+  const balanced = dr > 0 && Math.abs(dr - cr) < 0.01;
+  bar.className = 'balance-bar ' + (balanced ? 'balanced' : 'unbalanced');
+  status.textContent = balanced ? '✓ Balanced' : '⚠ Not balanced';
+}
+function saveEntryDraft() {
+  const btn = document.querySelector('#modal-new-entry .btn-outline:last-of-type');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  setTimeout(() => { closeModal('modal-new-entry'); btn.textContent = 'Save as Draft'; btn.disabled = false; }, 800);
+}
+function approveEntryNow() {
+  const bar = document.getElementById('je-balance-bar');
+  if (!bar.classList.contains('balanced')) { bar.style.outline = '2px solid #f59e0b'; setTimeout(() => bar.style.outline = '', 1200); return; }
+  const btn = document.querySelector('#modal-new-entry .btn-primary');
+  btn.textContent = 'Posting…'; btn.disabled = true;
+  setTimeout(() => { closeModal('modal-new-entry'); btn.textContent = 'Approve Immediately'; btn.disabled = false; }, 900);
+}
+
+function initEntryRows() {
+  document.querySelectorAll('#pg-entries .table tbody tr').forEach(tr => {
+    tr.style.cursor = 'pointer';
+    tr.addEventListener('click', function(e) {
+      if (e.target.closest('button')) return;
+      openModal('modal-entry-review');
+    });
+  });
+}
+function closeReviewModal() {
+  closeModal('modal-review');
+  cancelReviewAction();
+}
+function setReviewAction(action) {
+  const noteArea = document.getElementById('review-note-area');
+  const noteInput = document.getElementById('review-note-input');
+  const noteLabel = document.getElementById('review-note-label');
+  const noteHint = document.getElementById('review-note-hint');
+  const footerDefault = document.getElementById('review-footer-default');
+  const footerConfirm = document.getElementById('review-footer-confirm');
+  const confirmLabel = document.getElementById('review-confirm-label');
+  const confirmBtn = document.getElementById('review-confirm-btn');
+
+  if (action === 'approve') {
+    confirmBtn.textContent = 'Approving…';
+    confirmBtn.disabled = true;
+    setTimeout(() => { closeReviewModal(); }, 800);
+    return;
+  }
+
+  noteArea.style.display = 'block';
+  footerDefault.style.display = 'none';
+  footerConfirm.style.display = 'flex';
+  noteInput.classList.remove('danger');
+
+  if (action === 'return') {
+    noteLabel.textContent = 'Note to client (required)';
+    noteHint.textContent = 'Explain what needs to be corrected. The client will be notified and asked to re-upload.';
+    confirmLabel.textContent = 'Return for Re-upload';
+    confirmBtn.textContent = 'Confirm Return';
+    confirmBtn.className = 'btn btn-outline';
+    confirmBtn.style.cssText = 'color:#d97706;border-color:#f59e0b;';
+  } else if (action === 'reject') {
+    noteLabel.textContent = 'Rejection reason (required)';
+    noteHint.textContent = 'This is permanent. The client cannot re-upload after rejection.';
+    noteInput.classList.add('danger');
+    confirmLabel.textContent = 'Reject document';
+    confirmBtn.textContent = 'Confirm Rejection';
+    confirmBtn.className = 'btn btn-danger';
+    confirmBtn.style.cssText = '';
+  }
+  noteInput.focus();
+}
+function cancelReviewAction() {
+  document.getElementById('review-note-area').style.display = 'none';
+  document.getElementById('review-note-input').value = '';
+  document.getElementById('review-footer-default').style.display = 'flex';
+  document.getElementById('review-footer-confirm').style.display = 'none';
+}
+function confirmReviewAction() {
+  const note = document.getElementById('review-note-input').value.trim();
+  const btn = document.getElementById('review-confirm-btn');
+  if (!note) {
+    document.getElementById('review-note-input').style.borderColor = '#ef4444';
+    document.getElementById('review-note-input').focus();
+    return;
+  }
+  const orig = btn.textContent;
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+  setTimeout(() => { closeReviewModal(); btn.textContent = orig; btn.disabled = false; }, 900);
+}
+function updateQueueApprove() {
+  const n = document.querySelectorAll('.queue-cb:checked').length;
+  const btn = document.getElementById('queue-approve-btn');
+  btn.textContent = 'Approve Selected (' + n + ')';
+  btn.disabled = n === 0;
+}
+function selectAllGreen() {
+  document.querySelectorAll('.queue-cb').forEach(cb => cb.checked = true);
+  updateQueueApprove();
+}
+function deselectAllGreen() {
+  document.querySelectorAll('.queue-cb').forEach(cb => cb.checked = false);
+  updateQueueApprove();
+}
+function approveSelected() {
+  const n = document.querySelectorAll('.queue-cb:checked').length;
+  if (n === 0) return;
+  const btn = document.getElementById('queue-approve-btn');
+  btn.textContent = 'Approving…';
+  btn.disabled = true;
+  setTimeout(() => {
+    document.querySelectorAll('.queue-green-row').forEach(row => {
+      if (row.querySelector('.queue-cb:checked')) row.style.display = 'none';
+    });
+    deselectAllGreen();
+    btn.textContent = 'Approve Selected (0)';
+  }, 900);
+}
+function updateBulkBtn() {
+  const checked = document.querySelectorAll('#bulk-client-list .bulk-cb:checked').length;
+  const hasTarget = document.getElementById('bulk-reassign-target').value !== '';
+  const btn = document.getElementById('bulk-reassign-btn');
+  const lbl = document.getElementById('bulk-selected-count');
+  lbl.textContent = checked === 0 ? '0 clients selected' : checked + ' client' + (checked > 1 ? 's' : '') + ' selected';
+  btn.disabled = !(checked > 0 && hasTarget);
+}
+function selectAllBulk() {
+  document.querySelectorAll('#bulk-client-list .bulk-cb').forEach(cb => cb.checked = true);
+  updateBulkBtn();
+}
+function deselectAllBulk() {
+  document.querySelectorAll('#bulk-client-list .bulk-cb').forEach(cb => cb.checked = false);
+  updateBulkBtn();
+}
+function confirmBulkReassign() {
+  const btn = document.getElementById('bulk-reassign-btn');
+  btn.textContent = 'Reassigning…';
+  btn.disabled = true;
+  setTimeout(() => {
+    closeModal('modal-bulk-reassign');
+    deselectAllBulk();
+    document.getElementById('bulk-reassign-target').value = '';
+    btn.textContent = 'Reassign Selected';
+  }, 900);
+}
+function confirmDeactivate() {
+  const sel = document.querySelector('#modal-deactivate-accountant select');
+  if (!sel.value) { sel.style.borderColor = '#ef4444'; return; }
+  const btn = document.querySelector('#modal-deactivate-accountant .btn-danger');
+  btn.textContent = 'Deactivating…';
+  btn.disabled = true;
+  setTimeout(() => {
+    closeModal('modal-deactivate-accountant');
+    btn.textContent = 'Confirm Deactivation';
+    btn.disabled = false;
+    sel.style.borderColor = '';
+  }, 900);
+}
+
+const pages = ['dashboard','clients','accountants','billing','queue','entries','reports','settings','client-detail','client-create','accountant-detail'];
+const navPages = ['dashboard','clients','accountants','billing','queue','entries','reports'];
+
+function showPage(name) {
+  pages.forEach(p => {
+    const el = document.getElementById('pg-'+p);
+    if (el) el.style.display = p===name ? '' : 'none';
+  });
+  const subToNav = {'client-detail':'clients','client-create':'clients','accountant-detail':'accountants'};
+  const navName = subToNav[name] || name;
+  navPages.forEach(p => {
+    const nav = document.getElementById('nav-'+p);
+    if (nav) nav.classList.toggle('active', p===navName);
+  });
+}
+
+function showClientTab(name, el) {
+  ['overview','documents','coa'].forEach(t => {
+    document.getElementById('ctab-'+t).style.display = t===name ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function showCreateSuccess() {
+  document.getElementById('create-form-state').style.display = 'none';
+  document.getElementById('create-success-state').style.display = '';
+}
+function resetCreateForm() {
+  document.getElementById('create-form-state').style.display = '';
+  document.getElementById('create-success-state').style.display = 'none';
+}
+
+document.querySelectorAll('.efilter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.efilter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+function toggleAvatarMenu() {
+  const dd = document.getElementById('avatar-dropdown');
+  dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#avatar-menu-wrap')) {
+    const dd = document.getElementById('avatar-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
+
+showPage('dashboard');
+initQueueRows();
+initEntryRows();
+</script>
+</body>
+</html>

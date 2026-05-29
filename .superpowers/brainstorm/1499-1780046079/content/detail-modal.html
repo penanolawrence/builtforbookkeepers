@@ -1,0 +1,111 @@
+<h2>Section 3 (revised) — Document Detail as Sheet</h2>
+<p class="subtitle">Clicking a row on the documents table opens a right-side sheet overlay. No page navigation.</p>
+
+<!-- Full page context -->
+<div style="margin-top: 20px; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; background: #f9fafb; position: relative;">
+
+  <!-- Page header -->
+  <div style="background: white; border-bottom: 1px solid #e5e7eb; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="font-size: 14px; font-weight: 700; color: #111827;">My Documents</div>
+    <div style="font-size: 11px; color: #6b7280;">Filters ▾</div>
+  </div>
+
+  <!-- Documents table (dimmed when sheet is open) -->
+  <div style="opacity: 0.35; padding: 12px 16px;">
+    <div style="display: grid; grid-template-columns: 80px 60px 90px 80px 80px 70px; gap: 8px; font-size: 10px; font-weight: 600; color: #6b7280; text-transform: uppercase; padding: 0 4px; margin-bottom: 6px;">
+      <span>Reference</span><span>Source</span><span>Date</span><span style="text-align:right;">Inflow</span><span style="text-align:right;">Outflow</span><span>Status</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="display: grid; grid-template-columns: 80px 60px 90px 80px 80px 70px; gap: 8px; background: #dbeafe; border: 1px solid #93c5fd; border-radius: 6px; padding: 8px 4px; font-size: 11px; align-items: center;">
+        <span style="color: #1d4ed8; font-weight: 600;">MNL-0012</span>
+        <span style="background: #dbeafe; color: #1d4ed8; font-size: 10px; padding: 1px 5px; border-radius: 3px;">Manual</span>
+        <span style="color: #374151;">May 29</span>
+        <span style="color: #374151; text-align:right;">—</span>
+        <span style="color: #ef4444; font-weight: 600; text-align:right;">₱350.00</span>
+        <span style="background: #fef9c3; color: #a16207; font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 600;">PARKED</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 80px 60px 90px 80px 80px 70px; gap: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 4px; font-size: 11px; align-items: center;">
+        <span style="color: #374151; font-weight: 600;">OR-00421</span>
+        <span style="background: #f3f4f6; color: #6b7280; font-size: 10px; padding: 1px 5px; border-radius: 3px;">Upload</span>
+        <span style="color: #374151;">May 28</span>
+        <span style="color: #16a34a; font-weight: 600; text-align:right;">₱1,000</span>
+        <span style="color: #374151; text-align:right;">—</span>
+        <span style="background: #dcfce7; color: #16a34a; font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 600;">APPROVED</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 80px 60px 90px 80px 80px 70px; gap: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 4px; font-size: 11px; align-items: center;">
+        <span style="color: #374151; font-weight: 600;">OR-00420</span>
+        <span style="background: #f3f4f6; color: #6b7280; font-size: 10px; padding: 1px 5px; border-radius: 3px;">Upload</span>
+        <span style="color: #374151;">May 25</span>
+        <span style="color: #374151; text-align:right;">—</span>
+        <span style="color: #ef4444; font-weight: 600; text-align:right;">₱200.00</span>
+        <span style="background: #fee2e2; color: #dc2626; font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 600;">RETURNED</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheet overlay -->
+  <div style="position: absolute; top: 0; right: 0; width: 52%; height: 100%; background: white; border-left: 1px solid #e5e7eb; box-shadow: -4px 0 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; min-height: 480px;">
+
+    <!-- Sheet header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid #e5e7eb;">
+      <div>
+        <div style="font-size: 13px; font-weight: 700; color: #111827;">MNL-0012</div>
+        <div style="font-size: 10px; color: #6b7280; margin-top: 1px;">May 29, 2026 · Cash · Expense</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="background: #fef9c3; color: #a16207; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px;">PARKED</span>
+        <span style="font-size: 16px; color: #9ca3af; cursor: pointer; line-height: 1;">×</span>
+      </div>
+    </div>
+
+    <!-- Sheet body (scrollable) -->
+    <div style="flex: 1; overflow-y: auto; padding: 12px 14px;">
+
+      <!-- Manual entry placeholder -->
+      <div style="background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 6px; padding: 10px; text-align: center; margin-bottom: 12px;">
+        <div style="font-size: 16px;">📋</div>
+        <div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">Manual Entry — no receipt</div>
+      </div>
+
+      <!-- Lines table -->
+      <div style="font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 5px;">Transaction Lines</div>
+      <div style="border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; margin-bottom: 10px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; background: #f9fafb; padding: 5px 8px; font-size: 9px; font-weight: 600; color: #6b7280; text-transform: uppercase; gap: 6px;">
+          <span>Your Description</span><span>AI Category</span><span style="text-align:right;">Amount</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 7px 8px; font-size: 10px; border-top: 1px solid #e5e7eb; gap: 6px; align-items: center;">
+          <span style="color: #374151;">Bayad kuryente</span>
+          <span style="background: #f3f4f6; color: #6b7280; padding: 1px 5px; border-radius: 3px; font-size: 9px;">Utilities Expense</span>
+          <span style="color: #374151; text-align:right; white-space:nowrap;">₱200.00</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 7px 8px; font-size: 10px; border-top: 1px solid #e5e7eb; gap: 6px; align-items: center;">
+          <span style="color: #374151;">Supplies sa opisina</span>
+          <span style="background: #f3f4f6; color: #6b7280; padding: 1px 5px; border-radius: 3px; font-size: 9px;">Supplies Expense</span>
+          <span style="color: #374151; text-align:right; white-space:nowrap;">₱150.00</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; padding: 7px 8px; font-size: 10px; border-top: 2px solid #e5e7eb; background: #f9fafb; gap: 6px;">
+          <span style="font-weight: 700; color: #374151; grid-column: 1/3;">Total</span>
+          <span style="font-weight: 700; color: #ef4444; text-align:right;">₱350.00</span>
+        </div>
+      </div>
+
+      <!-- Status banner -->
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; font-size: 10px; color: #92400e;">
+        ⏳ Your accountant is reviewing this entry.
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Sheet behavior</h3>
+  <ul style="font-size: 13px; color: #374151; line-height: 1.8;">
+    <li>Clicking any row in the documents table opens this <strong>right-side sheet</strong> — no page navigation, URL does not change</li>
+    <li>The documents list is <strong>dimmed</strong> behind the sheet (backdrop overlay)</li>
+    <li>Sheet closes with the <strong>× button</strong> or clicking outside</li>
+    <li>On mobile: sheet slides up from the <strong>bottom</strong> (full width) instead of from the right</li>
+    <li>The existing <code>/client/documents/[id]/page.tsx</code> route can be <strong>removed</strong> — all detail viewing happens in this sheet</li>
+  </ul>
+</div>

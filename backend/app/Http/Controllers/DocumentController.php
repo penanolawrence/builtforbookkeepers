@@ -1,0 +1,314 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Events\DocumentStageUpdated;
+use App\Http\Requests\Document\ManualEntryRequest;
+use App\Http\Requests\Document\UploadDocumentRequest;
+use App\Jobs\ClassifyWithAI;
+use App\Jobs\ProcessDocumentOCR;
+use App\Models\Company;
+use App\Models\Document;
+use App\Services\Ref\RefSequenceService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
+class DocumentController extends Controller
+{
+    public function upload(UploadDocumentRequest $request): JsonResponse
+    {
+        $user    = auth()->user();
+        $company = Company::findOrFail($user->company_id);
+
+        $hash = hash_file('sha256', $request->file('file')->getRealPath());
+
+        $existing = Document::where('company_id', $company->id)
+            ->where('file_hash', $hash)
+            ->where('status', '!=', 'rejected')
+            ->first();
+
+        if ($existing && $existing->status !== 'returned') {
+            return response()->json(['message' => 'This file has already been uploaded.'], 409);
+        }
+
+        $path = $request->file('file')->store('documents', 's3');
+
+        $document = Document::create([
+            'company_id'      => $company->id,
+            'uploaded_by'     => $user->id,
+            'original_filename' => $request->file('file')->getClientOriginalName(),
+            'storage_path'    => $path,
+            'file_type'       => $request->file('file')->getClientOriginalExtension(),
+            'file_hash'       => $hash,
+            'document_type'   => $request->declared_type,
+            'status'          => 'processing',
+            'internal_status' => 'PENDING',
+            'is_no_receipt'   => false,
+            'is_ocr_failed'   => false,
+        ]);
+
+        ProcessDocumentOCR::dispatch($document);
+
+        rescue(fn () => event(new DocumentStageUpdated(
+            companyId:  $company->id,
+            documentId: $document->id,
+            stage:      'uploading',
+            status:     'processing',
+            label:      'Uploading...',
+        )));
+
+        return response()->json(['documentId' => $document->id], 201);
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $user  = auth()->user();
+        $query = Document::where('company_id', $user->company_id);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('type')) {
+            $query->where('document_type', $request->type);
+        }
+        if ($request->filled('start')) {
+            $query->whereDate('document_date', '>=', $request->start);
+        }
+        if ($request->filled('end')) {
+            $query->whereDate('document_date', '<=', $request->end);
+        }
+
+        $documents = $query->latest()->get();
+
+        return response()->json($documents->map(fn ($d) => $this->toListItem($d)));
+    }
+
+    public function show(string $id): JsonResponse
+    {
+        $document = Document::with(['company', 'ocrResult'])->findOrFail($id);
+        $user     = auth()->user();
+
+        if ($user->role === 'client' && $document->company_id !== $user->company_id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        return response()->json($this->toDetail($document));
+    }
+
+    public function getStatus(string $id): JsonResponse
+    {
+        $user     = auth()->user();
+        $document = Document::where('id', $id)
+            ->where('company_id', $user->company_id)
+            ->firstOrFail();
+
+        return response()->json([
+            'documentId' => $document->id,
+            'stage'      => $document->internal_status,
+            'status'     => $document->status,
+            'flag'       => $document->flag,
+        ]);
+    }
+
+    public function reupload(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
+        ]);
+
+        $user     = auth()->user();
+        $document = Document::where('id', $id)
+            ->where('company_id', $user->company_id)
+            ->firstOrFail();
+
+        if ($document->status !== 'returned') {
+            return response()->json(['message' => 'Only RETURNED documents can be re-uploaded.'], 422);
+        }
+
+        $document->ocrResult()?->delete();
+        Storage::disk('s3')->delete($document->storage_path);
+
+        $newHash = hash_file('sha256', $request->file('file')->getRealPath());
+
+        $existing = Document::where('company_id', $user->company_id)
+            ->where('file_hash', $newHash)
+            ->where('status', '!=', 'rejected')
+            ->where('id', '!=', $document->id)
+            ->first();
+
+        if ($existing && $existing->status !== 'returned') {
+            return response()->json(['message' => 'This file has already been uploaded.'], 409);
+        }
+
+        $newPath = $request->file('file')->store('documents', 's3');
+
+        $document->update([
+            'status'          => 'processing',
+            'internal_status' => 'PENDING',
+            'flag'            => 'YELLOW',
+            'storage_path'    => $newPath,
+            'file_type'       => $request->file('file')->getClientOriginalExtension(),
+            'file_hash'       => $newHash,
+            'return_note'     => null,
+            'expires_at'      => null,
+            'is_ocr_failed'   => false,
+            'merchant_name'   => null,
+            'document_date'   => null,
+            'amount'          => null,
+            'vat_amount'      => null,
+            'category'        => null,
+            'anomaly_reason'  => null,
+        ]);
+
+        ProcessDocumentOCR::dispatch($document);
+
+        return response()->json(['documentId' => $document->id]);
+    }
+
+    public function manualEntry(ManualEntryRequest $request): JsonResponse
+    {
+        $user    = auth()->user();
+        $company = Company::findOrFail($user->company_id);
+        $refService = new RefSequenceService();
+
+        $documentIds = [];
+
+        foreach ($request->entries as $entry) {
+            $ref = $refService->nextRef($company, 'MNL');
+
+            $document = Document::create([
+                'company_id'        => $company->id,
+                'uploaded_by'       => $user->id,
+                'original_filename' => 'manual-entry',
+                'storage_path'      => '',
+                'document_type'     => $entry['declared_type'],
+                'status'            => 'processing',
+                'internal_status'   => 'OCR_COMPLETE',
+                'flag'              => null,
+                'is_no_receipt'     => true,
+                'is_ocr_failed'     => false,
+                'ref_number'        => $ref,
+                'file_hash'         => null,
+                'document_date'     => $entry['date'],
+                'amount'            => $entry['amount'],
+                'category'          => null,
+                'payment_method'    => $entry['payment_method'],
+                'note'              => $entry['note'] ?? null,
+            ]);
+
+            ClassifyWithAI::dispatch($document, null);
+
+            rescue(fn () => event(new DocumentStageUpdated(
+                companyId:  $company->id,
+                documentId: $document->id,
+                stage:      'ai',
+                status:     'processing',
+                label:      'Categorizing...',
+            )));
+
+            $documentIds[] = $document->id;
+        }
+
+        return response()->json(['documentIds' => $documentIds], 201);
+    }
+
+    public function getSignedUrl(string $id): JsonResponse
+    {
+        $document = Document::with('company')->findOrFail($id);
+        $user     = auth()->user();
+
+        if ($user->role === 'client' && $document->company_id !== $user->company_id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        if ($user->role === 'accountant' && $document->company->accountant_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        if ($document->is_no_receipt || !$document->storage_path) {
+            return response()->json(['url' => null]);
+        }
+
+        $url       = Storage::disk('s3')->temporaryUrl($document->storage_path, now()->addMinutes(15));
+        $expiresAt = now()->addMinutes(15)->toIso8601String();
+
+        return response()->json(['url' => $url, 'expiresAt' => $expiresAt]);
+    }
+
+    public function clientDocuments(Request $request, string $clientId): JsonResponse
+    {
+        $user    = auth()->user();
+        $company = Company::findOrFail($clientId);
+
+        if ($user->role === 'accountant' && $company->accountant_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $query = Document::where('company_id', $clientId);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('type')) {
+            $query->where('document_type', $request->type);
+        }
+        if ($request->filled('start')) {
+            $query->whereDate('document_date', '>=', $request->start);
+        }
+        if ($request->filled('end')) {
+            $query->whereDate('document_date', '<=', $request->end);
+        }
+
+        $documents = $query->latest()->get();
+
+        return response()->json($documents->map(fn ($d) => $this->toListItem($d)));
+    }
+
+    private function toListItem(Document $d): array
+    {
+        return [
+            'id'              => $d->id,
+            'companyId'       => $d->company_id,
+            'declaredType'    => $d->document_type,
+            'status'          => strtoupper($d->status),
+            'flag'            => $d->flag,
+            'anomalyReasons'  => $d->anomaly_reason ?? [],
+            'merchantName'    => $d->merchant_name,
+            'date'            => $d->document_date?->toDateString(),
+            'amount'          => $d->amount,
+            'vatAmount'       => $d->vat_amount,
+            'category'        => $d->category,
+            'paymentMethod'   => $d->payment_method,
+            'imageUrl'        => null,
+            'isNoReceipt'     => $d->is_no_receipt,
+            'isOcrFailed'     => $d->is_ocr_failed,
+            'returnNote'      => $d->return_note,
+            'rejectionReason' => $d->rejection_reason,
+            'expiresAt'       => $d->expires_at?->toIso8601String(),
+            'refNumber'       => $d->ref_number,
+            'note'            => $d->note,
+            'createdAt'       => $d->created_at?->toIso8601String(),
+            'updatedAt'       => $d->updated_at?->toIso8601String(),
+        ];
+    }
+
+    private function toDetail(Document $d): array
+    {
+        return array_merge($this->toListItem($d), [
+            'internalStatus' => $d->internal_status,
+            'approvedAt'     => $d->approved_at?->toIso8601String(),
+            'returnedAt'     => $d->returned_at?->toIso8601String(),
+            'rejectedAt'     => $d->rejected_at?->toIso8601String(),
+            'ocrResult'      => $d->ocrResult ? [
+                'merchant'   => $d->ocrResult->extracted_data['merchant'] ?? null,
+                'date'       => $d->ocrResult->extracted_data['date'] ?? null,
+                'amount'     => $d->ocrResult->extracted_data['amount'] ?? null,
+                'vatAmount'  => $d->ocrResult->extracted_data['vat_amount'] ?? null,
+                'orNumber'   => $d->ocrResult->extracted_data['or_number'] ?? null,
+                'tin'        => $d->ocrResult->extracted_data['tin'] ?? null,
+                'confidence' => $d->ocrResult->confidence,
+            ] : null,
+        ]);
+    }
+}

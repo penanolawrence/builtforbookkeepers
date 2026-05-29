@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documents — Tabbed</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; color: #111827; }
+
+  .topnav { background:#fff; border-bottom:1px solid #e5e7eb; padding:0 24px; display:flex; align-items:center; gap:24px; height:48px; }
+  .topnav-brand { font-size:14px; font-weight:800; color:#111827; display:flex; align-items:center; gap:6px; margin-right:8px; }
+  .topnav-brand-dot { width:8px; height:8px; background:#6366f1; border-radius:2px; }
+  .topnav-link { font-size:13px; color:#6b7280; height:48px; display:flex; align-items:center; border-bottom:2px solid transparent; }
+  .topnav-link.active { color:#6366f1; font-weight:600; border-bottom-color:#6366f1; }
+  .topnav-spacer { flex:1; }
+  .topnav-avatar { width:28px; height:28px; background:#eef2ff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#6366f1; }
+
+  .page { max-width:960px; margin:0 auto; padding:24px; }
+  .page-title { font-size:18px; font-weight:700; color:#111827; letter-spacing:-0.3px; margin-bottom:4px; }
+  .page-subtitle { font-size:12px; color:#9ca3af; margin-bottom:20px; }
+
+  /* Alert */
+  .alert { background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:12px 16px; display:flex; align-items:flex-start; gap:10px; margin-bottom:20px; }
+  .alert-title { font-size:13px; font-weight:600; color:#9a3412; margin-bottom:2px; }
+  .alert-body { font-size:12px; color:#c2410c; }
+
+  /* Sub-nav pills */
+  .subnav { display:flex; gap:6px; margin-bottom:20px; }
+  .subnav-btn { padding:6px 16px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid #e5e7eb; background:#fff; color:#6b7280; display:flex; align-items:center; gap:6px; transition:all 0.15s; }
+  .subnav-btn:hover { border-color:#c7d2fe; color:#4338ca; background:#f5f3ff; }
+  .subnav-btn.active { background:#6366f1; color:#fff; border-color:#6366f1; }
+  .subnav-btn.active .tab-badge { background:rgba(255,255,255,0.25); color:#fff; }
+  .tab-badge { font-size:10px; font-weight:700; padding:1px 7px; border-radius:20px; background:#eef2ff; color:#4338ca; }
+
+  /* Upload tab */
+  .upload-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+  .upload-zone { border-radius:10px; overflow:hidden; border:1.5px solid; }
+  .upload-zone.income { border-color:#bbf7d0; }
+  .upload-zone.expense { border-color:#fecaca; }
+
+  .zone-header { padding:11px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .upload-zone.income .zone-header { background:#f0fdf4; }
+  .upload-zone.expense .zone-header { background:#fff5f5; }
+
+  .zone-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; }
+  .upload-zone.income .zone-label { color:#15803d; }
+  .upload-zone.expense .zone-label { color:#b91c1c; }
+
+  .zone-count { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
+  .upload-zone.income .zone-count { background:#dcfce7; color:#166534; }
+  .upload-zone.expense .zone-count { background:#fee2e2; color:#991b1b; }
+
+  .zone-drop { margin:12px; border:2px dashed; border-radius:8px; padding:22px 12px; text-align:center; cursor:pointer; }
+  .upload-zone.income .zone-drop { border-color:#86efac; background:#f0fdf4; }
+  .upload-zone.expense .zone-drop { border-color:#fca5a5; background:#fff5f5; }
+
+  .zone-drop-hint { font-size:12px; color:#6b7280; margin-bottom:10px; }
+  .zone-drop-hint strong { display:block; font-size:13px; margin-bottom:3px; }
+  .upload-zone.income .zone-drop-hint strong { color:#15803d; }
+  .upload-zone.expense .zone-drop-hint strong { color:#b91c1c; }
+
+  .zone-btns { display:flex; gap:6px; justify-content:center; }
+  .zone-btn { font-size:11px; font-weight:600; padding:5px 12px; border-radius:6px; cursor:pointer; background:#fff; }
+  .upload-zone.income .zone-btn { color:#16a34a; border:1.5px solid #86efac; }
+  .upload-zone.expense .zone-btn { color:#dc2626; border:1.5px solid #fca5a5; }
+
+  .zone-formats { font-size:10px; color:#d1d5db; margin:6px 16px 10px; text-align:center; }
+
+  .zone-recent { border-top:1px solid; margin:0 12px 12px; padding-top:8px; }
+  .upload-zone.income .zone-recent { border-color:#bbf7d0; }
+  .upload-zone.expense .zone-recent { border-color:#fecaca; }
+  .zone-recent-title { font-size:10px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:5px; }
+  .zone-item { display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid #f9fafb; }
+  .zone-item:last-child { border-bottom:none; }
+  .zone-item-name { font-size:11px; color:#374151; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .zone-item-status { font-size:10px; font-weight:600; padding:1px 6px; border-radius:3px; flex-shrink:0; }
+  .s-posted { background:#dcfce7; color:#166534; }
+  .s-processing { background:#dbeafe; color:#1d4ed8; }
+  .s-returned { background:#fee2e2; color:#991b1b; }
+  .s-review { background:#fef3c7; color:#92400e; }
+
+  .manual-link { text-align:center; }
+  .manual-link a { font-size:12px; color:#6366f1; text-decoration:underline; cursor:pointer; font-weight:500; }
+
+  /* All documents tab */
+  .section-card { background:#fff; border:1px solid #e5e7eb; border-radius:0 0 8px 8px; overflow:hidden; }
+  .toolbar { padding:8px 14px; border-bottom:1px solid #f3f4f6; display:flex; gap:8px; align-items:center; background:#fafafa; flex-wrap:wrap; }
+  .toolbar-input { border:1px solid #e5e7eb; border-radius:6px; padding:5px 10px; font-size:12px; color:#374151; background:#fff; outline:none; width:180px; }
+  .toolbar-select { border:1px solid #e5e7eb; border-radius:6px; padding:5px 8px; font-size:12px; color:#374151; background:#fff; }
+
+  .table { width:100%; border-collapse:collapse; font-size:12px; }
+  .table th { background:#f9fafb; padding:7px 14px; text-align:left; font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e5e7eb; }
+  .table td { padding:8px 14px; border-bottom:1px solid #f3f4f6; color:#374151; vertical-align:middle; }
+  .table tr:last-child td { border-bottom:none; }
+  .table tr:hover td { background:#fafafa; cursor:pointer; }
+  .td-primary { font-weight:500; color:#111827; }
+  .td-muted { color:#9ca3af; font-size:11px; }
+  .td-ret td { background:#fff8f0 !important; }
+  .td-ret .td-primary { color:#9a3412; }
+
+  .badge { display:inline-flex; align-items:center; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+  .b-income { background:#dcfce7; color:#166534; }
+  .b-expense { background:#fee2e2; color:#991b1b; }
+  .b-green { background:#dcfce7; color:#166534; }
+  .b-blue { background:#dbeafe; color:#1d4ed8; }
+  .b-yellow { background:#fef3c7; color:#92400e; }
+  .b-red { background:#fee2e2; color:#991b1b; }
+
+  .reupload-btn { font-size:11px; font-weight:600; color:#ea580c; background:#fff7ed; border:1px solid #fed7aa; padding:2px 8px; border-radius:4px; cursor:pointer; }
+
+  .pagination { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #f3f4f6; background:#fafafa; }
+  .pagination-info { font-size:11px; color:#9ca3af; }
+  .pagination-btns { display:flex; gap:4px; }
+  .page-btn { width:26px; height:26px; border:1px solid #e5e7eb; border-radius:5px; font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; background:#fff; color:#374151; }
+  .page-btn.active { background:#6366f1; color:#fff; border-color:#6366f1; font-weight:700; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-brand"><div class="topnav-brand-dot"></div> Sofia Books</div>
+  <a class="topnav-link">Dashboard</a>
+  <a class="topnav-link active">Documents</a>
+  <a class="topnav-link">Reports</a>
+  <a class="topnav-link">Settings</a>
+  <div class="topnav-spacer"></div>
+  <div class="topnav-avatar">AB</div>
+</nav>
+
+<div class="page">
+  <div class="page-title">Documents</div>
+  <div class="page-subtitle">ABC Trading Corp. · 24 total this month</div>
+
+  <!-- Returned alert — visible on both tabs -->
+  <div class="alert">
+    <div style="font-size:16px;flex-shrink:0;">⚠️</div>
+    <div>
+      <div class="alert-title">2 documents were returned — action needed</div>
+      <div class="alert-body">OR-2026-0391: image too blurry. &nbsp;INV-2026-0077: missing page 2. &nbsp;Re-upload them in the correct zone.</div>
+    </div>
+  </div>
+
+  <!-- Sub-nav -->
+  <div class="subnav">
+    <button class="subnav-btn active" onclick="show('upload')">Upload Documents</button>
+    <button class="subnav-btn" onclick="show('all')">All Documents <span class="tab-badge">24</span></button>
+  </div>
+
+  <!-- ── UPLOAD TAB ── -->
+  <div id="tab-upload" style="padding:0;">
+
+    <div class="upload-grid">
+
+      <!-- Income -->
+      <div class="upload-zone income">
+        <div class="zone-header">
+          <div class="zone-label">↑ Income</div>
+          <div class="zone-count">14 this month</div>
+        </div>
+        <div class="zone-drop">
+          <div class="zone-drop-hint">
+            <strong>Drop income documents here</strong>
+            Official receipts, invoices received, sales records
+          </div>
+          <div class="zone-btns">
+            <button class="zone-btn">📷 Take Photo</button>
+            <button class="zone-btn">📁 Choose File</button>
+          </div>
+        </div>
+        <div class="zone-formats">JPG · PNG · PDF · max 10MB</div>
+      </div>
+
+      <!-- Expenses -->
+      <div class="upload-zone expense">
+        <div class="zone-header">
+          <div class="zone-label">↓ Expenses</div>
+          <div class="zone-count">10 this month</div>
+        </div>
+        <div class="zone-drop">
+          <div class="zone-drop-hint">
+            <strong>Drop expense documents here</strong>
+            Receipts paid, supplier invoices, disbursements
+          </div>
+          <div class="zone-btns">
+            <button class="zone-btn">📷 Take Photo</button>
+            <button class="zone-btn">📁 Choose File</button>
+          </div>
+        </div>
+        <div class="zone-formats">JPG · PNG · PDF · max 10MB</div>
+      </div>
+
+    </div>
+
+    <!-- No Receipt block button -->
+    <button style="width:100%;padding:11px;background:#fff;border:1.5px dashed #c7d2fe;border-radius:8px;font-size:13px;font-weight:600;color:#6366f1;cursor:pointer;margin-bottom:20px;">
+      No physical receipt? Enter manually
+    </button>
+
+    <!-- In-progress / needs attention table -->
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+      <div style="padding:11px 16px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:13px;font-weight:600;color:#111827;">In Progress</div>
+        <div style="font-size:11px;color:#9ca3af;">Processing and returned documents only · Posted items removed automatically</div>
+      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Type</th>
+            <th>Uploaded</th>
+            <th>Status</th>
+            <th>Note</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-primary">INV-2026-0089.pdf</td>
+            <td><span class="badge b-income">Income</span></td>
+            <td class="td-muted">May 26</td>
+            <td><span class="badge b-blue">Processing</span></td>
+            <td class="td-muted">Being reviewed by your accountant</td>
+            <td></td>
+          </tr>
+          <tr style="background:#fff8f0;">
+            <td class="td-primary" style="color:#9a3412;">OR-2026-0391.jpg ⚠️</td>
+            <td><span class="badge b-income">Income</span></td>
+            <td class="td-muted">May 24</td>
+            <td><span class="badge b-red">Returned</span></td>
+            <td style="font-size:11px;color:#c2410c;">Image too blurry</td>
+            <td><button class="reupload-btn">Re-upload</button></td>
+          </tr>
+          <tr style="background:#fff8f0;">
+            <td class="td-primary" style="color:#9a3412;">INV-2026-0077.pdf ⚠️</td>
+            <td><span class="badge b-expense">Expense</span></td>
+            <td class="td-muted">May 22</td>
+            <td><span class="badge b-red">Returned</span></td>
+            <td style="font-size:11px;color:#c2410c;">Missing page 2</td>
+            <td><button class="reupload-btn">Re-upload</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ── ALL DOCUMENTS TAB ── -->
+  <div id="tab-all" style="display:none;">
+    <div class="section-card">
+      <div class="toolbar">
+        <input class="toolbar-input" placeholder="Search filename..." />
+        <select class="toolbar-select">
+          <option>All types</option>
+          <option>Income</option>
+          <option>Expenses</option>
+        </select>
+        <select class="toolbar-select">
+          <option>All statuses</option>
+          <option>Processing</option>
+          <option>In Review</option>
+          <option>Posted</option>
+          <option>Returned</option>
+          <option>Rejected</option>
+        </select>
+        <input type="date" class="toolbar-select" style="width:130px;" />
+        <input type="date" class="toolbar-select" style="width:130px;" />
+      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Type</th>
+            <th>Merchant</th>
+            <th>Amount</th>
+            <th>Uploaded</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-primary">OR-2026-0441.jpg</td>
+            <td><span class="badge b-income">Income</span></td>
+            <td class="td-muted">ABC Customer #44</td>
+            <td style="font-size:12px;font-weight:500;">₱1,200.00</td>
+            <td class="td-muted">May 27</td>
+            <td><span class="badge b-green">Posted</span></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="td-primary">INV-2026-0089.pdf</td>
+            <td><span class="badge b-income">Income</span></td>
+            <td class="td-muted">—</td>
+            <td class="td-muted">—</td>
+            <td class="td-muted">May 26</td>
+            <td><span class="badge b-blue">Processing</span></td>
+            <td></td>
+          </tr>
+          <tr class="td-ret">
+            <td class="td-primary">OR-2026-0391.jpg ⚠️</td>
+            <td><span class="badge b-income">Income</span></td>
+            <td class="td-muted">—</td>
+            <td class="td-muted">—</td>
+            <td class="td-muted">May 24</td>
+            <td><span class="badge b-red">Returned</span></td>
+            <td><button class="reupload-btn">Re-upload</button></td>
+          </tr>
+          <tr class="td-ret">
+            <td class="td-primary">INV-2026-0077.pdf ⚠️</td>
+            <td><span class="badge b-expense">Expense</span></td>
+            <td class="td-muted">—</td>
+            <td class="td-muted">—</td>
+            <td class="td-muted">May 22</td>
+            <td><span class="badge b-red">Returned</span></td>
+            <td><button class="reupload-btn">Re-upload</button></td>
+          </tr>
+          <tr>
+            <td class="td-primary">OR-2026-0388.jpg</td>
+            <td><span class="badge b-expense">Expense</span></td>
+            <td class="td-muted">Supplier XYZ</td>
+            <td style="font-size:12px;font-weight:500;">₱4,500.00</td>
+            <td class="td-muted">May 21</td>
+            <td><span class="badge b-green">Posted</span></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="td-primary">OR-2026-0370.jpg</td>
+            <td><span class="badge b-expense">Expense</span></td>
+            <td class="td-muted">Meralco</td>
+            <td style="font-size:12px;font-weight:500;">₱3,200.00</td>
+            <td class="td-muted">May 19</td>
+            <td><span class="badge b-green">Posted</span></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <div class="pagination-info">Showing 1–6 of 24</div>
+        <div class="pagination-btns">
+          <div class="page-btn">‹</div>
+          <div class="page-btn active">1</div>
+          <div class="page-btn">2</div>
+          <div class="page-btn">3</div>
+          <div class="page-btn">4</div>
+          <div class="page-btn">›</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function show(tab) {
+  document.getElementById('tab-upload').style.display = tab === 'upload' ? '' : 'none';
+  document.getElementById('tab-all').style.display = tab === 'all' ? '' : 'none';
+  document.querySelectorAll('.subnav-btn').forEach((t, i) => {
+    t.classList.toggle('active', ['upload','all'][i] === tab);
+  });
+}
+</script>
+</body>
+</html>
