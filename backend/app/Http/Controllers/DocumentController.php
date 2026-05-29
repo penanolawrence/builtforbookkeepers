@@ -79,14 +79,14 @@ class DocumentController extends Controller
             $query->whereDate('document_date', '<=', $request->end);
         }
 
-        $documents = $query->latest()->get();
+        $documents = $query->with('transactionLines')->latest()->get();
 
         return response()->json($documents->map(fn ($d) => $this->toListItem($d)));
     }
 
     public function show(string $id): JsonResponse
     {
-        $document = Document::with(['company', 'ocrResult'])->findOrFail($id);
+        $document = Document::with(['company', 'ocrResult', 'transactionLines.account'])->findOrFail($id);
         $user     = auth()->user();
 
         if ($user->role === 'client' && $document->company_id !== $user->company_id) {
@@ -262,13 +262,16 @@ class DocumentController extends Controller
             $query->whereDate('document_date', '<=', $request->end);
         }
 
-        $documents = $query->latest()->get();
+        $documents = $query->with('transactionLines')->latest()->get();
 
         return response()->json($documents->map(fn ($d) => $this->toListItem($d)));
     }
 
     private function toListItem(Document $d): array
     {
+        $inflow  = (float) $d->transactionLines->where('type', 'income')->sum('amount');
+        $outflow = (float) $d->transactionLines->where('type', 'expense')->sum('amount');
+
         return [
             'id'              => $d->id,
             'companyId'       => $d->company_id,
@@ -290,6 +293,8 @@ class DocumentController extends Controller
             'expiresAt'       => $d->expires_at?->toIso8601String(),
             'refNumber'       => $d->ref_number,
             'note'            => $d->note,
+            'inflow'          => $inflow,
+            'outflow'         => $outflow,
             'createdAt'       => $d->created_at?->toIso8601String(),
             'updatedAt'       => $d->updated_at?->toIso8601String(),
         ];
@@ -298,11 +303,11 @@ class DocumentController extends Controller
     private function toDetail(Document $d): array
     {
         return array_merge($this->toListItem($d), [
-            'internalStatus' => $d->internal_status,
-            'approvedAt'     => $d->approved_at?->toIso8601String(),
-            'returnedAt'     => $d->returned_at?->toIso8601String(),
-            'rejectedAt'     => $d->rejected_at?->toIso8601String(),
-            'ocrResult'      => $d->ocrResult ? [
+            'internalStatus'   => $d->internal_status,
+            'approvedAt'       => $d->approved_at?->toIso8601String(),
+            'returnedAt'       => $d->returned_at?->toIso8601String(),
+            'rejectedAt'       => $d->rejected_at?->toIso8601String(),
+            'ocrResult'        => $d->ocrResult ? [
                 'merchant'   => $d->ocrResult->extracted_data['merchant'] ?? null,
                 'date'       => $d->ocrResult->extracted_data['date'] ?? null,
                 'amount'     => $d->ocrResult->extracted_data['amount'] ?? null,
@@ -311,6 +316,15 @@ class DocumentController extends Controller
                 'tin'        => $d->ocrResult->extracted_data['tin'] ?? null,
                 'confidence' => $d->ocrResult->confidence,
             ] : null,
+            'transactionLines' => $d->transactionLines->map(fn($l) => [
+                'id'          => $l->id,
+                'accountCode' => $l->account_code,
+                'accountName' => $l->account?->name,
+                'type'        => $l->type,
+                'category'    => $l->category,
+                'amount'      => (float) $l->amount,
+                'description' => $l->description,
+            ])->values()->all(),
         ]);
     }
 }
