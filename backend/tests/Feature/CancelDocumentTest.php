@@ -38,9 +38,13 @@ class CancelDocumentTest extends TestCase
 
         $response->assertOk();
         $this->assertDatabaseHas('documents', [
-            'id'     => $doc->id,
-            'status' => 'cancelled',
+            'id'           => $doc->id,
+            'status'       => 'cancelled',
+            'cancelled_by' => $this->client->id,
         ]);
+        // Also verify cancelled_at is set
+        $doc->refresh();
+        $this->assertNotNull($doc->cancelled_at);
     }
 
     public function test_client_can_cancel_parked_document(): void

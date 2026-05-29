@@ -45,6 +45,8 @@ class Document extends Model
         'rejected_at',
         'approved_by',
         'approved_at',
+        'cancelled_by',
+        'cancelled_at',
         'note',
     ];
 
@@ -59,6 +61,7 @@ class Document extends Model
         'expires_at'     => 'datetime',
         'rejected_at'    => 'datetime',
         'approved_at'    => 'datetime',
+        'cancelled_at'   => 'datetime',
     ];
 
     public function company(): BelongsTo

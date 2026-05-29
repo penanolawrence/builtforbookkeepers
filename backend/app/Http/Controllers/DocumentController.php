@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\DocumentStageUpdated;
+use App\Events\DocumentStatusChanged;
 use App\Http\Requests\Document\ManualEntryRequest;
 use App\Http\Requests\Document\UploadDocumentRequest;
 use App\Jobs\ClassifyWithAI;
@@ -177,7 +178,19 @@ class DocumentController extends Controller
             return response()->json(['message' => 'This document cannot be cancelled.'], 422);
         }
 
-        $document->update(['status' => 'cancelled']);
+        $document->update([
+            'status'       => 'cancelled',
+            'cancelled_by' => $user->id,
+            'cancelled_at' => now(),
+        ]);
+
+        rescue(fn () => event(new DocumentStatusChanged(
+            companyId:      $document->company_id,
+            documentId:     $document->id,
+            status:         'cancelled',
+            flag:           $document->flag,
+            anomalyReasons: $document->anomaly_reason ?? [],
+        )));
 
         return response()->json(['message' => 'Document withdrawn.']);
     }
