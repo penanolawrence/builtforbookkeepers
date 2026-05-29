@@ -82,7 +82,10 @@ class ClassifyWithAI implements ShouldQueue
         // STEP E — Write TransactionLine records (delete+recreate = safe re-run)
         $this->document->transactionLines()->delete();
 
-        $docDate = $this->document->document_date?->format('Y-m-d');
+        // Prefer document_date already on the model; fall back to what Claude extracted
+        // from the receipt (OCR path sets document_date later, so we read it here first)
+        $docDate = $this->document->document_date?->format('Y-m-d')
+            ?? ($classification['document']['date'] ?? null);
 
         foreach ($classification['lines'] ?? [] as $line) {
             $accountId = Account::where('company_id', $company->id)
