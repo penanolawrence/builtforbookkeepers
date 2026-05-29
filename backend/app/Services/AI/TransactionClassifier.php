@@ -61,6 +61,8 @@ class TransactionClassifier
                 throw new \RuntimeException("Claude did not call classify_transaction tool");
             }
 
+            // SDK decodes JSON with associative: true, so input is already a native PHP array
+            // (including nested objects like lines[*]); (array) cast is a safe no-op guard.
             $result = (array) $toolBlock->input;
 
             if (empty($result['lines']) || !is_array($result['lines'])) {
