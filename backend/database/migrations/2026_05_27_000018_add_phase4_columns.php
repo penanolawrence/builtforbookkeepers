@@ -10,8 +10,10 @@ return new class extends Migration
     public function up(): void
     {
         // Extend documents.status to include returned, rejected, approved
-        DB::statement("ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_status_check");
-        DB::statement("ALTER TABLE documents ADD CONSTRAINT documents_status_check CHECK (status IN ('processing','parked','posted','failed','returned','rejected','approved'))");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_status_check");
+            DB::statement("ALTER TABLE documents ADD CONSTRAINT documents_status_check CHECK (status IN ('processing','parked','posted','failed','returned','rejected','approved'))");
+        }
 
         Schema::table('documents', function (Blueprint $table) {
             $table->string('file_type')->nullable()->after('storage_path');
@@ -27,8 +29,10 @@ return new class extends Migration
         });
 
         // Extend adjusting_entries.status to include pending, approved, rejected
-        DB::statement("ALTER TABLE adjusting_entries DROP CONSTRAINT IF EXISTS adjusting_entries_status_check");
-        DB::statement("ALTER TABLE adjusting_entries ADD CONSTRAINT adjusting_entries_status_check CHECK (status IN ('draft','posted','pending','approved','rejected'))");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE adjusting_entries DROP CONSTRAINT IF EXISTS adjusting_entries_status_check");
+            DB::statement("ALTER TABLE adjusting_entries ADD CONSTRAINT adjusting_entries_status_check CHECK (status IN ('draft','posted','pending','approved','rejected'))");
+        }
 
         Schema::table('adjusting_entries', function (Blueprint $table) {
             $table->string('type')->nullable()->after('description');
@@ -92,10 +96,12 @@ return new class extends Migration
             $table->dropColumn(['file_type', 'return_note', 'returned_by', 'returned_at', 'expires_at', 'rejection_reason', 'rejected_by', 'rejected_at', 'approved_by', 'approved_at']);
         });
 
-        DB::statement("ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_status_check");
-        DB::statement("ALTER TABLE documents ADD CONSTRAINT documents_status_check CHECK (status IN ('processing','parked','posted','failed'))");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_status_check");
+            DB::statement("ALTER TABLE documents ADD CONSTRAINT documents_status_check CHECK (status IN ('processing','parked','posted','failed'))");
 
-        DB::statement("ALTER TABLE adjusting_entries DROP CONSTRAINT IF EXISTS adjusting_entries_status_check");
-        DB::statement("ALTER TABLE adjusting_entries ADD CONSTRAINT adjusting_entries_status_check CHECK (status IN ('draft','posted'))");
+            DB::statement("ALTER TABLE adjusting_entries DROP CONSTRAINT IF EXISTS adjusting_entries_status_check");
+            DB::statement("ALTER TABLE adjusting_entries ADD CONSTRAINT adjusting_entries_status_check CHECK (status IN ('draft','posted'))");
+        }
     }
 };

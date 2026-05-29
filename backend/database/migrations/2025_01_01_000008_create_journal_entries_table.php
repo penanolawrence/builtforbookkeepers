@@ -24,12 +24,16 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement('ALTER TABLE journal_entries ADD CONSTRAINT chk_journal_source CHECK (document_id IS NOT NULL OR adjusting_entry_id IS NOT NULL)');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE journal_entries ADD CONSTRAINT chk_journal_source CHECK (document_id IS NOT NULL OR adjusting_entry_id IS NOT NULL)');
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE journal_entries DROP CONSTRAINT IF EXISTS chk_journal_source');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE journal_entries DROP CONSTRAINT IF EXISTS chk_journal_source');
+        }
         Schema::dropIfExists('journal_entries');
     }
 };

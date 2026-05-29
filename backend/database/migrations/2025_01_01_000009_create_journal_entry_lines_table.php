@@ -19,12 +19,16 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement('ALTER TABLE journal_entry_lines ADD CONSTRAINT chk_debit_or_credit CHECK ((debit IS NOT NULL)::int + (credit IS NOT NULL)::int = 1)');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE journal_entry_lines ADD CONSTRAINT chk_debit_or_credit CHECK ((debit IS NOT NULL)::int + (credit IS NOT NULL)::int = 1)');
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE journal_entry_lines DROP CONSTRAINT IF EXISTS chk_debit_or_credit');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE journal_entry_lines DROP CONSTRAINT IF EXISTS chk_debit_or_credit');
+        }
         Schema::dropIfExists('journal_entry_lines');
     }
 };
