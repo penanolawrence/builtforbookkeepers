@@ -50,10 +50,27 @@ def _preprocess(img_bytes: bytes) -> np.ndarray:
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if img is None:
         raise ValueError("Could not decode image")
+
+    # Upscale small images — PaddleOCR works best at 1500px+ wide
+    h, w = img.shape[:2]
+    if w < 1500:
+        scale = 1500 / w
+        img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_CUBIC)
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray = _deskew(gray)
-    gray = cv2.fastNlMeansDenoising(gray, h=10)
-    gray = cv2.equalizeHist(gray)
+
+    # Gentle denoising — h=4 preserves thin text; h=10 blurs it
+    gray = cv2.fastNlMeansDenoising(gray, h=4)
+
+    # CLAHE instead of equalizeHist — adapts locally, better for uneven receipt lighting
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray = clahe.apply(gray)
+
+    # Mild unsharp mask to sharpen text edges
+    blurred = cv2.GaussianBlur(gray, (0, 0), sigmaX=1.0)
+    gray = cv2.addWeighted(gray, 1.5, blurred, -0.5, 0)
+
     rgb = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
     return rgb
 
@@ -77,26 +94,48 @@ def _parse_date(text: str) -> str | None:
 
 
 def _parse_amount(lines: list[str]) -> float | None:
-    total_keywords = r'(grand\s*total|total\s*amount|total\s*due|total|amount\s*due)'
+    # Philippine receipt keywords — ordered by specificity
+    total_keywords = (
+        r'(grand\s*total|total\s*amount\s*due|total\s*amount|total\s*due|'
+        r'amount\s*due|net\s*amount|total\s*sales|total\s*purchase|'
+        r'less\s*vat|amount\s*payable|payable\s*amount|total)'
+    )
+    # Match amounts with or without decimals, with or without peso sign
+    amount_pattern = r'[₱P]?\s*([\d,]+(?:\.\d{1,2})?)'
+
     for line in reversed(lines):
         if re.search(total_keywords, line, re.IGNORECASE):
-            nums = re.findall(r'[\d,]+\.\d{2}', line)
+            nums = re.findall(amount_pattern, line)
             if nums:
-                return float(nums[-1].replace(',', ''))
+                try:
+                    return float(nums[-1].replace(',', ''))
+                except ValueError:
+                    continue
+
+    # Fallback: last line containing a number that looks like a total
     for line in reversed(lines):
-        nums = re.findall(r'[\d,]+\.\d{2}', line)
+        nums = re.findall(amount_pattern, line)
         if nums:
-            return float(nums[-1].replace(',', ''))
+            try:
+                val = float(nums[-1].replace(',', ''))
+                if val > 0:
+                    return val
+            except ValueError:
+                continue
     return None
 
 
 def _parse_vat(lines: list[str]) -> float | None:
-    vat_keywords = r'(vat|12%|output\s*tax|input\s*tax|value.added)'
+    vat_keywords = r'(vat|12%|output\s*tax|input\s*tax|value.added\s*tax|vatable)'
+    amount_pattern = r'[₱P]?\s*([\d,]+(?:\.\d{1,2})?)'
     for line in lines:
         if re.search(vat_keywords, line, re.IGNORECASE):
-            nums = re.findall(r'[\d,]+\.\d{2}', line)
+            nums = re.findall(amount_pattern, line)
             if nums:
-                return float(nums[-1].replace(',', ''))
+                try:
+                    return float(nums[-1].replace(',', ''))
+                except ValueError:
+                    continue
     return None
 
 
