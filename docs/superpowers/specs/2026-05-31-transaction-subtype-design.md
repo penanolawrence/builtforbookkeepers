@@ -43,7 +43,12 @@ The `documents.category` column (used by the anomaly detector) is **not touched*
 - Returns matching subtypes (`id`, `name`) using `ILIKE %query%`
 - Max 20 results
 
-No dedicated create endpoint. When saving a transaction line with a new subtype name, the backend performs a **find-or-create** on the `subtypes` table by name and resolves `subtype_id`. This keeps the API surface minimal.
+**`POST /api/subtypes`**
+- Body: `{ name }`
+- Creates the subtype immediately and returns `{ id, name }`
+- Called the moment the accountant selects "Create: {value}" from the dropdown
+
+Creation happens **on selection, not on save**. The frontend immediately calls `POST /api/subtypes` when the accountant picks a new value, shows a spinner on the combobox while waiting, then stores the returned `id`. This makes the new subtype available in the typeahead for other lines in the same document without waiting for the form to be saved.
 
 ### `TransactionLine` model
 
@@ -60,7 +65,7 @@ No dedicated create endpoint. When saving a transaction line with a new subtype 
   - Below 3 characters: no API call, no dropdown shown
   - At 3+ characters: debounced `GET /api/subtypes?q={query}`, results populate as options
   - Selecting an existing match stores `subtype_id`
-  - No match: user sees "Create: {value}" option — submitted as a name string, resolved to `subtype_id` server-side on save
+  - No match: user sees "Create: {value}" option — selecting it calls `POST /api/subtypes` immediately, the combobox shows a spinner while the request is in flight, then resolves to the new `subtype_id`
   - Uses the existing shadcn/ui `Command` + `Popover` pattern — no new dependencies
 
 ## AI Classification
