@@ -59,7 +59,7 @@ class QueueController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $document = Document::with(['company', 'ocrResult', 'transactionLines.account'])->findOrFail($id);
+        $document = Document::with(['company', 'ocrResult', 'transactionLines.account', 'transactionLines.subtype'])->findOrFail($id);
 
         try {
             $journalPreview = (new JournalEntryService())->previewFromDocument($document);
@@ -91,7 +91,8 @@ class QueueController extends Controller
                 'accountCode' => $l->account_code,
                 'accountName' => $l->account?->name,
                 'type'        => $l->type,
-                'category'    => $l->category,
+                'subtypeId'   => $l->subtype_id,
+                'subtypeName' => $l->subtype?->name,
                 'amount'      => (float) $l->amount,
                 'description' => $l->description,
                 'date'        => $l->date?->toDateString(),
@@ -161,7 +162,7 @@ class QueueController extends Controller
                         $updateData = [];
                         if (array_key_exists('accountId', $lineData))   $updateData['account_id']   = $lineData['accountId'];
                         if (array_key_exists('accountCode', $lineData)) $updateData['account_code'] = $lineData['accountCode'];
-                        if (array_key_exists('category', $lineData))    $updateData['category']     = $lineData['category'];
+                        if (array_key_exists('subtypeId', $lineData))   $updateData['subtype_id']   = $lineData['subtypeId'] ?: null;
                         if (array_key_exists('amount', $lineData))      $updateData['amount']       = $lineData['amount'];
                         if (array_key_exists('description', $lineData)) $updateData['description']  = $lineData['description'];
                         if (array_key_exists('date', $lineData))        $updateData['date']         = $lineData['date'];
@@ -175,7 +176,7 @@ class QueueController extends Controller
                             'type'         => $lineData['type'],
                             'account_id'   => $lineData['accountId'] ?? null,
                             'account_code' => $lineData['accountCode'] ?? null,
-                            'category'     => $lineData['category'] ?? null,
+                            'subtype_id'   => $lineData['subtypeId'] ?? null,
                             'amount'       => $lineData['amount'] ?? 0,
                             'description'  => $lineData['description'] ?? null,
                             'date'         => $lineData['date'] ?? null,
@@ -262,7 +263,7 @@ class QueueController extends Controller
                 if (empty($lineData['id'])) continue;
                 $line = $document->transactionLines->firstWhere('id', $lineData['id']);
                 if (!$line) continue;
-                foreach (['accountCode' => 'account_code', 'category' => 'category'] as $field => $dbCol) {
+                foreach (['accountCode' => 'account_code', 'subtypeId' => 'subtype_id'] as $field => $dbCol) {
                     if (!isset($lineData[$field])) continue;
                     $original = (string) ($line->$dbCol ?? '');
                     $newVal   = (string) $lineData[$field];

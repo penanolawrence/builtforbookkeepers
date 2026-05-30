@@ -88,7 +88,7 @@ class DocumentController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $document = Document::with(['company', 'ocrResult', 'transactionLines.account'])->findOrFail($id);
+        $document = Document::with(['company', 'ocrResult', 'transactionLines.account', 'transactionLines.subtype'])->findOrFail($id);
         $user     = auth()->user();
 
         if ($user->role === 'client' && $document->company_id !== $user->company_id) {
@@ -352,7 +352,8 @@ class DocumentController extends Controller
                 'accountCode' => $l->account_code,
                 'accountName' => $l->account?->name,
                 'type'        => $l->type,
-                'category'    => $l->category,
+                'subtypeId'   => $l->subtype_id,
+                'subtypeName' => $l->subtype?->name,
                 'amount'      => (float) $l->amount,
                 'description' => $l->description,
                 'date'        => $l->date?->toDateString(),
