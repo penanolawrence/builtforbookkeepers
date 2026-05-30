@@ -58,11 +58,12 @@ New optional inputs alongside the existing `fields` map:
 |---|---|---|
 | `fields.declaredType` | string | Maps to `document_type` |
 | `lines` | array | Line updates and new lines (see below) |
+| `removedLineIds` | string[] | IDs of existing lines to delete |
 
 Each entry in `lines` is one of:
 
-- **Update existing line:** `{ id, accountId, accountCode, category, amount, description }`
-- **New line:** `{ type: 'income'|'expense', accountId, accountCode, category, amount, description }`
+- **Update existing line:** `{ id, accountId, accountCode, category, amount, description, date }`
+- **New line:** `{ type: 'income'|'expense', accountId, accountCode, category, amount, description, date }`
 
 ### `QueueController::show` — extended response
 
@@ -97,8 +98,9 @@ Requires eager-loading `transactionLines.account` in the `show` query.
 2. **Compute diff before applying changes** — compare each submitted field value against the current stored document value. For each line entry with an `id`, compare submitted `accountCode` and `category` against the current line values. Record differences as `{ field, original, override }`.
 3. Apply document field updates via the existing `fill()` pattern.
 4. Process `lines` inside the existing DB transaction:
-   - Entries with `id`: find matching `TransactionLine`, update `account_id`, `account_code`, `category`, `amount`, `description`.
+   - Entries with `id`: find matching `TransactionLine`, update `account_id`, `account_code`, `category`, `amount`, `description`, `date`.
    - Entries without `id`: create a new `TransactionLine` with `document_id`, `type`, and submitted fields.
+   - Delete all `TransactionLine` records whose IDs appear in `removedLineIds` (scoped to this document for safety).
 5. If the computed diff is non-empty, write `field_overrides` JSON (with `overriddenBy` and `overriddenAt`). Otherwise leave null.
 
 ### `DocumentController::toDetail`
@@ -132,7 +134,8 @@ Add `fieldOverrides` to the response:
 | `date` | string (YYYY-MM-DD) |
 | `declaredType` | string (`'income'` \| `'expense'`) |
 | `paymentMethod` | string |
-| `lines` | `{ id?, type, accountId, accountCode, category, amount, description }[]` |
+| `lines` | `{ id?, type, accountId, accountCode, category, amount, description, date }[]` |
+| `removedLineIds` | `string[]` — IDs of existing lines to delete |
 
 ---
 
@@ -147,15 +150,15 @@ Add `fieldOverrides` to the response:
 │  ┌───────────────────┐  │  ── Transaction Lines ──                   │
 │  │   receipt image   │  │                                            │
 │  └───────────────────┘  │  Income                                    │
-│                         │  Account            Cat    Amt    Desc     │
-│  ── Document Fields ──  │  [5100 — Utilities▾][____][_____][______]  │
-│                         │                          [+ Add income line]│
+│                         │  Account       Cat  Amt   Date    Desc  [x]│
+│  ── Document Fields ──  │  [5100—Util▾] [__][____][______][______][🗑]│
+│                         │                        [+ Add income line] │
 │  Merchant               │                                            │
 │  [_________________]    │  Expense                                   │
-│  AI: MERALCO            │  Account            Cat    Amt    Desc     │
-│                         │  [6200 — Rent     ▾][____][_____][______]  │
-│  Date                   │  [5300 — Supplies ▾][____][_____][______]  │
-│  [_________________]    │                         [+ Add expense line]│
+│  AI: MERALCO            │  Account       Cat  Amt   Date    Desc  [x]│
+│                         │  [6200—Rent▾] [__][____][______][______][🗑]│
+│  Date                   │  [5300—Sup▾]  [__][____][______][______][🗑]│
+│  [_________________]    │                       [+ Add expense line] │
 │  AI: 2026-05-20         │                                            │
 │                         │  ── Anomaly Reasons ──                     │
 │  Declared Type          │  (if RED/YELLOW)                           │
@@ -195,9 +198,13 @@ Lines are grouped into **Income** and **Expense** sections. A section is omitted
 | Account | Searchable dropdown — fetches company's accounts list; shows `code — name`; on select sets both `accountCode` and `accountId` |
 | Category | Free text input |
 | Amount | Number input |
+| Date | Date input (YYYY-MM-DD) |
 | Description | Free text input |
+| Delete | Icon button (🗑) — removes the row from local state; for existing lines, adds the `id` to `removedLineIds` on submit |
 
 **Adding lines:** `[+ Add income line]` / `[+ Add expense line]` appends a new empty row with no `id`. New rows have a subtle left border (blue) to distinguish them from AI-generated lines.
+
+**Removing lines:** Clicking 🗑 on any row removes it immediately from the local `lines` state. For rows that have an `id` (existing AI-generated lines), the `id` is tracked in a `removedLineIds` set and sent to the backend on approve. New rows (no `id`) are simply discarded from state with no backend call needed.
 
 ---
 
@@ -254,7 +261,5 @@ Field labels are human-readable (e.g. `merchantName` → `Merchant`). Line entri
 
 ## Out of scope
 
-- Deleting existing transaction lines
-- Editing transaction line dates
 - Batch approve with field overrides — batch approval remains unchanged
 - Backend changes to `batchApprove`
