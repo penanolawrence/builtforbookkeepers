@@ -36,17 +36,18 @@ class DocumentController extends Controller
         $path = $request->file('file')->store('documents', 's3');
 
         $document = Document::create([
-            'company_id'      => $company->id,
-            'uploaded_by'     => $user->id,
+            'company_id'        => $company->id,
+            'uploaded_by'       => $user->id,
             'original_filename' => $request->file('file')->getClientOriginalName(),
-            'storage_path'    => $path,
-            'file_type'       => $request->file('file')->getClientOriginalExtension(),
-            'file_hash'       => $hash,
-            'document_type'   => $request->declared_type,
-            'status'          => 'processing',
-            'internal_status' => 'PENDING',
-            'is_no_receipt'   => false,
-            'is_ocr_failed'   => false,
+            'storage_path'      => $path,
+            'file_type'         => $request->file('file')->getClientOriginalExtension(),
+            'file_hash'         => $hash,
+            'document_type'     => $request->declared_type,
+            'status'            => 'processing',
+            'internal_status'   => 'PENDING',
+            'is_no_receipt'     => false,
+            'is_ocr_failed'     => false,
+            'note'              => $request->note,
         ]);
 
         ProcessDocumentOCR::dispatch($document);
@@ -261,17 +262,10 @@ class DocumentController extends Controller
             return response()->json(['url' => null]);
         }
 
-        $disk      = 's3';
-        $url       = Storage::disk($disk)->temporaryUrl($document->storage_path, now()->addMinutes(15));
-        $expiresAt = now()->addMinutes(15)->toIso8601String();
+        $disk = config('filesystems.disks.s3.public_url') ? 's3-url' : 's3';
+        $url  = Storage::disk($disk)->temporaryUrl($document->storage_path, now()->addMinutes(15));
 
-        $publicBase   = config("filesystems.disks.$disk.public_url");
-        $internalBase = config("filesystems.disks.$disk.endpoint");
-        if ($publicBase && $internalBase) {
-            $url = str_replace(rtrim($internalBase, '/'), rtrim($publicBase, '/'), $url);
-        }
-
-        return response()->json(['url' => $url, 'expiresAt' => $expiresAt]);
+        return response()->json(['url' => $url, 'expiresAt' => now()->addMinutes(15)->toIso8601String()]);
     }
 
     public function clientDocuments(Request $request, string $clientId): JsonResponse
