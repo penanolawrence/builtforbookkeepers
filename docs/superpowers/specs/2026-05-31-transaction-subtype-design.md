@@ -63,8 +63,17 @@ No dedicated create endpoint. When saving a transaction line with a new subtype 
   - No match: user sees "Create: {value}" option — submitted as a name string, resolved to `subtype_id` server-side on save
   - Uses the existing shadcn/ui `Command` + `Popover` pattern — no new dependencies
 
+## AI Classification
+
+The `ClassifyWithAI` job already receives a `category` string from Claude's response per transaction line. After this change it will:
+
+1. Take that category string
+2. Find-or-create a matching `Subtype` by name
+3. Set `subtype_id` on the line instead of `category`
+
+This means lines will have a `subtype_id` populated from day one, even before an accountant reviews them. Accountants can still override in the review modal.
+
 ## Out of Scope
 
-- AI auto-assigning subtypes during classification
 - Scoping subtypes per account
 - Report UI changes (subtype data will be available for future breakdown reports)
