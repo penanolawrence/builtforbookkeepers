@@ -58,7 +58,7 @@ class QueueController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $document = Document::with(['company', 'ocrResult'])->findOrFail($id);
+        $document = Document::with(['company', 'ocrResult', 'transactionLines.account'])->findOrFail($id);
 
         try {
             $journalPreview = (new JournalEntryService())->previewFromDocument($document);
@@ -67,23 +67,34 @@ class QueueController extends Controller
         }
 
         return response()->json([
-            'documentId'     => $document->id,
-            'clientId'       => $document->company_id,
-            'clientName'     => $document->company->name,
-            'flag'           => $document->flag,
-            'anomalyReasons' => $document->anomaly_reason ?? [],
-            'merchantName'   => $document->merchant_name,
-            'amount'         => $document->amount,
-            'vatAmount'      => $document->vat_amount,
-            'date'           => $document->document_date?->toDateString(),
-            'category'       => $document->category,
-            'paymentMethod'  => $document->payment_method,
-            'refNumber'      => $document->ref_number,
-            'isNoReceipt'    => $document->is_no_receipt,
-            'isOcrFailed'    => $document->is_ocr_failed,
-            'declaredType'   => $document->document_type,
-            'isVat'          => $document->company->bir_type === 'vat',
-            'journalPreview' => $journalPreview,
+            'documentId'       => $document->id,
+            'clientId'         => $document->company_id,
+            'clientName'       => $document->company->name,
+            'flag'             => $document->flag,
+            'anomalyReasons'   => $document->anomaly_reason ?? [],
+            'merchantName'     => $document->merchant_name,
+            'amount'           => $document->amount,
+            'vatAmount'        => $document->vat_amount,
+            'date'             => $document->document_date?->toDateString(),
+            'category'         => $document->category,
+            'paymentMethod'    => $document->payment_method,
+            'refNumber'        => $document->ref_number,
+            'isNoReceipt'      => $document->is_no_receipt,
+            'isOcrFailed'      => $document->is_ocr_failed,
+            'declaredType'     => $document->document_type,
+            'isVat'            => $document->company->bir_type === 'vat',
+            'journalPreview'   => $journalPreview,
+            'transactionLines' => $document->transactionLines->map(fn ($l) => [
+                'id'          => $l->id,
+                'accountId'   => $l->account_id,
+                'accountCode' => $l->account_code,
+                'accountName' => $l->account?->name,
+                'type'        => $l->type,
+                'category'    => $l->category,
+                'amount'      => (float) $l->amount,
+                'description' => $l->description,
+                'date'        => $l->date?->toDateString(),
+            ])->values()->all(),
         ]);
     }
 
