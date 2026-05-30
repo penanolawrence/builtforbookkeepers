@@ -253,4 +253,42 @@ class QueueReviewTest extends TestCase
         $this->assertDatabaseMissing('transaction_lines', ['id' => $line2->id]);
         $this->assertDatabaseHas('transaction_lines', ['id' => $line1->id]);
     }
+
+    public function test_document_detail_includes_field_overrides(): void
+    {
+        $this->document->update([
+            'status'          => 'approved',
+            'approved_by'     => $this->accountant->id,
+            'approved_at'     => now(),
+            'field_overrides' => [
+                'overriddenBy' => $this->accountant->id,
+                'overriddenAt' => now()->toIso8601String(),
+                'fields'       => [
+                    ['field' => 'merchantName', 'original' => 'MERALCO', 'override' => 'Manila Electric Co.'],
+                ],
+                'lines' => [],
+            ],
+        ]);
+
+        $client = User::factory()->create([
+            'role'       => 'client',
+            'company_id' => $this->company->id,
+        ]);
+
+        $response = $this->actingAs($client)
+            ->getJson("/api/documents/{$this->document->id}");
+
+        $response->assertOk();
+        $response->assertJsonPath('fieldOverrides.fields.0.field', 'merchantName');
+        $response->assertJsonPath('fieldOverrides.fields.0.original', 'MERALCO');
+    }
+
+    public function test_signed_url_accessible_to_accountant(): void
+    {
+        $response = $this->actingAs($this->accountant)
+            ->getJson("/api/documents/{$this->document->id}/image");
+
+        // 200 — not 403 or 404. URL may be null (MinIO not running in test), but endpoint must be accessible.
+        $response->assertStatus(200);
+    }
 }

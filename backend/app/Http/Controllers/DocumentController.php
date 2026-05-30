@@ -258,6 +258,11 @@ class DocumentController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
+        // Admins can access any document
+        if (!in_array($user->role, ['client', 'accountant', 'admin'])) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
         if ($document->is_no_receipt || !$document->storage_path) {
             return response()->json(['url' => null]);
         }
@@ -337,6 +342,7 @@ class DocumentController extends Controller
             'approvedAt'       => $d->approved_at?->toIso8601String(),
             'returnedAt'       => $d->returned_at?->toIso8601String(),
             'rejectedAt'       => $d->rejected_at?->toIso8601String(),
+            'fieldOverrides'   => $d->field_overrides,
             'ocrResult'        => $d->ocrResult ? [
                 'rawText'    => $d->ocrResult->extracted_data['raw_text'] ?? null,
                 'confidence' => $d->ocrResult->confidence,

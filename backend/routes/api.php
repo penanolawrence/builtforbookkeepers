@@ -30,6 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/count',      [NotificationController::class, 'unreadCount']);
     Route::post('/notifications/mark-read', [NotificationController::class, 'markRead']);
 
+    // Document signed URL — available to all authenticated users (client, accountant, admin)
+    Route::get('/documents/{id}/image', [DocumentController::class, 'getSignedUrl']);
+
     // Client routes
     Route::middleware(['role:client', 'client.active'])->group(function () {
         Route::post('/documents',               [DocumentController::class, 'upload'])->middleware('throttle:30,1');
@@ -37,7 +40,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/documents',                [DocumentController::class, 'index']);
         Route::get('/documents/{id}',           [DocumentController::class, 'show']);
         Route::get('/documents/{id}/status',    [DocumentController::class, 'getStatus']);
-        Route::get('/documents/{id}/image',     [DocumentController::class, 'getSignedUrl']);
         Route::post('/documents/{id}/reupload', [DocumentController::class, 'reupload']);
         Route::post('/documents/{id}/cancel',   [DocumentController::class, 'cancel']);
 
