@@ -82,7 +82,6 @@ class TransactionLinesTest extends TestCase
             'account_id'   => $account->id,
             'account_code' => '4001',
             'type'         => 'income',
-            'category'     => 'Sales Revenue',
             'amount'       => 1000.00,
             'description'  => 'Product sales',
         ]);
