@@ -113,6 +113,32 @@ class TransactionClassifierNoteTest extends TestCase
         );
     }
 
+    public function test_user_note_appears_in_ocr_prompt_with_sections(): void
+    {
+        $messages = null;
+        $classifier = $this->makeClassifierWithCapture($messages);
+        $company    = $this->makeCompany();
+
+        $inputData = [
+            'raw_text' => 'Meralco electricity bill total 100',
+            'header'   => ['MERALCO', 'Account No. 123-456'],
+            'body'     => ['Electricity charges: 100.00'],
+            'footer'   => ['Total Amount Due: 100.00'],
+        ];
+
+        $classifier->classify($inputData, $company, 'Monthly electricity bill from Meralco');
+
+        $this->assertNotNull($messages);
+        $promptText = is_string($messages[0]['content'])
+            ? $messages[0]['content']
+            : json_encode($messages[0]['content']);
+
+        $this->assertStringContainsString(
+            'Monthly electricity bill from Meralco',
+            $promptText
+        );
+    }
+
     public function test_no_note_context_block_when_note_is_null(): void
     {
         $messages = null;

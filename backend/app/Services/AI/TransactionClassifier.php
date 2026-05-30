@@ -104,11 +104,16 @@ class TransactionClassifier
         );
     }
 
-    private function buildImageMessages(array $inputData, ?string $userNote = null): array
+    private function buildNoteBlock(?string $userNote): string
     {
-        $noteBlock = $userNote
+        return ($userNote !== null && trim($userNote) !== '')
             ? "\n\nUser-provided context: \"{$userNote}\"\nUse this as additional context when classifying the document."
             : '';
+    }
+
+    private function buildImageMessages(array $inputData, ?string $userNote = null): array
+    {
+        $noteBlock = $this->buildNoteBlock($userNote);
 
         return [[
             'role'    => 'user',
@@ -136,9 +141,7 @@ class TransactionClassifier
 
     private function buildOcrPrompt(array $inputData, ?string $userNote = null): string
     {
-        $noteBlock = $userNote
-            ? "\n\nUser-provided context: \"{$userNote}\"\nUse this as additional context when classifying the document."
-            : '';
+        $noteBlock = $this->buildNoteBlock($userNote);
 
         $sections = [];
 
@@ -181,9 +184,7 @@ class TransactionClassifier
 
     private function buildManualPrompt(array $inputData, ?string $userNote = null): string
     {
-        $noteBlock = $userNote
-            ? "\n\nUser-provided context: \"{$userNote}\"\nUse this as additional context when classifying the document."
-            : '';
+        $noteBlock = $this->buildNoteBlock($userNote);
 
         return "The client has manually entered this transaction. " .
                "Assign the correct account_code and category to each line from the Chart of Accounts. " .
