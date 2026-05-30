@@ -8,6 +8,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SubtypeController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Accountant;
 use Illuminate\Support\Facades\Route;
@@ -83,6 +84,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/bir/{book}/pdf', [BIRController::class, 'exportPDF']);
 
         Route::get('/documents/client/{clientId}', [DocumentController::class, 'clientDocuments']);
+
+        Route::get('/subtypes',  [SubtypeController::class, 'index']);
+        Route::post('/subtypes', [SubtypeController::class, 'store']);
     });
 
     // Admin routes
