@@ -24,7 +24,7 @@ class ApproveItemRequest extends FormRequest
             'lines.*.type'              => ['nullable', 'string', 'in:income,expense', 'required_without:lines.*.id'],
             'lines.*.accountId'         => ['nullable', 'string'],
             'lines.*.accountCode'       => ['nullable', 'string'],
-            'lines.*.category'          => ['nullable', 'string'],
+            'lines.*.subtypeId'         => ['nullable', 'string', 'exists:subtypes,id'],
             'lines.*.amount'            => ['nullable', 'numeric'],
             'lines.*.description'       => ['nullable', 'string'],
             'lines.*.date'              => ['nullable', 'date'],

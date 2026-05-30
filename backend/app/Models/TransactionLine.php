@@ -16,7 +16,7 @@ class TransactionLine extends Model
         'account_id',
         'account_code',
         'type',
-        'category',
+        'subtype_id',
         'amount',
         'description',
         'date',
@@ -35,5 +35,10 @@ class TransactionLine extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function subtype(): BelongsTo
+    {
+        return $this->belongsTo(Subtype::class);
     }
 }

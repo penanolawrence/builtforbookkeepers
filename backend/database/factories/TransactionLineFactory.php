@@ -14,7 +14,7 @@ class TransactionLineFactory extends Factory
             'account_id'   => null,
             'account_code' => null,
             'type'         => $this->faker->randomElement(['income', 'expense']),
-            'category'     => $this->faker->words(2, true),
+            'subtype_id'   => null,
             'amount'       => $this->faker->randomFloat(2, 10, 5000),
             'description'  => $this->faker->sentence(3),
             'date'         => $this->faker->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),

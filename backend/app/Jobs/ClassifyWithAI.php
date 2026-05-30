@@ -6,6 +6,7 @@ use App\Events\DocumentStageUpdated;
 use App\Events\QueueItemAdded;
 use App\Models\Account;
 use App\Models\Document;
+use App\Models\Subtype;
 use App\Services\AI\TransactionClassifier;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -92,19 +93,21 @@ class ClassifyWithAI implements ShouldQueue
                 ->where('code', $line['account_code'] ?? null)
                 ->value('id');
 
+            $subtypeId = null;
+            if (!empty($line['category'])) {
+                $subtypeId = Subtype::firstOrCreate(['name' => trim($line['category'])])->id;
+            }
+
             $this->document->transactionLines()->create([
                 'account_id'   => $accountId,
                 'account_code' => $line['account_code'] ?? null,
                 'type'         => $line['type'],
-                'category'     => $line['category'] ?? null,
+                'subtype_id'   => $subtypeId,
                 'amount'       => $line['amount'],
                 'description'  => $line['description'] ?? null,
                 'date'         => $line['date'] ?? $docDate,
             ]);
         }
-
-        // Set document category to first line's category as a summary label
-        $this->document->category = $classification['lines'][0]['category'] ?? $this->document->category;
 
         // Apply cleaned fields from Claude (OCR path only)
         if (!$this->document->is_no_receipt && !empty($classification['document'])) {

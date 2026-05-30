@@ -63,7 +63,6 @@ class QueueReviewTest extends TestCase
             'account_id'   => $this->expenseAccount->id,
             'account_code' => '5100',
             'type'         => 'expense',
-            'category'     => 'Utilities',
             'amount'       => 1200.00,
             'description'  => 'Meralco bill',
             'date'         => '2026-05-20',
@@ -160,7 +159,6 @@ class QueueReviewTest extends TestCase
             'account_code' => '5100',
             'type'         => 'expense',
             'amount'       => 1200.00,
-            'category'     => 'Utilities',
         ]);
 
         $newAccount = Account::factory()->create([
@@ -176,7 +174,6 @@ class QueueReviewTest extends TestCase
                     'id'          => $line->id,
                     'accountId'   => $newAccount->id,
                     'accountCode' => '5200',
-                    'category'    => 'Rent',
                     'amount'      => 1500.00,
                     'description' => 'Monthly rent',
                     'date'        => '2026-05-20',
@@ -187,7 +184,7 @@ class QueueReviewTest extends TestCase
 
         $updated = $line->fresh();
         $this->assertEquals('5200', $updated->account_code);
-        $this->assertEquals('Rent', $updated->category);
+        $this->assertEquals('Monthly rent', $updated->description);
         $this->assertEquals('1500.00', $updated->amount);
     }
 
@@ -209,7 +206,6 @@ class QueueReviewTest extends TestCase
                     'type'         => 'expense',
                     'accountId'    => $this->expenseAccount->id,
                     'accountCode'  => '5100',
-                    'category'     => 'Office',
                     'amount'       => 300.00,
                     'description'  => 'Printer paper',
                     'date'         => '2026-05-20',
@@ -219,8 +215,8 @@ class QueueReviewTest extends TestCase
         $response->assertOk();
         $this->assertDatabaseHas('transaction_lines', [
             'document_id' => $this->document->id,
-            'category'    => 'Office',
             'amount'      => '300.00',
+            'description' => 'Printer paper',
         ]);
     }
 
