@@ -14,7 +14,7 @@ class TransactionClassifier
         $this->client = $client ?? new Client(apiKey: config('services.anthropic.key'));
     }
 
-    public function classify(array $inputData, Company $company): array
+    public function classify(array $inputData, Company $company, ?string $userNote = null): array
     {
         $accounts = $company->accounts()->where('is_active', true)->get()
             ->map(fn($a) => "{$a->code}: {$a->name} ({$a->type})")
@@ -29,24 +29,37 @@ class TransactionClassifier
             "Chart of Accounts:\n{$accounts}\n\n" .
             "Rules:\n" .
             "- Each line must use an account_code from the Chart of Accounts above.\n" .
-            "- sum(lines[].amount) MUST equal document.total_amount.\n" .
+            "- For simple single-type documents (all income OR all expense), sum(lines[].amount) MUST equal document.total_amount.\n" .
+            "- For documents that contain BOTH income and expenses (e.g. a daily sales summary with a GROSS SALES figure and an EXPENSES BREAKDOWN section): " .
+            "set document.total_amount to the GROSS SALES amount; " .
+            "create income line(s) for the sales revenue; " .
+            "AND create separate expense line(s) for each expense category listed. " .
+            "Do NOT collapse everything into one income line.\n" .
             "- Use one line for simple single-purpose documents.\n" .
-            "- Use multiple lines when the document clearly covers multiple categories or multiple dates.\n" .
+            "- Use multiple lines when the document covers multiple categories, multiple dates, or has an expenses breakdown.\n" .
             "- For each line, always try to assign a date (YYYY-MM-DD). " .
             "For multi-date documents (e.g. daily sales records), each row has its own date. " .
             "For manual entries, extract any date mentioned in the description text " .
-            "(e.g. 'kita kahapon 2026-05-28' → date: '2026-05-28'). " .
-            "Return null only if you truly cannot determine the date for that specific line.";
+            "Return null only if you truly cannot determine the date for that specific line.\n" .
+            "- Today's date is " . now()->format('Y-m-d') . ". Dates must never be in the future — transactions cannot be dated after today. " .
+            "If an extracted date is in the future, it is likely a misread (e.g. month and day swapped). " .
+            "Try swapping month and day to get a valid past date; if that also fails, return null.";
 
+        $isImagePath = array_key_exists('image_base64', $inputData);
         $isOcrPath   = array_key_exists('raw_text', $inputData);
-        $userPrompt  = $isOcrPath
-            ? $this->buildOcrPrompt($inputData)
-            : $this->buildManualPrompt($inputData);
+
+        if ($isImagePath) {
+            $messages = $this->buildImageMessages($inputData, $userNote);
+        } elseif ($isOcrPath) {
+            $messages = [['role' => 'user', 'content' => $this->buildOcrPrompt($inputData, $userNote)]];
+        } else {
+            $messages = [['role' => 'user', 'content' => $this->buildManualPrompt($inputData, $userNote)]];
+        }
 
         try {
             $response = $this->callApi([
                 'maxTokens'   => 1536,
-                'messages'    => [['role' => 'user', 'content' => $userPrompt]],
+                'messages'    => $messages,
                 'model'       => 'claude-haiku-4-5-20251001',
                 'system'      => $systemPrompt,
                 'temperature' => 0.0,
@@ -87,40 +100,91 @@ class TransactionClassifier
             system:      $params['system'],
             temperature: $params['temperature'],
             tools:       $params['tools'],
-            tool_choice: $params['tool_choice'],
+            toolChoice:  $params['tool_choice'],
         );
     }
 
-    private function buildOcrPrompt(array $inputData): string
+    private function buildImageMessages(array $inputData, ?string $userNote = null): array
     {
+        $noteBlock = $userNote
+            ? "\n\nUser-provided context: \"{$userNote}\"\nUse this as additional context when classifying the document."
+            : '';
+
+        return [[
+            'role'    => 'user',
+            'content' => [
+                [
+                    'type'   => 'image',
+                    'source' => [
+                        'type'       => 'base64',
+                        'media_type' => $inputData['media_type'] ?? 'image/jpeg',
+                        'data'       => $inputData['image_base64'],
+                    ],
+                ],
+                [
+                    'type' => 'text',
+                    'text' => "This is a document photographed by a Philippine SME client.\n\n" .
+                              "It may be a receipt, invoice, daily sales summary, or cash collection report.\n\n" .
+                              "If it contains BOTH a gross sales/income figure AND an expenses breakdown, " .
+                              "create income line(s) for the sales AND separate expense line(s) — do not merge them.\n\n" .
+                              "Extract all structured fields and classify the transaction using the classify_transaction tool." .
+                              $noteBlock,
+                ],
+            ],
+        ]];
+    }
+
+    private function buildOcrPrompt(array $inputData, ?string $userNote = null): string
+    {
+        $noteBlock = $userNote
+            ? "\n\nUser-provided context: \"{$userNote}\"\nUse this as additional context when classifying the document."
+            : '';
+
         $sections = [];
 
         if (!empty($inputData['header'])) {
-            $sections[] = "HEADER (store name, address, BIR TIN):\n" .
+            $sections[] = "HEADER (store name, address, BIR TIN, document title):\n" .
                           implode("\n", $inputData['header']);
         }
         if (!empty($inputData['body'])) {
-            $sections[] = "BODY (items, quantities, unit prices):\n" .
+            $sections[] = "BODY (main content: items, sales entries, time-slot collections, expense categories):\n" .
                           implode("\n", $inputData['body']);
         }
         if (!empty($inputData['footer'])) {
-            $sections[] = "FOOTER (totals, VAT, OR number):\n" .
+            $sections[] = "FOOTER (totals, VAT, OR number, net amounts):\n" .
                           implode("\n", $inputData['footer']);
         }
 
+        $rawText = $inputData['raw_text'] ?? '';
+
         if (empty($sections)) {
-            $sections[] = "Full receipt text:\n" . ($inputData['raw_text'] ?? '');
+            return "You are reading a document photographed by a Philippine SME client.\n" .
+                   "The text below was extracted by OCR — it may contain noise, truncated words, or misread characters.\n\n" .
+                   "Full text:\n{$rawText}\n\n" .
+                   "This may be a receipt, invoice, daily sales summary, or cash collection report.\n\n" .
+                   "If it contains BOTH a gross sales/income figure AND an expenses breakdown, " .
+                   "create income line(s) for the sales AND separate expense line(s) — do not merge them.\n\n" .
+                   "Extract all structured fields and classify the transaction using the classify_transaction tool." .
+                   $noteBlock;
         }
 
-        return "You are reading a receipt photographed by a Philippine SME client.\n" .
-               "The text below was extracted by OCR — it may contain noise or misread characters.\n\n" .
-               "Receipt sections:\n\n" . implode("\n\n", $sections) . "\n\n" .
-               "Extract all structured fields and classify the transaction " .
-               "using the classify_transaction tool.";
+        return "You are reading a document photographed by a Philippine SME client.\n" .
+               "The text below was extracted by OCR — it may contain noise, truncated words, or misread characters.\n\n" .
+               "Document sections:\n\n" . implode("\n\n", $sections) . "\n\n" .
+               "Full text (use this to cross-reference amounts and labels that may be split across sections):\n{$rawText}\n\n" .
+               "This may be a receipt, invoice, daily sales summary, or cash collection report.\n\n" .
+               "If it contains BOTH a gross sales/income figure AND an expenses breakdown, " .
+               "create income line(s) for the sales AND separate expense line(s) — do not merge them.\n\n" .
+               "Extract all structured fields and classify the transaction using the classify_transaction tool." .
+               $noteBlock;
     }
 
-    private function buildManualPrompt(array $inputData): string
+    private function buildManualPrompt(array $inputData, ?string $userNote = null): string
     {
+        $noteBlock = $userNote
+            ? "\n\nUser-provided context: \"{$userNote}\"\nUse this as additional context when classifying the document."
+            : '';
+
         return "The client has manually entered this transaction. " .
                "Assign the correct account_code and category to each line from the Chart of Accounts. " .
                "Also extract any dates mentioned in the description text " .
@@ -128,7 +192,8 @@ class TransactionClassifier
                "Transaction data: " . json_encode($inputData) . "\n\n" .
                "Classify using the classify_transaction tool. " .
                "For document.merchant, document.date, document.or_number — return null " .
-               "(those fields are already set on the document).";
+               "(those fields are already set on the document)." .
+               $noteBlock;
     }
 
     private function buildTool(): array
