@@ -116,6 +116,8 @@ class QueueReviewTest extends TestCase
         $fieldKeys = collect($overrides['fields'])->pluck('field')->all();
         $this->assertContains('merchantName', $fieldKeys);
         $this->assertContains('date', $fieldKeys);
+        $this->assertNotContains('declaredType', $fieldKeys);
+        $this->assertNotContains('paymentMethod', $fieldKeys);
 
         $merchantOverride = collect($overrides['fields'])->firstWhere('field', 'merchantName');
         $this->assertEquals('MERALCO', $merchantOverride['original']);
@@ -124,13 +126,7 @@ class QueueReviewTest extends TestCase
 
     public function test_approve_without_changes_leaves_field_overrides_null(): void
     {
-        $this->document->update([
-            'merchant_name'  => 'MERALCO',
-            'document_date'  => '2026-05-20',
-            'document_type'  => 'expense',
-            'payment_method' => 'cash',
-            'account_id'     => $this->expenseAccount->id,
-        ]);
+        $this->document->update(['account_id' => $this->expenseAccount->id]);
 
         TransactionLine::factory()->create([
             'document_id'  => $this->document->id,

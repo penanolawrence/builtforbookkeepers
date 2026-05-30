@@ -21,7 +21,7 @@ class ApproveItemRequest extends FormRequest
             'fields.paymentMethod'      => ['nullable', 'string'],
             'lines'                     => ['nullable', 'array'],
             'lines.*.id'                => ['nullable', 'string'],
-            'lines.*.type'              => ['nullable', 'string', 'in:income,expense'],
+            'lines.*.type'              => ['nullable', 'string', 'in:income,expense', 'required_without:lines.*.id'],
             'lines.*.accountId'         => ['nullable', 'string'],
             'lines.*.accountCode'       => ['nullable', 'string'],
             'lines.*.category'          => ['nullable', 'string'],

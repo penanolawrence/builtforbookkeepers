@@ -115,30 +115,6 @@ class QueueController extends Controller
         // Compute diff before any changes so original values are preserved
         $diff = $this->computeOverrideDiff($request, $document);
 
-        // Apply document-level field edits
-        if ($request->filled('fields')) {
-            $fieldMap = [
-                'merchantName'  => 'merchant_name',
-                'date'          => 'document_date',
-                'amount'        => 'amount',
-                'vatAmount'     => 'vat_amount',
-                'category'      => 'category',
-                'paymentMethod' => 'payment_method',
-                'accountId'     => 'account_id',
-                'declaredType'  => 'document_type',
-            ];
-            $mapped = [];
-            foreach ($request->fields as $key => $value) {
-                if (isset($fieldMap[$key])) {
-                    $mapped[$fieldMap[$key]] = $value;
-                }
-            }
-            if ($mapped) {
-                $document->fill($mapped);
-                $document->save();
-            }
-        }
-
         $overrideData = (!empty($diff['fields']) || !empty($diff['lines']))
             ? array_merge($diff, [
                 'overriddenBy' => $user->id,
@@ -147,6 +123,30 @@ class QueueController extends Controller
             : null;
 
         DB::transaction(function () use ($document, $user, $request, $overrideData) {
+            // Apply document-level field edits (inside transaction so they roll back if journal posting fails)
+            if ($request->filled('fields')) {
+                $fieldMap = [
+                    'merchantName'  => 'merchant_name',
+                    'date'          => 'document_date',
+                    'amount'        => 'amount',
+                    'vatAmount'     => 'vat_amount',
+                    'category'      => 'category',
+                    'paymentMethod' => 'payment_method',
+                    'accountId'     => 'account_id',
+                    'declaredType'  => 'document_type',
+                ];
+                $mapped = [];
+                foreach ($request->fields as $key => $value) {
+                    if (isset($fieldMap[$key])) {
+                        $mapped[$fieldMap[$key]] = $value;
+                    }
+                }
+                if ($mapped) {
+                    $document->fill($mapped);
+                    $document->save();
+                }
+            }
+
             // Delete removed lines (scoped to this document for safety)
             if ($request->filled('removedLineIds')) {
                 TransactionLine::where('document_id', $document->id)
