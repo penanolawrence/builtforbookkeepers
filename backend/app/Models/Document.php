@@ -48,6 +48,7 @@ class Document extends Model
         'cancelled_by',
         'cancelled_at',
         'note',
+        'field_overrides',
     ];
 
     protected $casts = [
@@ -62,6 +63,7 @@ class Document extends Model
         'rejected_at'    => 'datetime',
         'approved_at'    => 'datetime',
         'cancelled_at'   => 'datetime',
+        'field_overrides' => 'array',
     ];
 
     public function company(): BelongsTo
