@@ -9,6 +9,7 @@ use App\Http\Requests\Queue\BatchApproveRequest;
 use App\Http\Requests\Queue\RejectItemRequest;
 use App\Http\Requests\Queue\ReturnItemRequest;
 use App\Models\Document;
+use App\Models\TransactionLine;
 use App\Services\Accounting\JournalEntryService;
 use App\Services\Notification\NotificationService;
 use Illuminate\Http\JsonResponse;
@@ -100,7 +101,7 @@ class QueueController extends Controller
 
     public function approve(ApproveItemRequest $request, string $id): JsonResponse
     {
-        $document = Document::with('company')->findOrFail($id);
+        $document = Document::with(['company', 'transactionLines'])->findOrFail($id);
         $user     = auth()->user();
 
         if ($document->status !== 'parked') {
@@ -111,7 +112,10 @@ class QueueController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        // Apply optional field edits
+        // Compute diff before any changes so original values are preserved
+        $diff = $this->computeOverrideDiff($request, $document);
+
+        // Apply document-level field edits
         if ($request->filled('fields')) {
             $fieldMap = [
                 'merchantName'  => 'merchant_name',
@@ -121,6 +125,7 @@ class QueueController extends Controller
                 'category'      => 'category',
                 'paymentMethod' => 'payment_method',
                 'accountId'     => 'account_id',
+                'declaredType'  => 'document_type',
             ];
             $mapped = [];
             foreach ($request->fields as $key => $value) {
@@ -134,13 +139,61 @@ class QueueController extends Controller
             }
         }
 
-        DB::transaction(function () use ($document, $user) {
+        $overrideData = (!empty($diff['fields']) || !empty($diff['lines']))
+            ? array_merge($diff, [
+                'overriddenBy' => $user->id,
+                'overriddenAt' => now()->toIso8601String(),
+            ])
+            : null;
+
+        DB::transaction(function () use ($document, $user, $request, $overrideData) {
+            // Delete removed lines (scoped to this document for safety)
+            if ($request->filled('removedLineIds')) {
+                TransactionLine::where('document_id', $document->id)
+                    ->whereIn('id', $request->removedLineIds)
+                    ->delete();
+            }
+
+            // Update existing lines / create new lines
+            if ($request->filled('lines')) {
+                foreach ($request->lines as $lineData) {
+                    if (!empty($lineData['id'])) {
+                        $updateData = [];
+                        if (array_key_exists('accountId', $lineData))   $updateData['account_id']   = $lineData['accountId'];
+                        if (array_key_exists('accountCode', $lineData)) $updateData['account_code'] = $lineData['accountCode'];
+                        if (array_key_exists('category', $lineData))    $updateData['category']     = $lineData['category'];
+                        if (array_key_exists('amount', $lineData))      $updateData['amount']       = $lineData['amount'];
+                        if (array_key_exists('description', $lineData)) $updateData['description']  = $lineData['description'];
+                        if (array_key_exists('date', $lineData))        $updateData['date']         = $lineData['date'];
+                        if ($updateData) {
+                            TransactionLine::where('id', $lineData['id'])
+                                ->where('document_id', $document->id)
+                                ->update($updateData);
+                        }
+                    } else {
+                        $document->transactionLines()->create([
+                            'type'         => $lineData['type'],
+                            'account_id'   => $lineData['accountId'] ?? null,
+                            'account_code' => $lineData['accountCode'] ?? null,
+                            'category'     => $lineData['category'] ?? null,
+                            'amount'       => $lineData['amount'] ?? 0,
+                            'description'  => $lineData['description'] ?? null,
+                            'date'         => $lineData['date'] ?? null,
+                        ]);
+                    }
+                }
+            }
+
+            // Refresh lines before journal posting (picks up deletions and updates)
+            $document->setRelation('transactionLines', $document->transactionLines()->get());
+
             (new JournalEntryService())->postFromDocument($document, $user);
 
             $document->update([
-                'status'      => 'approved',
-                'approved_by' => $user->id,
-                'approved_at' => now(),
+                'status'          => 'approved',
+                'approved_by'     => $user->id,
+                'approved_at'     => now(),
+                'field_overrides' => $overrideData,
             ]);
 
             rescue(fn () => event(new QueueItemRemoved($document->id)));
@@ -154,7 +207,6 @@ class QueueController extends Controller
             )));
         });
 
-        // Past-period notification (accountant only)
         if ($user->role === 'accountant' && $document->document_date) {
             $isPastPeriod = Carbon::parse($document->document_date)->lt(Carbon::now()->startOfMonth());
             if ($isPastPeriod) {
@@ -170,6 +222,63 @@ class QueueController extends Controller
         }
 
         return response()->json(['message' => 'Approved.']);
+    }
+
+    private function computeOverrideDiff(ApproveItemRequest $request, Document $document): array
+    {
+        $diff = ['fields' => [], 'lines' => []];
+
+        $docFieldMap = [
+            'merchantName'  => 'merchant_name',
+            'date'          => 'document_date',
+            'declaredType'  => 'document_type',
+            'paymentMethod' => 'payment_method',
+        ];
+
+        if ($request->filled('fields')) {
+            foreach ($request->fields as $key => $value) {
+                if (!isset($docFieldMap[$key])) continue;
+                $dbCol    = $docFieldMap[$key];
+                $raw      = $document->$dbCol;
+                // Normalise date fields: Carbon instances / datetime strings → Y-m-d
+                if ($key === 'date' && $raw !== null) {
+                    $original = Carbon::parse($raw)->toDateString();
+                } else {
+                    $original = (string) ($raw ?? '');
+                }
+                $newVal   = (string) $value;
+                if ($original !== $newVal) {
+                    $diff['fields'][] = [
+                        'field'    => $key,
+                        'original' => $original,
+                        'override' => $newVal,
+                    ];
+                }
+            }
+        }
+
+        if ($request->filled('lines')) {
+            foreach ($request->lines as $lineData) {
+                if (empty($lineData['id'])) continue;
+                $line = $document->transactionLines->firstWhere('id', $lineData['id']);
+                if (!$line) continue;
+                foreach (['accountCode' => 'account_code', 'category' => 'category'] as $field => $dbCol) {
+                    if (!isset($lineData[$field])) continue;
+                    $original = (string) ($line->$dbCol ?? '');
+                    $newVal   = (string) $lineData[$field];
+                    if ($original !== $newVal) {
+                        $diff['lines'][] = [
+                            'lineId'   => $line->id,
+                            'field'    => $field,
+                            'original' => $original,
+                            'override' => $newVal,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $diff;
     }
 
     public function return(ReturnItemRequest $request, string $id): JsonResponse
