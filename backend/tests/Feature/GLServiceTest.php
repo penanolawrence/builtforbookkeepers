@@ -69,6 +69,17 @@ class GLServiceTest extends TestCase
         $this->assertNotContains('Opening Balance', $descriptions);
     }
 
+    public function test_opening_balance_field_reflects_entries_before_start_date(): void
+    {
+        $account = $this->makeAccount('cash');
+        $this->makeEntry($account, '2025-12-31', debit: 500.0); // before start
+
+        $result = (new GLService())->getData($this->company, $account, $this->start, $this->end);
+
+        $this->assertArrayHasKey('openingBalance', $result);
+        $this->assertSame(500.0, $result['openingBalance']);
+    }
+
     // ── Normal balance ────────────────────────────────────────────────────────
 
     public function test_normal_balance_is_debit_for_cash_account(): void
@@ -153,6 +164,21 @@ class GLServiceTest extends TestCase
             'company_id'    => $this->company->id,
             'status'        => 'processing',
             'document_date' => '2026-02-01',
+        ]);
+
+        $result = (new GLService())->getData($this->company, $account, $this->start, $this->end);
+
+        $this->assertSame(0, $result['parkedCount']);
+    }
+
+    public function test_parked_count_excludes_documents_before_start_date(): void
+    {
+        $account = $this->makeAccount('cash');
+
+        Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'status'        => 'parked',
+            'document_date' => '2025-12-31', // before start
         ]);
 
         $result = (new GLService())->getData($this->company, $account, $this->start, $this->end);
