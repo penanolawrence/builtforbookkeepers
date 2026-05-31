@@ -7,6 +7,8 @@ use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\Subtype;
+use App\Models\TransactionLine;
 use App\Models\User;
 use App\Services\BIR\GLService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,6 +52,45 @@ class GLServiceTest extends TestCase
             'posted_by'   => $this->user->id,
             'posted_at'   => Carbon::now(),
         ]);
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $account->id,
+            'debit'            => $debit ?: null,
+            'credit'           => $credit ?: null,
+        ]);
+    }
+
+    private function makeEntryWithDocument(
+        Account $account,
+        string $date,
+        float $debit = 0,
+        float $credit = 0,
+        ?Subtype $subtype = null,
+    ): void {
+        $document = Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'document_date' => $date,
+            'status'        => 'approved',
+        ]);
+
+        TransactionLine::factory()->create([
+            'document_id' => $document->id,
+            'account_id'  => $account->id,
+            'subtype_id'  => $subtype?->id,
+            'type'        => $debit > 0 ? 'expense' : 'income',
+            'amount'      => $debit > 0 ? $debit : $credit,
+        ]);
+
+        $entry = JournalEntry::create([
+            'company_id'  => $this->company->id,
+            'document_id' => $document->id,
+            'entry_date'  => $date,
+            'description' => "Document #{$document->id}",
+            'status'      => 'posted',
+            'posted_by'   => $this->user->id,
+            'posted_at'   => Carbon::now(),
+        ]);
+
         JournalEntryLine::create([
             'journal_entry_id' => $entry->id,
             'account_id'       => $account->id,
@@ -200,5 +241,32 @@ class GLServiceTest extends TestCase
         $result = (new GLService())->getData($this->company, $account, $this->start, $this->end);
 
         $this->assertSame(0, $result['parkedCount']);
+    }
+
+    // ── Subtype column ────────────────────────────────────────────────────────
+
+    public function test_row_includes_subtype_name_when_transaction_line_has_subtype(): void
+    {
+        $account = $this->makeAccount('expense');
+        $subtype = Subtype::factory()->create(['name' => 'Internet Expense']);
+
+        $this->makeEntryWithDocument($account, '2026-02-01', debit: 1000.0, subtype: $subtype);
+
+        $result = (new GLService())->getData($this->company, $account, $this->start, $this->end);
+
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame('Internet Expense', $result['rows'][0]['subtype']);
+    }
+
+    public function test_row_falls_back_to_account_name_when_no_subtype(): void
+    {
+        $account = $this->makeAccount('expense');
+
+        $this->makeEntryWithDocument($account, '2026-02-01', debit: 500.0);
+
+        $result = (new GLService())->getData($this->company, $account, $this->start, $this->end);
+
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame($account->name, $result['rows'][0]['subtype']);
     }
 }
