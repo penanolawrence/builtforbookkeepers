@@ -269,4 +269,64 @@ class GLServiceTest extends TestCase
         $this->assertCount(1, $result['rows']);
         $this->assertSame($account->name, $result['rows'][0]['subtype']);
     }
+
+    public function test_subtype_resolves_to_correct_line_for_multi_line_document(): void
+    {
+        $account1 = $this->makeAccount('expense');
+        $account2 = $this->makeAccount('income');
+        $subtype1 = Subtype::factory()->create(['name' => 'Internet']);
+        $subtype2 = Subtype::factory()->create(['name' => 'Sales']);
+
+        $document = Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'document_date' => '2026-02-01',
+            'status'        => 'approved',
+        ]);
+
+        TransactionLine::factory()->create([
+            'document_id' => $document->id,
+            'account_id'  => $account1->id,
+            'subtype_id'  => $subtype1->id,
+            'type'        => 'expense',
+            'amount'      => 1000.0,
+        ]);
+
+        TransactionLine::factory()->create([
+            'document_id' => $document->id,
+            'account_id'  => $account2->id,
+            'subtype_id'  => $subtype2->id,
+            'type'        => 'income',
+            'amount'      => 1000.0,
+        ]);
+
+        $entry = JournalEntry::create([
+            'company_id'  => $this->company->id,
+            'document_id' => $document->id,
+            'entry_date'  => '2026-02-01',
+            'description' => 'Multi-line doc',
+            'status'      => 'posted',
+            'posted_by'   => $this->user->id,
+            'posted_at'   => Carbon::now(),
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $account1->id,
+            'debit'            => 1000.0,
+            'credit'           => null,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $account2->id,
+            'debit'            => null,
+            'credit'           => 1000.0,
+        ]);
+
+        // GL for account1 must show subtype1, not subtype2
+        $result = (new GLService())->getData($this->company, $account1, $this->start, $this->end);
+
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame('Internet', $result['rows'][0]['subtype']);
+    }
 }
