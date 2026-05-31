@@ -115,6 +115,7 @@ class IncomeStatementService
 
         $named = [];
         foreach ($lookup as $name => $subtotal) {
+            // Skip — Others is computed by subtraction so adjusting-entry amounts (no TransactionLine) also land here.
             if ($name === '__others__') continue;
             $named[] = ['name' => $name, 'total' => $subtotal];
         }
