@@ -22,7 +22,11 @@ class GLService
             ->value('balance') ?? 0;
 
         // Step 2 — Lines in range
-        $lines = JournalEntryLine::with(['journalEntry.document', 'journalEntry.adjustingEntry'])
+        $lines = JournalEntryLine::with([
+            'journalEntry.document.transactionLines.subtype',
+            'journalEntry.adjustingEntry',
+            'account',
+        ])
             ->where('account_id', $account->id)
             ->whereHas('journalEntry', function ($q) use ($co, $start, $end) {
                 $q->where('company_id', $co->id)
@@ -47,8 +51,12 @@ class GLService
 
             $runningBalance += ($debit ?? 0) - ($credit ?? 0);
 
+            $txLine  = $entry->document?->transactionLines->firstWhere('account_id', $line->account_id);
+            $subtype = $txLine?->subtype?->name ?? $line->account->name;
+
             $rows[] = [
                 'date'           => $entry->entry_date?->toDateString(),
+                'subtype'        => $subtype,
                 'description'    => $entry->description,
                 'ref'            => $ref,
                 'debit'          => $debit,
