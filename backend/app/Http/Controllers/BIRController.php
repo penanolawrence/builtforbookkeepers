@@ -82,7 +82,7 @@ class BIRController extends Controller
                 if (!$request->filled('accountId')) {
                     return response()->json(['message' => 'accountId is required for GL.'], 422);
                 }
-                $account = Account::findOrFail($request->accountId);
+                $account = $company->accounts()->findOrFail($request->accountId);
                 return response()->json((new GLService())->getData($company, $account, $start, $end));
 
             default:
@@ -112,7 +112,7 @@ class BIRController extends Controller
                 if (!$request->filled('accountId')) {
                     abort(422, 'accountId is required for GL.');
                 }
-                $account = Account::findOrFail($request->accountId);
+                $account = $company->accounts()->findOrFail($request->accountId);
                 $rows    = (new GLService())->getData($company, $account, $start, $end);
                 break;
             default:

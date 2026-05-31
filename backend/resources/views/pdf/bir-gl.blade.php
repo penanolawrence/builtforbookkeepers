@@ -35,6 +35,16 @@
     </thead>
     <tbody>
         @php $rowList = isset($rows['rows']) ? $rows['rows'] : $rows; @endphp
+        @if(isset($rows['openingBalance']))
+        <tr>
+            <td></td>
+            <td><strong>Opening Balance</strong></td>
+            <td></td>
+            <td class="amount"></td>
+            <td class="amount"></td>
+            <td class="amount">{{ number_format($rows['openingBalance'], 2) }}</td>
+        </tr>
+        @endif
         @foreach ($rowList as $row)
         <tr>
             <td>{{ $row['date'] }}</td>
