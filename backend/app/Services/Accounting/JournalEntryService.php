@@ -8,7 +8,6 @@ use App\Models\Document;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
 use App\Models\User;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class JournalEntryService
@@ -161,7 +160,6 @@ class JournalEntryService
     {
         return DB::transaction(function () use ($entry, $approvedBy) {
             $company = $entry->company;
-            $isPast  = Carbon::parse($entry->entry_date)->lt(Carbon::now()->startOfMonth());
 
             $journalEntry = JournalEntry::create([
                 'company_id'         => $company->id,
