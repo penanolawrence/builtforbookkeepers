@@ -58,7 +58,7 @@ class GLService
                 'date'           => $entry->entry_date?->toDateString(),
                 'accountName'    => $line->account->name,
                 'subtype'        => $subtype,
-                'description'    => $entry->description,
+                'description'    => $line->transactionLine?->description ?? $line->description ?? $entry->description,
                 'ref'            => $ref,
                 'debit'          => $debit,
                 'credit'         => $credit,
