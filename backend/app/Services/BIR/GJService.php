@@ -10,7 +10,7 @@ class GJService
 {
     public function getData(Company $co, Carbon $start, Carbon $end): array
     {
-        $entries = JournalEntry::with(['document', 'adjustingEntry', 'lines.account'])
+        $entries = JournalEntry::with(['document', 'adjustingEntry', 'lines.account', 'lines.transactionLine.subtype'])
             ->where('company_id', $co->id)
             ->whereDate('entry_date', '>=', $start->toDateString())
             ->whereDate('entry_date', '<=', $end->toDateString())
@@ -31,6 +31,7 @@ class GJService
                     'ref'         => $ref,
                     'accountCode' => $account?->code,
                     'accountName' => $account?->name,
+                    'subtype'     => $line->transactionLine?->subtype?->name,
                     'debit'       => $line->debit,
                     'credit'      => $line->credit,
                 ];
