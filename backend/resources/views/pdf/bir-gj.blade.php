@@ -22,9 +22,10 @@
     <thead>
         <tr>
             <th>Date</th>
+            <th>Account Name</th>
+            <th>Subtype</th>
             <th>Description</th>
             <th>Ref</th>
-            <th>Account</th>
             <th class="amount">Debit</th>
             <th class="amount">Credit</th>
         </tr>
@@ -33,9 +34,10 @@
         @foreach ($rows as $row)
         <tr>
             <td>{{ $row['date'] }}</td>
+            <td>{{ $row['accountName'] }}</td>
+            <td>{{ $row['subtype'] ?? '' }}</td>
             <td>{{ $row['description'] }}</td>
             <td>{{ $row['ref'] }}</td>
-            <td>{{ $row['accountCode'] }} — {{ $row['accountName'] }}</td>
             <td class="amount">{{ $row['debit'] !== null ? number_format($row['debit'], 2) : '' }}</td>
             <td class="amount">{{ $row['credit'] !== null ? number_format($row['credit'], 2) : '' }}</td>
         </tr>
