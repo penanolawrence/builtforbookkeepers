@@ -7,6 +7,8 @@ use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\Subtype;
+use App\Models\TransactionLine;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -105,6 +107,10 @@ class DemoDataSeeder extends Seeder
 
         $this->command->info('Chart of accounts: ' . count($accounts) . ' accounts seeded.');
 
+        // ── 3b. Subtype lookups ─────────────────────────────────────────
+        $subtypeUtilities  = Subtype::where('name', 'Utilities Expense')->firstOrFail();
+        $subtypeSalesRev   = Subtype::where('name', 'Sales Revenue')->firstOrFail();
+
         // ── 4. PARKED document ──────────────────────────────────────────
         // Meralco electricity bill — awaiting accountant review
 
@@ -134,6 +140,18 @@ class DemoDataSeeder extends Seeder
             ]);
 
             $this->command->info("PARKED doc:   {$parkedDoc->ref_number} — Meralco PHP 3,200.00 (flag: GREEN)");
+
+            TransactionLine::create([
+                'document_id'  => $parkedDoc->id,
+                'account_id'   => $accounts['5001']->id,
+                'account_code' => '5001',
+                'type'         => 'expense',
+                'subtype_id'   => $subtypeUtilities->id,
+                'amount'       => 3200.00,
+                'description'  => 'Meralco electricity bill',
+                'date'         => '2026-05-15',
+            ]);
+
         } else {
             $this->command->warn('PARKED doc already exists — skipped.');
         }
@@ -213,6 +231,22 @@ class DemoDataSeeder extends Seeder
                 'credit'           => $vatAmount,
                 'description'      => 'Output VAT 12%',
             ]);
+
+            $incomeLine = TransactionLine::create([
+                'document_id'  => $approvedDoc->id,
+                'account_id'   => $accounts['4001']->id,
+                'account_code' => '4001',
+                'type'         => 'income',
+                'subtype_id'   => $subtypeSalesRev->id,
+                'amount'       => $gross,
+                'description'  => "GCash sale — {$approvedDoc->merchant_name}",
+                'date'         => '2026-05-20',
+            ]);
+
+            // Link the revenue JEL to the transaction line so GL report can resolve subtype
+            JournalEntryLine::where('journal_entry_id', $journalEntry->id)
+                ->where('account_id', $accounts['4001']->id)
+                ->update(['transaction_line_id' => $incomeLine->id]);
 
             $this->command->info("APPROVED doc: {$approvedDoc->ref_number} — GCash sale PHP {$gross}");
             $this->command->info("  Journal:    {$journalEntry->id}");
