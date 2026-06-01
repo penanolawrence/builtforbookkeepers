@@ -73,7 +73,7 @@ class GLServiceTest extends TestCase
             'status'        => 'approved',
         ]);
 
-        TransactionLine::factory()->create([
+        $txLine = TransactionLine::factory()->create([
             'document_id' => $document->id,
             'account_id'  => $account->id,
             'subtype_id'  => $subtype?->id,
@@ -92,10 +92,11 @@ class GLServiceTest extends TestCase
         ]);
 
         JournalEntryLine::create([
-            'journal_entry_id' => $entry->id,
-            'account_id'       => $account->id,
-            'debit'            => $debit ?: null,
-            'credit'           => $credit ?: null,
+            'journal_entry_id'    => $entry->id,
+            'account_id'          => $account->id,
+            'transaction_line_id' => $txLine->id,
+            'debit'               => $debit ?: null,
+            'credit'              => $credit ?: null,
         ]);
     }
 
@@ -283,7 +284,7 @@ class GLServiceTest extends TestCase
             'status'        => 'approved',
         ]);
 
-        TransactionLine::factory()->create([
+        $txLine1 = TransactionLine::factory()->create([
             'document_id' => $document->id,
             'account_id'  => $account1->id,
             'subtype_id'  => $subtype1->id,
@@ -291,7 +292,7 @@ class GLServiceTest extends TestCase
             'amount'      => 1000.0,
         ]);
 
-        TransactionLine::factory()->create([
+        $txLine2 = TransactionLine::factory()->create([
             'document_id' => $document->id,
             'account_id'  => $account2->id,
             'subtype_id'  => $subtype2->id,
@@ -310,17 +311,19 @@ class GLServiceTest extends TestCase
         ]);
 
         JournalEntryLine::create([
-            'journal_entry_id' => $entry->id,
-            'account_id'       => $account1->id,
-            'debit'            => 1000.0,
-            'credit'           => null,
+            'journal_entry_id'    => $entry->id,
+            'account_id'          => $account1->id,
+            'transaction_line_id' => $txLine1->id,
+            'debit'               => 1000.0,
+            'credit'              => null,
         ]);
 
         JournalEntryLine::create([
-            'journal_entry_id' => $entry->id,
-            'account_id'       => $account2->id,
-            'debit'            => null,
-            'credit'           => 1000.0,
+            'journal_entry_id'    => $entry->id,
+            'account_id'          => $account2->id,
+            'transaction_line_id' => $txLine2->id,
+            'debit'               => null,
+            'credit'              => 1000.0,
         ]);
 
         // GL for account1 must show subtype1, not subtype2
@@ -328,5 +331,67 @@ class GLServiceTest extends TestCase
 
         $this->assertCount(1, $result['rows']);
         $this->assertSame('Internet', $result['rows'][0]['subtype']);
+    }
+
+    public function test_subtype_disambiguates_when_two_lines_share_same_account(): void
+    {
+        $account  = $this->makeAccount('expense');
+        $subtype1 = Subtype::factory()->create(['name' => 'Internet']);
+        $subtype2 = Subtype::factory()->create(['name' => 'Phone']);
+
+        $document = Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'document_date' => '2026-02-01',
+            'status'        => 'approved',
+        ]);
+
+        $txLine1 = TransactionLine::factory()->create([
+            'document_id' => $document->id,
+            'account_id'  => $account->id,
+            'subtype_id'  => $subtype1->id,
+            'type'        => 'expense',
+            'amount'      => 500.0,
+        ]);
+
+        $txLine2 = TransactionLine::factory()->create([
+            'document_id' => $document->id,
+            'account_id'  => $account->id,
+            'subtype_id'  => $subtype2->id,
+            'type'        => 'expense',
+            'amount'      => 300.0,
+        ]);
+
+        $entry = JournalEntry::create([
+            'company_id'  => $this->company->id,
+            'document_id' => $document->id,
+            'entry_date'  => '2026-02-01',
+            'description' => 'Multi-line same account',
+            'status'      => 'posted',
+            'posted_by'   => $this->user->id,
+            'posted_at'   => Carbon::now(),
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id'    => $entry->id,
+            'account_id'          => $account->id,
+            'transaction_line_id' => $txLine1->id,
+            'debit'               => 500.0,
+            'credit'              => null,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id'    => $entry->id,
+            'account_id'          => $account->id,
+            'transaction_line_id' => $txLine2->id,
+            'debit'               => 300.0,
+            'credit'              => null,
+        ]);
+
+        $result   = (new GLService())->getData($this->company, $account, $this->start, $this->end);
+        $subtypes = collect($result['rows'])->pluck('subtype')->toArray();
+
+        $this->assertCount(2, $result['rows']);
+        $this->assertContains('Internet', $subtypes);
+        $this->assertContains('Phone', $subtypes);
     }
 }

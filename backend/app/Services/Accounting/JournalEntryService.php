@@ -16,10 +16,7 @@ class JournalEntryService
     public function postFromDocument(Document $doc, User $approvedBy): JournalEntry
     {
         return DB::transaction(function () use ($doc, $approvedBy) {
-            $company   = $doc->company;
-            $isVat     = $company->bir_type === 'vat';
-            $type      = $doc->document_type;
-            $isPast    = Carbon::parse($doc->document_date)->lt(Carbon::now()->startOfMonth());
+            $company = $doc->company;
 
             $cashAccountMap = [
                 'cash'  => 'Cash on Hand',
@@ -37,35 +34,62 @@ class JournalEntryService
                 throw new \RuntimeException("Cash account '{$cashName}' not found for company {$company->id}");
             }
 
-            $txAccount = Account::where('company_id', $company->id)
-                ->where('id', $doc->account_id)
-                ->first();
-
-            if (!$txAccount) {
-                throw new \RuntimeException("Transaction account not found for document {$doc->id}");
-            }
-
-            $inputVatAccount = $outputVatAccount = null;
-            if ($isVat) {
-                $inputVatAccount  = Account::where('company_id', $company->id)->where('code', '1101')->first();
-                $outputVatAccount = Account::where('company_id', $company->id)->where('code', '2101')->first();
-            }
-
             $entry = JournalEntry::create([
-                'company_id'      => $company->id,
-                'document_id'     => $doc->id,
-                'entry_date'      => $doc->document_date,
-                'description'     => "Document #{$doc->ref_number} — {$doc->merchant_name}",
-                'is_past_period'  => $isPast,
-                'posted_by'       => $approvedBy->id,
-                'posted_at'       => now(),
+                'company_id'  => $company->id,
+                'document_id' => $doc->id,
+                'entry_date'  => $doc->document_date,
+                'description' => "Document #{$doc->ref_number} — {$doc->merchant_name}",
+                'status'      => 'posted',
+                'posted_by'   => $approvedBy->id,
+                'posted_at'   => now(),
             ]);
 
-            $netAmount   = (float)$doc->amount - (float)($doc->vat_amount ?? 0);
-            $grossAmount = (float)$doc->amount;
-            $vatAmount   = (float)($doc->vat_amount ?? 0);
+            $lines = $doc->transactionLines;
 
-            $this->createLines($entry, $isVat, $type, $txAccount, $cashAccount, $inputVatAccount, $outputVatAccount, $netAmount, $grossAmount, $vatAmount);
+            $missing = $lines->firstWhere('account_id', null);
+            if ($missing) {
+                throw new \RuntimeException("Transaction line is missing an account assignment (line id: {$missing->id}).");
+            }
+
+            $totalIncome  = $lines->where('type', 'income')->sum('amount');
+            $totalExpense = $lines->where('type', 'expense')->sum('amount');
+
+            foreach ($lines as $line) {
+                if ($line->type === 'income') {
+                    JournalEntryLine::create([
+                        'journal_entry_id'    => $entry->id,
+                        'account_id'          => $line->account_id,
+                        'transaction_line_id' => $line->id,
+                        'debit'               => null,
+                        'credit'              => $line->amount,
+                    ]);
+                } else {
+                    JournalEntryLine::create([
+                        'journal_entry_id'    => $entry->id,
+                        'account_id'          => $line->account_id,
+                        'transaction_line_id' => $line->id,
+                        'debit'               => $line->amount,
+                        'credit'              => null,
+                    ]);
+                }
+            }
+
+            $netCash = (float) $totalIncome - (float) $totalExpense;
+            if ($netCash > 0) {
+                JournalEntryLine::create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $cashAccount->id,
+                    'debit'            => $netCash,
+                    'credit'           => null,
+                ]);
+            } elseif ($netCash < 0) {
+                JournalEntryLine::create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $cashAccount->id,
+                    'debit'            => null,
+                    'credit'           => abs($netCash),
+                ]);
+            }
 
             return $entry;
         });
@@ -144,7 +168,7 @@ class JournalEntryService
                 'adjusting_entry_id' => $entry->id,
                 'entry_date'         => $entry->entry_date,
                 'description'        => $entry->description ?? "Adjusting Entry #{$entry->ref_number}",
-                'is_past_period'     => $isPast,
+                'status'             => 'posted',
                 'posted_by'          => $approvedBy->id,
                 'posted_at'          => now(),
             ]);
@@ -162,33 +186,4 @@ class JournalEntryService
         });
     }
 
-    private function createLines(
-        JournalEntry $entry,
-        bool $isVat,
-        string $type,
-        Account $txAccount,
-        Account $cashAccount,
-        ?Account $inputVatAccount,
-        ?Account $outputVatAccount,
-        float $netAmount,
-        float $grossAmount,
-        float $vatAmount,
-    ): void {
-        if ($isVat && $type === 'expense') {
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $txAccount->id,        'debit' => $netAmount,   'credit' => null]);
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $inputVatAccount->id,  'debit' => $vatAmount,   'credit' => null]);
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $cashAccount->id,      'debit' => null,         'credit' => $grossAmount]);
-        } elseif ($isVat && $type === 'income') {
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $cashAccount->id,      'debit' => $grossAmount, 'credit' => null]);
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $txAccount->id,        'debit' => null,         'credit' => $netAmount]);
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $outputVatAccount->id, 'debit' => null,         'credit' => $vatAmount]);
-        } elseif (!$isVat && $type === 'expense') {
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $txAccount->id,   'debit' => $grossAmount, 'credit' => null]);
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $cashAccount->id, 'debit' => null,         'credit' => $grossAmount]);
-        } else {
-            // non-VAT income
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $cashAccount->id, 'debit' => $grossAmount, 'credit' => null]);
-            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $txAccount->id,   'debit' => null,         'credit' => $grossAmount]);
-        }
-    }
 }
