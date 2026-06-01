@@ -107,7 +107,8 @@ class DemoDataSeeder extends Seeder
 
         $this->command->info('Chart of accounts: ' . count($accounts) . ' accounts seeded.');
 
-        // ── 3b. Subtype lookups ─────────────────────────────────────────
+        // ── 3b. Subtypes ────────────────────────────────────────────────
+        $this->call(SubtypeSeeder::class);
         $subtypeUtilities  = Subtype::where('name', 'Utilities Expense')->firstOrFail();
         $subtypeSalesRev   = Subtype::where('name', 'Sales Revenue')->firstOrFail();
 
