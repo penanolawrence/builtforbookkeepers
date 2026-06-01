@@ -259,7 +259,7 @@ class GLServiceTest extends TestCase
         $this->assertSame('Internet Expense', $result['rows'][0]['subtype']);
     }
 
-    public function test_row_falls_back_to_account_name_when_no_subtype(): void
+    public function test_row_has_null_subtype_and_accountName_when_no_subtype(): void
     {
         $account = $this->makeAccount('expense');
 
