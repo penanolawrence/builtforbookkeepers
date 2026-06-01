@@ -149,8 +149,10 @@ class DemoDataSeeder extends Seeder
                 'subtype_id'   => $subtypeUtilities->id,
                 'amount'       => 3200.00,
                 'description'  => 'Meralco electricity bill',
-                'date'         => '2026-05-15',
+                'date'         => $parkedDoc->document_date,
             ]);
+
+            // parked docs have no journal entry yet; no JEL link needed
 
         } else {
             $this->command->warn('PARKED doc already exists — skipped.');
@@ -238,9 +240,9 @@ class DemoDataSeeder extends Seeder
                 'account_code' => '4001',
                 'type'         => 'income',
                 'subtype_id'   => $subtypeSalesRev->id,
-                'amount'       => $gross,
+                'amount'       => $netRevenue,
                 'description'  => "GCash sale — {$approvedDoc->merchant_name}",
-                'date'         => '2026-05-20',
+                'date'         => $approvedDoc->document_date,
             ]);
 
             // Link the revenue JEL to the transaction line so GL report can resolve subtype
