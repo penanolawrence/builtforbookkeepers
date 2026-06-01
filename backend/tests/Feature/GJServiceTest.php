@@ -112,4 +112,100 @@ class GJServiceTest extends TestCase
         $this->assertNull($result[0]['subtype']);
         $this->assertSame($account->name, $result[0]['accountName']);
     }
+
+    public function test_description_uses_transaction_line_description_when_available(): void
+    {
+        $account = $this->makeAccount('expense');
+
+        $document = Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'document_date' => '2026-02-01',
+            'status'        => 'approved',
+        ]);
+
+        $txLine = TransactionLine::factory()->create([
+            'document_id' => $document->id,
+            'account_id'  => $account->id,
+            'description' => 'Purchased office supplies',
+            'type'        => 'expense',
+            'amount'      => 1000.0,
+        ]);
+
+        $entry = JournalEntry::create([
+            'company_id'  => $this->company->id,
+            'document_id' => $document->id,
+            'entry_date'  => '2026-02-01',
+            'description' => 'Entry description',
+            'status'      => 'posted',
+            'posted_by'   => $this->user->id,
+            'posted_at'   => Carbon::now(),
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id'    => $entry->id,
+            'account_id'          => $account->id,
+            'transaction_line_id' => $txLine->id,
+            'description'         => 'JEL description',
+            'debit'               => 1000.0,
+            'credit'              => null,
+        ]);
+
+        $result = (new GJService())->getData($this->company, $this->start, $this->end);
+
+        $this->assertCount(1, $result);
+        $this->assertSame('Purchased office supplies', $result[0]['description']);
+    }
+
+    public function test_description_falls_back_to_jel_description_when_no_transaction_line(): void
+    {
+        $account = $this->makeAccount('expense');
+
+        $entry = JournalEntry::create([
+            'company_id'  => $this->company->id,
+            'entry_date'  => '2026-02-01',
+            'description' => 'Entry description',
+            'status'      => 'posted',
+            'posted_by'   => $this->user->id,
+            'posted_at'   => Carbon::now(),
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $account->id,
+            'description'      => 'JEL description',
+            'debit'            => 500.0,
+            'credit'           => null,
+        ]);
+
+        $result = (new GJService())->getData($this->company, $this->start, $this->end);
+
+        $this->assertCount(1, $result);
+        $this->assertSame('JEL description', $result[0]['description']);
+    }
+
+    public function test_description_falls_back_to_entry_description_when_no_line_descriptions(): void
+    {
+        $account = $this->makeAccount('expense');
+
+        $entry = JournalEntry::create([
+            'company_id'  => $this->company->id,
+            'entry_date'  => '2026-02-01',
+            'description' => 'Entry description',
+            'status'      => 'posted',
+            'posted_by'   => $this->user->id,
+            'posted_at'   => Carbon::now(),
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $account->id,
+            'debit'            => 500.0,
+            'credit'           => null,
+        ]);
+
+        $result = (new GJService())->getData($this->company, $this->start, $this->end);
+
+        $this->assertCount(1, $result);
+        $this->assertSame('Entry description', $result[0]['description']);
+    }
 }

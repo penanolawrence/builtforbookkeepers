@@ -27,7 +27,7 @@ class GJService
                 $account = $line->account;
                 $rows[]  = [
                     'date'        => $entry->entry_date?->toDateString(),
-                    'description' => $entry->description,
+                    'description' => $line->transactionLine?->description ?? $line->description ?? $entry->description,
                     'ref'         => $ref,
                     'accountCode' => $account?->code,
                     'accountName' => $account?->name,
