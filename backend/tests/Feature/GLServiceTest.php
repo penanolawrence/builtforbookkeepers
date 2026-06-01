@@ -268,7 +268,22 @@ class GLServiceTest extends TestCase
         $result = (new GLService())->getData($this->company, $account, $this->start, $this->end);
 
         $this->assertCount(1, $result['rows']);
-        $this->assertSame($account->name, $result['rows'][0]['subtype']);
+        $this->assertNull($result['rows'][0]['subtype']);
+        $this->assertSame($account->name, $result['rows'][0]['accountName']);
+    }
+
+    public function test_row_includes_account_name_when_subtype_is_present(): void
+    {
+        $account = $this->makeAccount('expense');
+        $subtype = Subtype::factory()->create(['name' => 'Internet Expense']);
+
+        $this->makeEntryWithDocument($account, '2026-02-01', debit: 1000.0, subtype: $subtype);
+
+        $result = (new GLService())->getData($this->company, $account, $this->start, $this->end);
+
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame('Internet Expense', $result['rows'][0]['subtype']);
+        $this->assertSame($account->name, $result['rows'][0]['accountName']);
     }
 
     public function test_subtype_resolves_to_correct_line_for_multi_line_document(): void

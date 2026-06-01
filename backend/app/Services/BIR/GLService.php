@@ -52,10 +52,11 @@ class GLService
 
             $runningBalance += ($debit ?? 0) - ($credit ?? 0);
 
-            $subtype = $line->transactionLine?->subtype?->name ?? $line->account->name;
+            $subtype = $line->transactionLine?->subtype?->name;
 
             $rows[] = [
                 'date'           => $entry->entry_date?->toDateString(),
+                'accountName'    => $line->account->name,
                 'subtype'        => $subtype,
                 'description'    => $entry->description,
                 'ref'            => $ref,
