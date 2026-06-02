@@ -20,8 +20,10 @@ class CreateEntryRequest extends FormRequest
             'type'                => ['required', 'in:Reclassification,Reversal,Other'],
             'lines'               => ['required', 'array', 'min:2'],
             'lines.*.accountId'   => ['required', 'uuid', 'exists:accounts,id'],
+            'lines.*.subtypeId'   => ['nullable', 'uuid', 'exists:subtypes,id'],
             'lines.*.debit'       => ['nullable', 'numeric', 'min:0'],
             'lines.*.credit'      => ['nullable', 'numeric', 'min:0'],
+            'lines.*.description' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

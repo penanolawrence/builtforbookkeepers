@@ -10,6 +10,7 @@ class AdjustingEntryLine extends Model
     protected $fillable = [
         'adjusting_entry_id',
         'account_id',
+        'subtype_id',
         'debit',
         'credit',
         'description',
@@ -28,5 +29,10 @@ class AdjustingEntryLine extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function subtype(): BelongsTo
+    {
+        return $this->belongsTo(Subtype::class);
     }
 }
