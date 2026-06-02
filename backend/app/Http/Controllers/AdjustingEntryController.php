@@ -42,7 +42,7 @@ class AdjustingEntryController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $entry = AdjustingEntry::with(['company', 'lines.account', 'creator', 'approver', 'rejecter'])->findOrFail($id);
+        $entry = AdjustingEntry::with(['company', 'lines.account', 'lines.subtype', 'creator', 'approver', 'rejecter'])->findOrFail($id);
         $user  = auth()->user();
 
         if ($user->role !== 'admin' && $entry->created_by !== $user->id) {
@@ -302,8 +302,11 @@ class AdjustingEntryController extends Controller
                 'accountId'   => $l->account_id,
                 'accountCode' => $l->account?->code,
                 'accountName' => $l->account?->name,
+                'subtypeId'   => $l->subtype_id,
+                'subtypeName' => $l->subtype?->name,
                 'debit'       => $l->debit,
                 'credit'      => $l->credit,
+                'description' => $l->description,
             ]),
             'createdBy'       => $e->creator?->name,
             'approvedBy'      => $e->approver?->name,

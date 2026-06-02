@@ -85,4 +85,47 @@ class AdjustingEntryTest extends TestCase
         $this->assertNull($creditLine->subtype_id);
         $this->assertNull($creditLine->description);
     }
+
+    public function test_show_returns_subtype_and_description_per_line(): void
+    {
+        $subtype = Subtype::factory()->create(['name' => 'Travel']);
+
+        $entry = AdjustingEntry::create([
+            'company_id'  => $this->company->id,
+            'created_by'  => $this->accountant->id,
+            'status'      => 'draft',
+            'type'        => 'Reclassification',
+            'entry_date'  => '2026-06-02',
+            'description' => 'Test entry',
+            'ref_number'  => 'ADJ-001',
+        ]);
+
+        AdjustingEntryLine::create([
+            'adjusting_entry_id' => $entry->id,
+            'account_id'         => $this->debitAccount->id,
+            'subtype_id'         => $subtype->id,
+            'debit'              => 500.00,
+            'credit'             => null,
+            'description'        => 'Flight to Cebu',
+        ]);
+
+        AdjustingEntryLine::create([
+            'adjusting_entry_id' => $entry->id,
+            'account_id'         => $this->creditAccount->id,
+            'subtype_id'         => null,
+            'debit'              => null,
+            'credit'             => 500.00,
+            'description'        => null,
+        ]);
+
+        $response = $this->actingAs($this->accountant)
+            ->getJson("/api/adjusting-entries/{$entry->id}");
+
+        $response->assertOk();
+        $response->assertJsonPath('lines.0.subtypeId', $subtype->id);
+        $response->assertJsonPath('lines.0.subtypeName', 'Travel');
+        $response->assertJsonPath('lines.0.description', 'Flight to Cebu');
+        $response->assertJsonPath('lines.1.subtypeId', null);
+        $response->assertJsonPath('lines.1.description', null);
+    }
 }
