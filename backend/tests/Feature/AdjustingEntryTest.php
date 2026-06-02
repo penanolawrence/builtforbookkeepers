@@ -1,0 +1,88 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Account;
+use App\Models\AdjustingEntry;
+use App\Models\AdjustingEntryLine;
+use App\Models\Company;
+use App\Models\Subtype;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class AdjustingEntryTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $accountant;
+    private Company $company;
+    private Account $debitAccount;
+    private Account $creditAccount;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->accountant = User::factory()->create(['role' => 'accountant']);
+
+        $this->company = Company::factory()->create([
+            'accountant_id' => $this->accountant->id,
+            'bir_type'      => 'non_vat',
+        ]);
+
+        $this->debitAccount = Account::factory()->create([
+            'company_id' => $this->company->id,
+            'code'       => '5100',
+            'name'       => 'Office Supplies',
+            'type'       => 'expense',
+        ]);
+
+        $this->creditAccount = Account::factory()->create([
+            'company_id' => $this->company->id,
+            'code'       => '1001',
+            'name'       => 'Cash on Hand',
+            'type'       => 'cash',
+        ]);
+    }
+
+    public function test_create_stores_subtype_and_description_per_line(): void
+    {
+        $subtype = Subtype::factory()->create(['name' => 'Office Supplies']);
+
+        $response = $this->actingAs($this->accountant)
+            ->postJson('/api/adjusting-entries', [
+                'companyId' => $this->company->id,
+                'date'      => '2026-06-02',
+                'memo'      => 'Test entry',
+                'type'      => 'Reclassification',
+                'lines'     => [
+                    [
+                        'accountId'   => $this->debitAccount->id,
+                        'subtypeId'   => $subtype->id,
+                        'debit'       => 500.00,
+                        'credit'      => null,
+                        'description' => 'Pens and paper',
+                    ],
+                    [
+                        'accountId'   => $this->creditAccount->id,
+                        'subtypeId'   => null,
+                        'debit'       => null,
+                        'credit'      => 500.00,
+                        'description' => null,
+                    ],
+                ],
+            ]);
+
+        $response->assertStatus(201);
+
+        $debitLine = AdjustingEntryLine::where('account_id', $this->debitAccount->id)->first();
+        $this->assertNotNull($debitLine);
+        $this->assertEquals($subtype->id, $debitLine->subtype_id);
+        $this->assertEquals('Pens and paper', $debitLine->description);
+
+        $creditLine = AdjustingEntryLine::where('account_id', $this->creditAccount->id)->first();
+        $this->assertNull($creditLine->subtype_id);
+        $this->assertNull($creditLine->description);
+    }
+}
