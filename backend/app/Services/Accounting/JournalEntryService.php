@@ -177,6 +177,7 @@ class JournalEntryService
                     'account_id'       => $line->account_id,
                     'debit'            => $line->debit ?: null,
                     'credit'           => $line->credit ?: null,
+                    'description'      => $line->description ?? null,
                 ]);
             }
 
