@@ -113,8 +113,10 @@ class AdjustingEntryController extends Controller
                     AdjustingEntryLine::create([
                         'adjusting_entry_id' => $entry->id,
                         'account_id'         => $line['accountId'],
+                        'subtype_id'         => $line['subtypeId'] ?? null,
                         'debit'              => $line['debit'] ?? null,
                         'credit'             => $line['credit'] ?? null,
+                        'description'        => $line['description'] ?? null,
                     ]);
                 }
             }
@@ -212,8 +214,10 @@ class AdjustingEntryController extends Controller
                 AdjustingEntryLine::create([
                     'adjusting_entry_id' => $newEntry->id,
                     'account_id'         => $line->account_id,
+                    'subtype_id'         => $line->subtype_id,
                     'debit'              => $line->debit,
                     'credit'             => $line->credit,
+                    'description'        => $line->description,
                 ]);
             }
 

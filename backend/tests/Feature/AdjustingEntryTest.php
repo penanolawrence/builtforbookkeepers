@@ -128,4 +128,44 @@ class AdjustingEntryTest extends TestCase
         $response->assertJsonPath('lines.1.subtypeId', null);
         $response->assertJsonPath('lines.1.description', null);
     }
+
+    public function test_update_stores_subtype_and_description_per_line(): void
+    {
+        $subtype = Subtype::factory()->create(['name' => 'Repairs']);
+
+        $entry = AdjustingEntry::create([
+            'company_id'  => $this->company->id,
+            'created_by'  => $this->accountant->id,
+            'status'      => 'draft',
+            'type'        => 'Reclassification',
+            'entry_date'  => '2026-06-02',
+            'description' => 'Original memo',
+            'ref_number'  => 'ADJ-001',
+        ]);
+
+        $this->actingAs($this->accountant)
+            ->patchJson("/api/adjusting-entries/{$entry->id}", [
+                'lines' => [
+                    [
+                        'accountId'   => $this->debitAccount->id,
+                        'subtypeId'   => $subtype->id,
+                        'debit'       => 300.00,
+                        'credit'      => null,
+                        'description' => 'Roof repair',
+                    ],
+                    [
+                        'accountId'   => $this->creditAccount->id,
+                        'subtypeId'   => null,
+                        'debit'       => null,
+                        'credit'      => 300.00,
+                        'description' => null,
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $line = AdjustingEntryLine::where('account_id', $this->debitAccount->id)->first();
+        $this->assertEquals($subtype->id, $line->subtype_id);
+        $this->assertEquals('Roof repair', $line->description);
+    }
 }
