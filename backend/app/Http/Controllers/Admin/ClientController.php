@@ -229,6 +229,10 @@ class ClientController extends Controller
     public function resetAccess(string $id): JsonResponse
     {
         $company    = Company::findOrFail($id);
+        $authUser   = auth()->user();
+        if ($authUser->role === 'accountant' && $company->accountant_id !== $authUser->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
         $user       = $company->users()->where('role', 'client')->firstOrFail();
         $rawToken   = (new InviteTokenService())->generate($user);
         $inviteLink = env('FRONTEND_URL', 'http://localhost:3000') . '/setup?token=' . $rawToken;

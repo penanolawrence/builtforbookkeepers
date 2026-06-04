@@ -43,7 +43,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/documents/{id}/status',    [DocumentController::class, 'getStatus']);
         Route::post('/documents/{id}/reupload', [DocumentController::class, 'reupload']);
         Route::post('/documents/{id}/cancel',   [DocumentController::class, 'cancel']);
+    });
 
+    // Reports and BIR books — all authenticated roles; client.active blocks suspended/inactive clients
+    Route::middleware('client.active')->group(function () {
         Route::get('/reports/income-statement',      [ReportController::class, 'incomeStatement']);
         Route::get('/reports/expense-breakdown',     [ReportController::class, 'expenseBreakdown']);
         Route::get('/reports/income-statement/pdf',  [ReportController::class, 'exportPDF'])->defaults('type', 'income-statement');
@@ -76,17 +79,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/adjusting-entries/{id}',        [AdjustingEntryController::class, 'delete']);
         Route::post('/adjusting-entries/{id}/resubmit', [AdjustingEntryController::class, 'resubmit']);
 
-        Route::get('/reports/income-statement',      [ReportController::class, 'incomeStatement']);
-        Route::get('/reports/expense-breakdown',     [ReportController::class, 'expenseBreakdown']);
-        Route::get('/reports/income-statement/pdf',  [ReportController::class, 'exportPDF'])->defaults('type', 'income-statement');
-        Route::get('/reports/expense-breakdown/pdf', [ReportController::class, 'exportPDF'])->defaults('type', 'expense-breakdown');
-        Route::get('/bir/{book}',     [BIRController::class, 'getBook']);
-        Route::get('/bir/{book}/pdf', [BIRController::class, 'exportPDF']);
-
         Route::get('/documents/client/{clientId}', [DocumentController::class, 'clientDocuments']);
 
         Route::get('/subtypes',  [SubtypeController::class, 'index']);
         Route::post('/subtypes', [SubtypeController::class, 'store']);
+
+        // Chart of accounts + reset access — accountants access only their assigned clients
+        Route::get('/admin/clients/{id}/accounts',      [Admin\ChartOfAccountsController::class, 'index']);
+        Route::put('/admin/clients/{id}/accounts',      [Admin\ChartOfAccountsController::class, 'update']);
+        Route::post('/admin/clients/{id}/reset-access', [Admin\ClientController::class, 'resetAccess']);
     });
 
     // Admin routes
@@ -102,11 +103,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/admin/clients/{id}/reactivate',       [Admin\ClientController::class, 'reactivate']);
         Route::post('/admin/clients/{id}/deactivate',       [Admin\ClientController::class, 'deactivate']);
         Route::post('/admin/clients/{id}/mark-overdue',     [Admin\ClientController::class, 'markOverdue']);
-        Route::post('/admin/clients/{id}/reset-access',     [Admin\ClientController::class, 'resetAccess']);
         Route::post('/admin/clients/{id}/reassign',         [Admin\ClientController::class, 'reassignAccountant']);
         Route::get('/admin/clients/{id}/documents',         [Admin\ClientController::class, 'getDocuments']);
-        Route::get('/admin/clients/{id}/accounts',          [Admin\ChartOfAccountsController::class, 'index']);
-        Route::put('/admin/clients/{id}/accounts',          [Admin\ChartOfAccountsController::class, 'update']);
 
         Route::get('/admin/accountants',                       [Admin\AccountantController::class, 'index']);
         Route::post('/admin/accountants',                      [Admin\AccountantController::class, 'store']);

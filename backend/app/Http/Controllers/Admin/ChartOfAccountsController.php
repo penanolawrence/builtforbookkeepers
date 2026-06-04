@@ -12,8 +12,21 @@ use Illuminate\Http\Request;
 
 class ChartOfAccountsController extends Controller
 {
+    private function authorizeClient(string $clientId): void
+    {
+        $user = auth()->user();
+        if ($user->role === 'accountant') {
+            $company = Company::findOrFail($clientId);
+            if ($company->accountant_id !== $user->id) {
+                abort(403, 'Forbidden.');
+            }
+        }
+    }
+
     public function index(string $clientId): JsonResponse
     {
+        $this->authorizeClient($clientId);
+
         $accounts = Account::where('company_id', $clientId)
             ->orderBy('code')
             ->get()
@@ -31,6 +44,8 @@ class ChartOfAccountsController extends Controller
 
     public function update(Request $request, string $clientId): JsonResponse
     {
+        $this->authorizeClient($clientId);
+
         $company         = Company::findOrFail($clientId);
         $submittedIds    = collect($request->accounts ?? [])->pluck('id')->filter()->values();
         $existingAccounts = Account::where('company_id', $clientId)->get();
