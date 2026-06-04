@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sofia Books — Expense Breakdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>*{box-sizing:border-box;}html,body{margin:0;height:100%;-webkit-font-smoothing:antialiased;}::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:3px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+<script type="text/babel">
+const {useState}=React;
+const T={sofia:{surface:"#F6F1E9",card:"#FFFFFF",cardAlt:"#FBF7F1",ink:"#2A2433",muted:"#8A8295",faint:"#B4AEC0",line:"#ECE4D8",lineSoft:"#F2EBE0",primary:"#E2568C",primaryDeep:"#C53C76",primarySoft:"#FBE6EF",chipBg:"#F6F1E9",navBg:"rgba(255,255,255,0.88)",shadow:"0 1px 2px rgba(42,28,60,.04),0 14px 34px -18px rgba(42,28,60,.18)",tiers:{review:{fg:"#C2553D",bg:"#F7E5DD",ring:"#EBCBBE"},check:{fg:"#A9791A",bg:"#F6ECD4",ring:"#E8D5A6"},ready:{fg:"#3C8E6C",bg:"#DEEEE5",ring:"#BCDFCD"},pending:{fg:"#6A5ECF",bg:"#E9E3F8",ring:"#D3C9EF"}}},yoda:{surface:"#13111C",card:"#1C1928",cardAlt:"#211D2E",ink:"#ECEAF2",muted:"#9A93AE",faint:"#6E6880",line:"#2C2838",lineSoft:"#252132",primary:"#7C9CFF",primaryDeep:"#5B7CF0",primarySoft:"rgba(124,156,255,.14)",chipBg:"#211D2E",navBg:"rgba(22,20,32,0.85)",shadow:"0 1px 2px rgba(0,0,0,.3),0 18px 40px -20px rgba(0,0,0,.6)",tiers:{review:{fg:"#F0987B",bg:"rgba(225,120,90,.15)",ring:"rgba(225,120,90,.32)"},check:{fg:"#E8C06B",bg:"rgba(220,175,80,.14)",ring:"rgba(220,175,80,.30)"},ready:{fg:"#6FD6A6",bg:"rgba(80,200,150,.14)",ring:"rgba(80,200,150,.30)"},pending:{fg:"#A6B7FF",bg:"rgba(124,156,255,.16)",ring:"rgba(124,156,255,.34)"}}}};
+function Icon({name,size=18,stroke=1.7,color,style}){const p={fill:"none",stroke:color||"currentColor",strokeWidth:stroke,strokeLinecap:"round",strokeLinejoin:"round"};const paths={reports:<><path d="M5 19V5M5 19h14" {...p}/><path d="M9 15v-3M13 15V9M17 15v-5" {...p}/></>,bell:<><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z" {...p}/><path d="M10 20a2 2 0 004 0" {...p}/></>,chevron:<><path d="M6 9l6 6 6-6" {...p}/></>,calendar:<><rect x="3" y="4" width="18" height="18" rx="2" {...p}/><path d="M16 2v4M8 2v4M3 10h18" {...p}/></>,export:<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" {...p}/></>,spark:<><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1" {...p}/></>,};return <svg viewBox="0 0 24 24" width={size} height={size} style={style}>{paths[name]||null}</svg>;}
+function Nav({t,theme,setTheme}){const nav=[{l:"Dashboard"},{l:"Upload"},{l:"Documents"},{l:"Reports",active:true}];return(<header style={{display:"flex",alignItems:"center",gap:20,padding:"0 36px",height:70,borderBottom:`1px solid ${t.line}`,background:t.navBg,backdropFilter:"blur(12px)",flex:"none",transition:"background .5s"}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{width:32,height:32,borderRadius:10,display:"grid",placeItems:"center",background:`linear-gradient(150deg,${t.primary},${t.primaryDeep})`,flex:"none"}}><svg viewBox="0 0 24 24" width={18} height={18}><circle cx="12" cy="14.6" r="5.1" fill="#fff"/><circle cx="6.4" cy="8.6" r="2.25" fill="#fff"/><circle cx="12" cy="6.1" r="2.25" fill="#fff"/><circle cx="17.6" cy="8.6" r="2.25" fill="#fff"/></svg></span><span style={{fontFamily:"'Bricolage Grotesque'",fontWeight:700,fontSize:16,color:t.ink}}>Sofia Books</span></div><nav style={{display:"flex",gap:3,marginLeft:6}}>{nav.map(n=><span key={n.l} style={{padding:"7px 13px",borderRadius:10,fontSize:13.5,fontWeight:n.active?700:600,cursor:"pointer",color:n.active?t.primary:t.muted,background:n.active?t.primarySoft:"transparent"}}>{n.l}</span>)}</nav><div style={{flex:1}}/><div style={{position:"relative",display:"flex",padding:4,borderRadius:999,background:theme==="sofia"?"#EFE7DA":"#211D2E",border:`1px solid ${t.line}`}}><span style={{position:"absolute",top:4,bottom:4,width:"calc(50% - 4px)",borderRadius:999,background:`linear-gradient(150deg,${t.primary},${t.primaryDeep})`,left:4,transform:theme==="sofia"?"translateX(0)":"translateX(100%)",transition:"transform .32s cubic-bezier(.34,1.3,.5,1)"}}/>{["sofia","yoda"].map(k=><button key={k} onClick={()=>setTheme(k)} style={{position:"relative",zIndex:2,border:0,background:"transparent",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:12,padding:"5px 14px",borderRadius:999,color:theme===k?"#fff":t.muted,transition:"color .25s"}}>{k==="sofia"?"Sofia":"Yoda"}</button>)}</div><button style={{width:38,height:38,borderRadius:10,border:`1px solid ${t.line}`,background:t.card,color:t.muted,display:"grid",placeItems:"center",cursor:"pointer",position:"relative"}}><Icon name="bell" size={18}/><span style={{position:"absolute",top:9,right:9,width:6,height:6,borderRadius:999,background:t.primary,border:`2px solid ${t.card}`}}/></button><span style={{width:36,height:36,borderRadius:10,display:"grid",placeItems:"center",fontSize:12,fontWeight:800,color:t.primary,background:t.primarySoft,border:`1px solid ${t.line}`}}>MS</span></header>);}
+
+const EXPENSES=[
+  {name:"Salaries & Wages",  total:120000},
+  {name:"Rent Expense",       total:45000},
+  {name:"Cost of Goods Sold", total:42300},
+  {name:"Depreciation",       total:15600},
+  {name:"Utilities",          total:12400},
+  {name:"Office Supplies",    total:8750},
+  {name:"Miscellaneous",      total:4200},
+];
+const GRAND=EXPENSES.reduce((a,e)=>a+e.total,0);
+function fmt(n){return"₱"+n.toLocaleString("en-PH",{minimumFractionDigits:2});}
+
+function ExpenseBreakdownPage(){
+  const [theme,setTheme]=useState("sofia");
+  const t=T[theme];
+  const maxAmt=Math.max(...EXPENSES.map(e=>e.total));
+  return(
+    <div style={{height:"100%",width:"100%",background:t.surface,color:t.ink,fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif",transition:"background .5s,color .5s",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <Nav t={t} theme={theme} setTheme={setTheme}/>
+      <div style={{flex:1,overflowY:"auto",background:t.surface}}>
+      <div style={{maxWidth:1280,margin:"0 auto",padding:"28px 36px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:18,fontSize:13,color:t.muted}}>
+          <span style={{cursor:"pointer"}}>Reports</span>
+          <Icon name="chevron" size={13} style={{transform:"rotate(-90deg)",color:t.faint}}/>
+          <span style={{fontWeight:600,color:t.ink}}>Expense Breakdown</span>
+        </div>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:22}}>
+          <div>
+            <h1 style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:34,letterSpacing:"-.025em",margin:0,color:t.ink}}>Expense Breakdown</h1>
+            <p style={{margin:"5px 0 0",color:t.muted,fontSize:14.5}}>Approved transactions only</p>
+          </div>
+        </div>
+        {/* Toolbar */}
+        <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:22,background:t.card,border:`1px solid ${t.line}`,borderRadius:14,padding:"14px 18px",boxShadow:t.shadow}}>
+          <span style={{fontSize:13,fontWeight:600,color:t.muted,whiteSpace:"nowrap"}}>Period</span>
+          {["Jun 1, 2026","Jun 30, 2026"].map((v,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:8,height:40,padding:"0 12px",borderRadius:10,border:`1.5px solid ${t.line}`,background:t.surface,fontSize:13.5,fontWeight:600,color:t.muted,cursor:"pointer",whiteSpace:"nowrap"}}>
+              {v}<Icon name="calendar" size={14} style={{color:t.faint}}/>
+            </div>
+          ))}
+          <button style={{border:0,borderRadius:10,cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:13.5,padding:"10px 18px",color:"#fff",background:`linear-gradient(150deg,${t.primary},${t.primaryDeep})`,display:"inline-flex",alignItems:"center",gap:6}}>
+            <Icon name="spark" size={14} color="#fff"/> Generate
+          </button>
+          <div style={{flex:1}}/>
+          <button style={{border:`1px solid ${t.line}`,borderRadius:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600,fontSize:13,padding:"9px 16px",color:t.ink,background:t.card,display:"inline-flex",alignItems:"center",gap:6}}>
+            <Icon name="export" size={15}/> Export PDF
+          </button>
+        </div>
+        {/* Table card */}
+        <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:20,overflow:"hidden",boxShadow:t.shadow}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,padding:"18px 24px",borderBottom:`1px solid ${t.line}`}}>
+            <span style={{color:t.primary}}><Icon name="reports" size={18}/></span>
+            <span style={{fontFamily:"'Bricolage Grotesque'",fontWeight:700,fontSize:16,color:t.ink}}>Expense Breakdown</span>
+            <span style={{fontSize:12,color:t.faint}}>Jun 1 – Jun 30, 2026 · {EXPENSES.length} categories</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1.4fr",padding:"12px 24px",fontSize:11,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".06em"}}>
+            <span>Category</span><span style={{textAlign:"right",color:t.tiers.review.fg}}>Amount</span><span style={{textAlign:"right"}}>% of Total</span>
+          </div>
+          {EXPENSES.map((row,i)=>{
+            const pct=GRAND>0?(row.total/GRAND)*100:0;
+            const barW=Math.round((row.total/maxAmt)*140);
+            return(
+              <div key={row.name} style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1.4fr",padding:"13px 24px",alignItems:"center",borderTop:`1px solid ${t.lineSoft}`,background:i%2===0?t.cardAlt:"transparent"}}>
+                <span style={{fontSize:14,color:t.ink}}>{row.name}</span>
+                <span style={{fontSize:14,fontWeight:600,color:t.tiers.review.fg,fontVariantNumeric:"tabular-nums",textAlign:"right"}}>{fmt(row.total)}</span>
+                <div style={{display:"flex",alignItems:"center",gap:10,justifyContent:"flex-end"}}>
+                  <div style={{height:6,borderRadius:3,background:t.tiers.review.fg,opacity:.5,width:barW,flex:"none"}}/>
+                  <span style={{fontSize:11.5,color:t.faint,minWidth:42,textAlign:"right"}}>{pct.toFixed(1)}%</span>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{display:"grid",gridTemplateColumns:"1.8fr 1fr 1.4fr",padding:"14px 24px",borderTop:`2px solid ${t.line}`,background:t.cardAlt}}>
+            <span style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:15,color:t.ink}}>Total Expenses</span>
+            <span style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:15,color:t.tiers.review.fg,fontVariantNumeric:"tabular-nums",textAlign:"right"}}>{fmt(GRAND)}</span>
+            <span style={{textAlign:"right",fontSize:13,fontWeight:700,color:t.muted}}>100%</span>
+          </div>
+        </div>
+        <div style={{height:32}}/>
+      </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<ExpenseBreakdownPage/>);
+</script>
+</body>
+</html>

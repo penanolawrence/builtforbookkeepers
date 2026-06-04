@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sofia Books — Documents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{background:#E8E0D4;-webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center;}
+  #root{width:1280px;height:960px;max-width:100vw;max-height:100vh;border-radius:18px;overflow:hidden;box-shadow:0 30px 80px -40px rgba(42,28,60,.4);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="src/atoms.jsx"></script>
+<script type="text/babel">
+const { useState } = React;
+const { DASH_THEME, PageFrame, Breadcrumb, SummaryCard, FilterSelect, DateField,
+        TableCardHeader, CurrencyCell, StatusChip, SourceChip, PrimaryBtn, GhostBtn, Icon } = window;
+
+const DOCS = [
+  { ref:"MNL-0011", source:"Manual", date:"Jun 3", inflow:"₱400.00",  outflow:null,         status:"In Review",  note:"Awaiting accountant review" },
+  { ref:"MNL-0010", source:"Manual", date:"Jun 2", inflow:null,        outflow:"₱600.00",    status:"In Review",  note:"Awaiting accountant review" },
+  { ref:"MNL-0009", source:"Manual", date:"Jun 2", inflow:null,        outflow:"₱500.00",    status:"Approved",   note:null },
+  { ref:"MNL-0008", source:"Manual", date:"Jun 2", inflow:"₱600.00",  outflow:null,         status:"Approved",   note:null },
+  { ref:"MNL-0007", source:"Manual", date:"Jun 2", inflow:null,        outflow:"₱500.00",    status:"Approved",   note:null },
+  { ref:"MNL-0006", source:"Manual", date:"Jun 2", inflow:null,        outflow:"₱200.00",    status:"Approved",   note:null },
+  { ref:"MNL-0005", source:"Manual", date:"Jun 2", inflow:null,        outflow:"₱500.00",    status:"Approved",   note:null },
+  { ref:"MNL-0004", source:"Manual", date:"Jun 2", inflow:"₱200.00",  outflow:null,         status:"Approved",   note:null },
+  { ref:"MNL-0003", source:"Manual", date:"Jun 2", inflow:"₱500.00",  outflow:null,         status:"Approved",   note:null },
+  { ref:"DEMO-123456789", source:"Upload", date:"Jun 2", inflow:null,  outflow:"₱10,000.00", status:"Approved",   note:null },
+  { ref:"MNL-0002", source:"Manual", date:"Jun 2", inflow:"₱9,000.00",outflow:null,         status:"Approved",   note:null },
+  { ref:"MNL-0001", source:"Manual", date:"Jun 2", inflow:null,        outflow:"₱650.00",    status:"Approved",   note:null },
+  { ref:"EFS20072194920084771", source:"Upload", date:"Jun 2", inflow:null, outflow:"₱945.00", status:"Approved", note:null },
+  { ref:"000000000000724763",   source:"Upload", date:"Jun 2", inflow:null, outflow:"₱615.00", status:"Approved", note:null },
+  { ref:"OR-2026-0088", source:"Upload", date:"Jun 2", inflow:"₱10,714.29", outflow:null,   status:"Approved",   note:null },
+  { ref:"OR-2026-0041", source:"Upload", date:"Jun 2", inflow:null,    outflow:"₱3,200.00",  status:"Approved",   note:null },
+];
+
+const COLS = ["REFERENCE","SOURCE","UPLOADED","INFLOW","OUTFLOW","STATUS","NOTE"];
+const COL_W = "1.9fr 0.7fr 0.6fr 0.85fr 0.85fr 0.8fr 1.2fr";
+
+function DocumentsPage() {
+  const [theme, setTheme] = useState("sofia");
+  const t = DASH_THEME[theme];
+
+  const inReviewRows = DOCS.filter(d => d.status === "In Review");
+  const borderLeft = (d) => d.status === "In Review" ? `3px solid ${t.tiers.review.fg}` : "3px solid transparent";
+  const rowBg = (d, i) => d.status === "In Review"
+    ? (theme === "sofia" ? "rgba(242,104,74,.04)" : "rgba(240,152,123,.06)")
+    : (i % 2 === 0 ? t.cardAlt : "transparent");
+
+  return (
+    <PageFrame t={t} theme={theme} setTheme={setTheme} role="client" activeNav="Documents">
+      <Breadcrumb t={t} crumbs={["My Business","Documents"]}/>
+
+      {/* Page header */}
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:22}}>
+        <div>
+          <h1 style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:34,letterSpacing:"-.025em",margin:0,color:t.ink}}>Documents</h1>
+          <p style={{margin:"5px 0 0",color:t.muted,fontSize:14.5}}>Northwind Logistics · June 2026 · VAT registered</p>
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          <GhostBtn t={t}><Icon name="export" size={15}/>Export</GhostBtn>
+          <PrimaryBtn t={t}><Icon name="plus" size={15}/>Add Entry</PrimaryBtn>
+        </div>
+      </div>
+
+      {/* Summary cards */}
+      <div style={{display:"flex",gap:14,marginBottom:22}}>
+        <SummaryCard t={t} label="Total Entries" value="16" subnote="2 in review"/>
+        <SummaryCard t={t} label="Total Inflow" value="₱21,414.29" subnote="received" valueColor={t.tiers.ready.fg}/>
+        <SummaryCard t={t} label="Total Outflow" value="₱17,710.00" subnote="disbursed" valueColor={t.tiers.review.fg}/>
+        <SummaryCard t={t} label="Net Flow" value="₱3,704.29" subnote="net positive" valueColor={t.tiers.ready.fg}/>
+      </div>
+
+      {/* Filter bar */}
+      <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:20,flexWrap:"wrap"}}>
+        <FilterSelect t={t} value="All Statuses"/>
+        <FilterSelect t={t} value="All Types"/>
+        <DateField t={t} value="dd/mm/yyyy"/>
+        <DateField t={t} value="dd/mm/yyyy"/>
+        <div style={{flex:1}}/>
+        <span style={{fontSize:13,color:t.muted,fontWeight:500}}>16 of 16 entries</span>
+      </div>
+
+      {/* Table card */}
+      <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:20,overflow:"hidden",boxShadow:t.shadow}}>
+        <TableCardHeader t={t} icon="docs" title="Documents" count={16} badges={inReviewRows.length ? [{label:`${inReviewRows.length} in review`,tier:"review"}] : []}/>
+
+        {/* Column headers */}
+        <div style={{display:"grid",gridTemplateColumns:COL_W,padding:"12px 24px",fontSize:11,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".06em"}}>
+          <span>Reference</span><span>Source</span><span>Uploaded</span>
+          <span style={{color:t.tiers.ready.fg}}>Inflow</span>
+          <span style={{color:t.tiers.review.fg}}>Outflow</span>
+          <span>Status</span><span>Note</span>
+        </div>
+
+        {/* Rows */}
+        {DOCS.map((d,i)=>(
+          <div key={d.ref} style={{display:"grid",gridTemplateColumns:COL_W,padding:"13px 24px",alignItems:"center",borderTop:`1px solid ${t.lineSoft}`,background:rowBg(d,i),borderLeft:borderLeft(d),cursor:"pointer",transition:"background .12s"}}>
+            <span style={{fontWeight:600,fontSize:14,color:t.ink,fontVariantNumeric:"tabular-nums"}}>{d.ref}</span>
+            <span><SourceChip t={t} source={d.source}/></span>
+            <span style={{fontSize:13.5,color:t.muted}}>{d.date}</span>
+            <span style={{fontSize:13.5,fontVariantNumeric:"tabular-nums"}}><CurrencyCell t={t} value={d.inflow} isInflow/></span>
+            <span style={{fontSize:13.5,fontVariantNumeric:"tabular-nums"}}><CurrencyCell t={t} value={d.outflow}/></span>
+            <span><StatusChip t={t} status={d.status}/></span>
+            <span style={{fontSize:12.5,color:d.status==="In Review"?t.tiers.check.fg:t.faint,fontStyle:!d.note?"italic":"normal"}}>{d.note||"—"}</span>
+          </div>
+        ))}
+
+        {/* Footer */}
+        <div style={{display:"grid",gridTemplateColumns:COL_W,padding:"14px 24px",borderTop:`2px solid ${t.line}`,background:t.cardAlt}}>
+          <span style={{fontSize:13,color:t.muted,fontWeight:600}}>16 entries</span>
+          <span/><span/>
+          <span style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:15,color:t.tiers.ready.fg,fontVariantNumeric:"tabular-nums"}}>₱21,414.29</span>
+          <span style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:15,color:t.tiers.review.fg,fontVariantNumeric:"tabular-nums"}}>₱17,710.00</span>
+          <span/><span/>
+        </div>
+      </div>
+    </PageFrame>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<DocumentsPage/>);
+</script>
+</body>
+</html>
