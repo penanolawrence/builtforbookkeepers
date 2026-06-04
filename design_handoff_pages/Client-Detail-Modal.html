@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sofia Books — Client Detail Modal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>*{box-sizing:border-box;}html,body{margin:0;height:100%;-webkit-font-smoothing:antialiased;}::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:3px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+<script type="text/babel">
+const {useState}=React;
+
+const T={
+  sofia:{surface:"#F6F1E9",card:"#FFFFFF",cardAlt:"#FBF7F1",ink:"#2A2433",muted:"#8A8295",faint:"#B4AEC0",line:"#ECE4D8",lineSoft:"#F2EBE0",primary:"#E2568C",primaryDeep:"#C53C76",primarySoft:"#FBE6EF",chipBg:"#F6F1E9",navBg:"rgba(255,255,255,0.88)",shadow:"0 1px 2px rgba(42,28,60,.04),0 14px 34px -18px rgba(42,28,60,.18)",modalShadow:"0 24px 80px -16px rgba(42,28,60,.32)",tiers:{review:{fg:"#C2553D",bg:"#F7E5DD",ring:"#EBCBBE"},check:{fg:"#A9791A",bg:"#F6ECD4",ring:"#E8D5A6"},ready:{fg:"#3C8E6C",bg:"#DEEEE5",ring:"#BCDFCD"},pending:{fg:"#6A5ECF",bg:"#E9E3F8",ring:"#D3C9EF"}}},
+  yoda:{surface:"#13111C",card:"#1C1928",cardAlt:"#211D2E",ink:"#ECEAF2",muted:"#9A93AE",faint:"#6E6880",line:"#2C2838",lineSoft:"#252132",primary:"#7C9CFF",primaryDeep:"#5B7CF0",primarySoft:"rgba(124,156,255,.14)",chipBg:"#211D2E",navBg:"rgba(22,20,32,0.85)",shadow:"0 1px 2px rgba(0,0,0,.3),0 18px 40px -20px rgba(0,0,0,.6)",modalShadow:"0 32px 100px -20px rgba(0,0,0,.7)",tiers:{review:{fg:"#F0987B",bg:"rgba(225,120,90,.15)",ring:"rgba(225,120,90,.32)"},check:{fg:"#E8C06B",bg:"rgba(220,175,80,.14)",ring:"rgba(220,175,80,.30)"},ready:{fg:"#6FD6A6",bg:"rgba(80,200,150,.14)",ring:"rgba(80,200,150,.30)"},pending:{fg:"#A6B7FF",bg:"rgba(124,156,255,.16)",ring:"rgba(124,156,255,.34)"}}}
+};
+
+function Nav({t,theme,setTheme}){
+  const nav=[{l:"Dashboard"},{l:"Queue",badge:7},{l:"My Clients",active:true},{l:"Adj. Entries"},{l:"Reports"}];
+  return(
+    <header style={{display:"flex",alignItems:"center",gap:20,padding:"0 36px",height:70,borderBottom:`1px solid ${t.line}`,background:t.navBg,backdropFilter:"blur(12px)",flex:"none"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{width:32,height:32,borderRadius:10,display:"grid",placeItems:"center",background:`linear-gradient(150deg,${t.primary},${t.primaryDeep})`,flex:"none"}}>
+          <svg viewBox="0 0 24 24" width={18} height={18}><circle cx="12" cy="14.6" r="5.1" fill="#fff"/><circle cx="6.4" cy="8.6" r="2.25" fill="#fff"/><circle cx="12" cy="6.1" r="2.25" fill="#fff"/><circle cx="17.6" cy="8.6" r="2.25" fill="#fff"/></svg>
+        </span>
+        <span style={{fontFamily:"'Bricolage Grotesque'",fontWeight:700,fontSize:16,color:t.ink}}>Sofia Books</span>
+      </div>
+      <nav style={{display:"flex",gap:3,marginLeft:6}}>
+        {nav.map(n=>(
+          <span key={n.l} style={{display:"flex",alignItems:"center",gap:6,padding:"7px 13px",borderRadius:10,fontSize:13.5,fontWeight:n.active?700:600,cursor:"pointer",color:n.active?t.primary:t.muted,background:n.active?t.primarySoft:"transparent"}}>
+            {n.l}{n.badge&&<span style={{fontSize:10.5,fontWeight:800,color:"#fff",background:t.tiers.review.fg,borderRadius:999,padding:"1px 6px"}}>{n.badge}</span>}
+          </span>
+        ))}
+      </nav>
+      <div style={{flex:1}}/>
+      <div style={{position:"relative",display:"flex",padding:4,borderRadius:999,background:theme==="sofia"?"#EFE7DA":"#211D2E",border:`1px solid ${t.line}`}}>
+        <span style={{position:"absolute",top:4,bottom:4,width:"calc(50% - 4px)",borderRadius:999,background:`linear-gradient(150deg,${t.primary},${t.primaryDeep})`,left:4,transform:theme==="sofia"?"translateX(0)":"translateX(100%)",transition:"transform .32s cubic-bezier(.34,1.3,.5,1)"}}/>
+        {["sofia","yoda"].map(k=>(
+          <button key={k} onClick={()=>setTheme(k)} style={{position:"relative",zIndex:2,border:0,background:"transparent",cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:12,padding:"5px 14px",borderRadius:999,color:theme===k?"#fff":t.muted,transition:"color .25s"}}>
+            {k==="sofia"?"Sofia":"Yoda"}
+          </button>
+        ))}
+      </div>
+    </header>
+  );
+}
+
+function SCard({t,label,value,note,color}){
+  return(
+    <div style={{flex:1,background:t.card,border:`1px solid ${t.line}`,borderRadius:16,padding:"16px 20px",boxShadow:t.shadow}}>
+      <div style={{fontSize:11,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".06em",marginBottom:8}}>{label}</div>
+      <div style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:26,letterSpacing:"-.025em",color:color||t.ink,lineHeight:1}}>{value}</div>
+      {note&&<div style={{fontSize:12,color:t.faint,marginTop:5}}>{note}</div>}
+    </div>
+  );
+}
+
+function CountBadge({t,n,tier}){
+  if(n===0) return <span style={{color:t.faint,fontSize:13}}>—</span>;
+  const c=t.tiers[tier];
+  return <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",padding:"3px 10px",borderRadius:8,fontSize:12.5,fontWeight:700,background:c.bg,color:c.fg,border:`1px solid ${c.ring}`,minWidth:28}}>{n}</span>;
+}
+
+function StatusChip({t,s}){
+  const map={PARKED:"check",APPROVED:"ready",RETURNED:"review",PROCESSING:"pending",REJECTED:"review",CANCELLED:"pending"};
+  const labels={PARKED:"In Review",APPROVED:"Approved",RETURNED:"Returned",PROCESSING:"Processing",REJECTED:"Rejected",CANCELLED:"Cancelled"};
+  const c=t.tiers[map[s]||"pending"];
+  return <span style={{display:"inline-flex",alignItems:"center",padding:"4px 12px",borderRadius:999,fontSize:12.5,fontWeight:700,color:c.fg,background:c.bg,border:`1px solid ${c.ring}`,whiteSpace:"nowrap"}}>{labels[s]||s}</span>;
+}
+
+// ── OVERVIEW TAB ──────────────────────────────────────────────
+function OverviewTab({t,client}){
+  const infoRows=[
+    {label:"Business Name",value:client.name},
+    {label:"Mobile",value:client.mobile},
+    {label:"Email",value:client.email},
+    {label:"Contact Person",value:client.contactPerson},
+    {label:"TIN",value:client.tin},
+    {label:"Username",value:client.username},
+    {label:"Plan",value:client.plan+" · "+client.birType},
+  ];
+  return(
+    <div style={{display:"grid",gridTemplateColumns:"1fr 300px",gap:24,padding:"24px 28px"}}>
+      {/* Left — client info */}
+      <div>
+        <div style={{fontSize:11,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".06em",marginBottom:16}}>Client Information</div>
+        <div style={{display:"flex",flexDirection:"column",gap:0,background:t.card,border:`1px solid ${t.line}`,borderRadius:14,overflow:"hidden"}}>
+          {infoRows.map((row,i)=>(
+            <div key={row.label} style={{display:"grid",gridTemplateColumns:"160px 1fr",alignItems:"center",padding:"12px 16px",borderBottom:i<infoRows.length-1?`1px solid ${t.lineSoft}`:"none",background:i%2===1?t.cardAlt:"transparent"}}>
+              <span style={{fontSize:12,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".04em"}}>{row.label}</span>
+              <span style={{fontSize:13.5,fontWeight:600,color:t.ink}}>{row.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right — sidebar */}
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {/* Status */}
+        <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:14,padding:"16px 18px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".06em",marginBottom:12}}>Account Status</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <span style={{display:"inline-flex",padding:"4px 13px",borderRadius:999,fontSize:12.5,fontWeight:700,color:t.tiers.ready.fg,background:t.tiers.ready.bg,border:`1px solid ${t.tiers.ready.ring}`}}>Active</span>
+            <span style={{fontSize:12,color:t.faint}}>Growth · VAT</span>
+          </div>
+          <div style={{fontSize:12,color:t.faint,marginTop:10}}>Last login: May 28, 2026 · 9:14 AM</div>
+        </div>
+
+        {/* Queue flags */}
+        <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:14,padding:"16px 18px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".06em",marginBottom:12}}>Review Queue</div>
+          <div style={{display:"flex",gap:10}}>
+            <div style={{flex:1,textAlign:"center"}}>
+              <div style={{marginBottom:4}}><CountBadge t={t} n={2} tier="review"/></div>
+              <div style={{fontSize:11,fontWeight:700,color:t.faint}}>RED</div>
+            </div>
+            <div style={{flex:1,textAlign:"center"}}>
+              <div style={{marginBottom:4}}><CountBadge t={t} n={1} tier="check"/></div>
+              <div style={{fontSize:11,fontWeight:700,color:t.faint}}>YEL</div>
+            </div>
+            <div style={{flex:1,textAlign:"center"}}>
+              <div style={{marginBottom:4}}><CountBadge t={t} n={4} tier="ready"/></div>
+              <div style={{fontSize:11,fontWeight:700,color:t.faint}}>GRN</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Assigned accountant */}
+        <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:14,padding:"16px 18px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".06em",marginBottom:12}}>Assigned Accountant</div>
+          <div style={{fontSize:13.5,fontWeight:700,color:t.ink}}>Maria Santos</div>
+          <div style={{fontSize:12,color:t.faint,marginTop:2}}>maria@sofiabooks.ph</div>
+        </div>
+
+        {/* Quick actions */}
+        <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:14,padding:"16px 18px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:t.faint,textTransform:"uppercase",letterSpacing:".06em",marginBottom:12}}>Quick Actions</div>
+          <button style={{width:"100%",padding:"9px 14px",borderRadius:10,border:`1.5px solid ${t.line}`,background:t.card,color:t.ink,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
+            <svg viewBox="0 0 24 24" width={15} height={15} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{color:t.primary}}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+            Reset Access Link
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── DOCUMENTS TAB ─────────────────────────────────────────────
+const DOCS=[
+  {ref:"OR-2026-0441",type:"income",amount:"₱1,200",merchant:"ABC Customer #44",uploaded:"May 27",status:"APPROVED"},
+  {ref:"INV-2026-0089",type:"expense",amount:"₱3,200",merchant:"Meralco",uploaded:"May 26",status:"PROCESSING"},
+  {ref:"OR-2026-0441-B",type:"expense",amount:"₱14,800",merchant:"ABC Suppliers",uploaded:"May 25",status:"PARKED"},
+  {ref:"OR-2026-0391",type:"income",amount:"—",merchant:"Not detected",uploaded:"May 24",status:"RETURNED"},
+  {ref:"INV-2026-0062",type:"income",amount:"₱8,400",merchant:"Metro Client",uploaded:"May 20",status:"APPROVED"},
+  {ref:"OR-2026-0388",type:"expense",amount:"₱2,100",merchant:"Manila Water",uploaded:"May 19",status:"APPROVED"},
+];
+
+function DocumentsTab({t}){
+  const [statusF,setStatusF]=useState("all");
+  const [typeF,setTypeF]=useState("all");
+  const COLS="1fr 90px 110px 1fr 100px 130px";
+  const filtered=DOCS.filter(d=>(statusF==="all"||d.status===statusF)&&(typeF==="all"||d.type===typeF));
+  return(
+    <div style={{padding:"20px 28px"}}>
+      {/* Filter bar — row 1 */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+        {/* Status */}
+        <div style={{position:"relative"}}>
+          <select value={statusF} onChange={e=>setStatusF(e.target.value)} style={{width:"100%",height:40,paddingLeft:14,paddingRight:36,borderRadius:11,border:`1.5px solid ${t.line}`,background:t.card,fontSize:13.5,fontWeight:600,color:t.ink,appearance:"none",fontFamily:"inherit",cursor:"pointer"}}>
+            <option value="all">All Statuses</option>
+            <option value="PARKED">In Review</option>
+            <option value="APPROVED">Approved</option>
+            <option value="RETURNED">Returned</option>
+            <option value="PROCESSING">Processing</option>
+          </select>
+          <svg style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:t.faint}} viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          {statusF!=="all"&&<button onClick={()=>setStatusF("all")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",border:0,background:t.card,cursor:"pointer",padding:0,color:t.faint,display:"flex",alignItems:"center",justifyContent:"center",zIndex:2}}>
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{opacity:.5}}><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>}
+        </div>
+        {/* Type */}
+        <div style={{position:"relative"}}>
+          <select value={typeF} onChange={e=>setTypeF(e.target.value)} style={{width:"100%",height:40,paddingLeft:14,paddingRight:36,borderRadius:11,border:`1.5px solid ${t.line}`,background:t.card,fontSize:13.5,fontWeight:600,color:t.ink,appearance:"none",fontFamily:"inherit",cursor:"pointer"}}>
+            <option value="all">All Types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <svg style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",pointerEvents:"none",color:t.faint}} viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          {typeF!=="all"&&<button onClick={()=>setTypeF("all")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",border:0,background:t.card,cursor:"pointer",padding:0,color:t.faint,display:"flex",alignItems:"center",justifyContent:"center",zIndex:2}}>
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{opacity:.5}}><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>}
+        </div>
+      </div>
+      {/* Filter bar — row 2 */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+        <input type="date" defaultValue="2026-05-01" style={{height:40,padding:"0 12px",borderRadius:11,border:`1.5px solid ${t.line}`,background:t.card,fontSize:13.5,fontWeight:600,color:t.muted,fontFamily:"inherit",width:"100%"}}/>
+        <input type="date" defaultValue="2026-05-31" style={{height:40,padding:"0 12px",borderRadius:11,border:`1.5px solid ${t.line}`,background:t.card,fontSize:13.5,fontWeight:600,color:t.muted,fontFamily:"inherit",width:"100%"}}/>
+      </div>
+
+      {/* Table */}
+      <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:16,overflow:"hidden",boxShadow:t.shadow}}>
+        {/* col headers */}
+        <div style={{display:"grid",gridTemplateColumns:COLS,columnGap:16,padding:"10px 16px 6px"}}>
+          {["Reference","Type","Amount","Merchant","Uploaded","Status"].map((h,i)=>(
+            <span key={h} style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:t.faint,textAlign:i>=2&&i<=4?"left":"left"}}>{h}</span>
+          ))}
+        </div>
+        {/* rows */}
+        <div style={{padding:"0 12px 12px"}}>
+          {filtered.map((d,i)=>(
+            <div key={d.ref} style={{display:"grid",gridTemplateColumns:COLS,columnGap:16,padding:"12px 4px",borderRadius:i===0?"10px 10px 0 0":i===filtered.length-1?"0 0 10px 10px":"0",alignItems:"center",background:t.cardAlt,borderTop:i>0?`1px solid ${t.lineSoft}`:"none",cursor:"pointer"}}>
+              <span style={{fontSize:13,fontWeight:700,color:t.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.ref}</span>
+              <span style={{display:"inline-flex",padding:"3px 10px",borderRadius:8,fontSize:12,fontWeight:600,background:d.type==="income"?t.tiers.ready.bg:t.tiers.review.bg,color:d.type==="income"?t.tiers.ready.fg:t.tiers.review.fg,border:`1px solid ${d.type==="income"?t.tiers.ready.ring:t.tiers.review.ring}`,whiteSpace:"nowrap"}}>{d.type==="income"?"Income":"Expense"}</span>
+              <span style={{fontSize:13.5,fontWeight:600,color:t.ink,fontVariantNumeric:"tabular-nums"}}>{d.amount}</span>
+              <span style={{fontSize:13,color:t.muted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.merchant}</span>
+              <span style={{fontSize:13,color:t.faint}}>{d.uploaded}</span>
+              <div><StatusChip t={t} s={d.status}/></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CHART OF ACCOUNTS TAB ─────────────────────────────────────
+const INIT_COA={
+  income:[{id:1,code:"4001",name:"Sales Revenue"},{id:2,code:"4002",name:"Service Revenue"},{id:3,code:"4003",name:"Other Income"}],
+  expense:[{id:4,code:"5001",name:"Utilities Expense"},{id:5,code:"5002",name:"Supplies Expense"},{id:6,code:"5003",name:"Rent Expense"},{id:7,code:"5004",name:"Transportation Expense"},{id:8,code:"5005",name:"Meals and Entertainment"},{id:9,code:"5006",name:"Communication Expense"},{id:10,code:"5007",name:"Taxes and Licenses"},{id:11,code:"5008",name:"Other Expense"}],
+  cash:[{code:"1001",name:"Cash on Hand"},{code:"1002",name:"GCash"},{code:"1003",name:"Maya"},{code:"1004",name:"Bank"}],
+  vat:[{code:"1101",name:"Input VAT"},{code:"2101",name:"Output VAT"}],
+};
+
+function CoaSection({t,title,accounts,onChangeName,onRemove,onAdd,system,hint}){
+  const [open,setOpen]=useState(false);
+  return(
+    <div>
+      <div onClick={()=>setOpen(o=>!o)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 20px",background:t.cardAlt,cursor:"pointer",userSelect:"none",borderBottom:`1px solid ${t.lineSoft}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{color:t.faint,transform:open?"rotate(0)":"rotate(-90deg)",transition:"transform .2s"}}><path d="M6 9l6 6 6-6"/></svg>
+          <span style={{fontSize:12.5,fontWeight:700,color:t.ink}}>{title}</span>
+          <span style={{fontSize:11,fontWeight:700,color:t.faint,background:t.card,border:`1px solid ${t.line}`,borderRadius:999,padding:"1px 7px"}}>{accounts.length}</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {hint&&<span style={{fontSize:11,color:t.faint,fontStyle:"italic"}}>{hint}</span>}
+          {onAdd&&<button onClick={e=>{e.stopPropagation();onAdd();}} style={{border:`1.5px dashed ${t.line}`,background:"transparent",borderRadius:8,padding:"3px 10px",fontSize:12,fontWeight:700,color:t.primary,cursor:"pointer",fontFamily:"inherit"}}>+ Add Account</button>}
+        </div>
+      </div>
+      {open&&(
+        <div>
+          {accounts.map((a,i)=>(
+            <div key={a.id||a.code} style={{display:"grid",gridTemplateColumns:"70px 1fr 32px",gap:10,alignItems:"center",padding:"9px 20px",borderBottom:`1px solid ${t.lineSoft}`,background:i%2===0?"transparent":t.cardAlt}}>
+              <span style={{fontSize:12.5,fontWeight:700,color:t.faint,fontVariantNumeric:"tabular-nums"}}>{a.code}</span>
+              {system?(
+                <span style={{fontSize:13.5,color:t.muted}}>{a.name}</span>
+              ):(
+                <input value={a.name} onChange={e=>onChangeName(i,e.target.value)} style={{border:`1.5px solid ${t.line}`,borderRadius:8,padding:"5px 10px",fontSize:13.5,color:t.ink,background:t.card,fontFamily:"inherit",fontWeight:600,outline:"none",width:"100%"}}/>
+              )}
+              {system?(
+                <span style={{fontSize:13,color:t.faint,textAlign:"center"}}>🔒</span>
+              ):(
+                <button onClick={()=>onRemove(i)} style={{border:0,background:"transparent",cursor:"pointer",color:t.faint,padding:4,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:6}}>
+                  <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoaTab({t}){
+  const [income,setIncome]=useState(INIT_COA.income);
+  const [expense,setExpense]=useState(INIT_COA.expense);
+  const [saved,setSaved]=useState(false);
+  function changeName(list,setList,i,v){setList(l=>l.map((a,j)=>j===i?{...a,name:v}:a));}
+  function remove(list,setList,i){setList(l=>l.filter((_,j)=>j!==i));}
+  function add(list,setList,type){
+    const next=`${type==="income"?4:5}${String(list.length+1).padStart(3,"0")}`;
+    setList(l=>[...l,{id:Date.now(),code:next,name:"New Account"}]);
+  }
+  return(
+    <div>
+      <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:14,overflow:"hidden",margin:"20px 28px 0"}}>
+        <CoaSection t={t} title="Income Accounts" accounts={income} onChangeName={(i,v)=>changeName(income,setIncome,i,v)} onRemove={i=>remove(income,setIncome,i)} onAdd={()=>add(income,setIncome,"income")}/>
+        <CoaSection t={t} title="Expense Accounts" accounts={expense} onChangeName={(i,v)=>changeName(expense,setExpense,i,v)} onRemove={i=>remove(expense,setExpense,i)} onAdd={()=>add(expense,setExpense,"expense")}/>
+        <CoaSection t={t} title="Cash / Payment Accounts" accounts={INIT_COA.cash} system hint="System managed"/>
+        <CoaSection t={t} title="VAT Accounts" accounts={INIT_COA.vat} system hint="System managed · VAT clients only"/>
+      </div>
+      <div style={{display:"flex",justifyContent:"flex-end",padding:"16px 28px 24px"}}>
+        <button onClick={()=>{setSaved(true);setTimeout(()=>setSaved(false),2000);}} style={{border:0,borderRadius:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:14,padding:"11px 22px",color:"#fff",background:saved?`linear-gradient(150deg,${t.tiers.ready.fg},${t.tiers.ready.fg})`:`linear-gradient(150deg,${t.primary},${t.primaryDeep})`,boxShadow:`0 12px 22px -12px ${t.primary}cc`,transition:"background .3s"}}>
+          {saved?"✓ Saved!":"Save Chart of Accounts"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── CLIENT DETAIL MODAL ───────────────────────────────────────
+const CLIENT={name:"ABC Trading Corp.",mobile:"+63 917 555 1234",email:"abc@trading.ph",contactPerson:"Juan dela Cruz",tin:"123-456-789-000",username:"abc_trading_001",plan:"Growth",birType:"VAT"};
+
+function ClientDetailModal({t,onClose}){
+  const [tab,setTab]=useState("overview");
+  const tabs=[{id:"overview",label:"Overview"},{id:"documents",label:"Documents"},{id:"coa",label:"Chart of Accounts"}];
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:24}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{width:"100%",maxWidth:900,maxHeight:"90vh",background:t.card,borderRadius:24,boxShadow:t.modalShadow,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        {/* Modal header */}
+        <div style={{display:"flex",alignItems:"center",gap:14,padding:"20px 28px",borderBottom:`1px solid ${t.line}`,flex:"none"}}>
+          <div style={{width:40,height:40,borderRadius:12,background:`linear-gradient(150deg,${t.primary},${t.primaryDeep})`,display:"grid",placeItems:"center",flex:"none"}}>
+            <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:20,letterSpacing:"-.02em",color:t.ink}}>{CLIENT.name}</div>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginTop:3}}>
+              <span style={{fontSize:12.5,color:t.muted,fontWeight:500}}>Growth Plan</span>
+              <span style={{width:3,height:3,borderRadius:999,background:t.faint,display:"inline-block"}}/>
+              <span style={{display:"inline-flex",padding:"2px 9px",borderRadius:999,fontSize:11.5,fontWeight:700,color:t.tiers.ready.fg,background:t.tiers.ready.bg,border:`1px solid ${t.tiers.ready.ring}`}}>Active</span>
+              <span style={{display:"inline-flex",padding:"2px 9px",borderRadius:999,fontSize:11.5,fontWeight:700,color:t.faint,background:t.cardAlt,border:`1px solid ${t.line}`}}>VAT</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{width:36,height:36,borderRadius:10,border:`1.5px solid ${t.line}`,background:t.card,cursor:"pointer",display:"grid",placeItems:"center",color:t.muted,flex:"none"}}>
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{display:"flex",gap:2,padding:"0 28px",borderBottom:`1px solid ${t.line}`,flex:"none"}}>
+          {tabs.map(tb=>(
+            <button key={tb.id} onClick={()=>setTab(tb.id)} style={{border:0,background:"transparent",padding:"13px 16px",fontSize:13.5,fontWeight:tab===tb.id?700:600,color:tab===tb.id?t.primary:t.muted,cursor:"pointer",fontFamily:"inherit",borderBottom:`2.5px solid ${tab===tb.id?t.primary:"transparent"}`,marginBottom:-1,transition:"color .15s,border-color .15s",whiteSpace:"nowrap"}}>
+              {tb.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div style={{flex:1,overflowY:"auto"}}>
+          {tab==="overview"&&<OverviewTab t={t} client={CLIENT}/>}
+          {tab==="documents"&&<DocumentsTab t={t}/>}
+          {tab==="coa"&&<CoaTab t={t}/>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MY CLIENTS TABLE ──────────────────────────────────────────
+const CLIENTS=[
+  {id:"1",name:"ABC Trading Corp.",birType:"vat",plan:"Growth",red:2,yellow:1,green:4},
+  {id:"2",name:"Northwind Logistics",birType:"vat",plan:"Premium",red:0,yellow:3,green:2},
+  {id:"3",name:"Mariposa Café",birType:"non-vat",plan:"Starter",red:1,yellow:0,green:5},
+  {id:"4",name:"Sari-Sari Express",birType:"non-vat",plan:"Starter",red:0,yellow:0,green:3},
+  {id:"5",name:"Cebu Dive Co.",birType:"vat",plan:"Growth",red:3,yellow:2,green:1},
+];
+
+function App(){
+  const [theme,setTheme]=useState("sofia");
+  const [search,setSearch]=useState("");
+  const [selectedClient,setSelectedClient]=useState(null);
+  const [hovered,setHovered]=useState(null);
+  const t=T[theme];
+  const filtered=CLIENTS.filter(c=>c.name.toLowerCase().includes(search.toLowerCase()));
+  const COLS="minmax(200px,3fr) 90px 100px 70px 70px 70px";
+  const needAttn=CLIENTS.filter(c=>c.red>0).length;
+  const pendRev=CLIENTS.reduce((s,c)=>s+c.red+c.yellow,0);
+  const allClr=CLIENTS.filter(c=>c.red===0&&c.yellow===0&&c.green>0).length;
+
+  return(
+    <div style={{height:"100%",width:"100%",background:t.surface,color:t.ink,fontFamily:"'Plus Jakarta Sans',system-ui,sans-serif",transition:"background .5s,color .5s",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <Nav t={t} theme={theme} setTheme={setTheme}/>
+      <div style={{flex:1,overflowY:"auto",background:t.surface}}>
+        <div style={{maxWidth:1280,margin:"0 auto",padding:"28px 36px"}}>
+          {/* Breadcrumb */}
+          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:18,fontSize:13,color:t.muted}}>
+            <span style={{cursor:"pointer"}}>Dashboard</span>
+            <svg viewBox="0 0 24 24" width={13} height={13} style={{transform:"rotate(-90deg)"}} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            <span style={{fontWeight:600,color:t.ink}}>My Clients</span>
+          </div>
+          {/* Header */}
+          <div style={{marginBottom:22}}>
+            <h1 style={{fontFamily:"'Bricolage Grotesque'",fontWeight:800,fontSize:34,letterSpacing:"-.025em",margin:0,color:t.ink}}>My Clients</h1>
+            <p style={{margin:"5px 0 0",color:t.muted,fontSize:14.5}}>{CLIENTS.length} assigned clients</p>
+          </div>
+          {/* Summary cards */}
+          <div style={{display:"flex",gap:14,marginBottom:22}}>
+            <SCard t={t} label="Total Clients" value={String(CLIENTS.length)} note="assigned to you" color={t.ink}/>
+            <SCard t={t} label="Need Attention" value={String(needAttn)} note="have RED flags" color={t.tiers.review.fg}/>
+            <SCard t={t} label="Pending Review" value={String(pendRev)} note="total flagged items" color={t.tiers.check.fg}/>
+            <SCard t={t} label="All Clear" value={String(allClr)} note="no open flags" color={t.tiers.ready.fg}/>
+          </div>
+          {/* Search */}
+          <div style={{display:"flex",alignItems:"center",gap:10,height:40,padding:"0 14px",borderRadius:11,border:`1.5px solid ${t.line}`,background:t.card,width:300,marginBottom:20}}>
+            <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" style={{color:t.faint,flex:"none"}}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search business name…" value={search} onChange={e=>setSearch(e.target.value)} style={{border:0,outline:"none",background:"transparent",fontSize:13.5,color:t.ink,width:"100%",fontFamily:"inherit"}}/>
+          </div>
+          {/* Table card */}
+          <div style={{background:t.card,border:`1px solid ${t.line}`,borderRadius:20,overflow:"hidden",boxShadow:t.shadow}}>
+            {/* Card header */}
+            <div style={{display:"flex",alignItems:"center",gap:10,padding:"18px 24px"}}>
+              <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{color:t.primary}}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+              <span style={{fontFamily:"'Bricolage Grotesque'",fontWeight:700,fontSize:16,color:t.ink}}>My Clients</span>
+              <span style={{background:t.primarySoft,color:t.primary,border:`1px solid ${t.line}`,borderRadius:999,padding:"2px 9px",fontSize:11.5,fontWeight:800}}>{filtered.length}</span>
+              {needAttn>0&&<span style={{background:t.tiers.review.bg,color:t.tiers.review.fg,border:`1px solid ${t.tiers.review.ring}`,borderRadius:999,padding:"2px 9px",fontSize:11.5,fontWeight:800}}>{needAttn} need attention</span>}
+            </div>
+            {/* Col headers */}
+            <div style={{display:"grid",gridTemplateColumns:COLS,columnGap:16,padding:"12px 24px",borderTop:`1px solid ${t.line}`}}>
+              {[["Business Name","left","var(--faint)"],["VAT","left"],["Plan","left"],["RED","center"],["YEL","center"],["GRN","center"]].map(([l,a],i)=>(
+                <span key={l} style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:i===3?t.tiers.review.fg:i===4?t.tiers.check.fg:i===5?t.tiers.ready.fg:t.faint,textAlign:a}}>{l}</span>
+              ))}
+            </div>
+            {/* Rows */}
+            {filtered.map((c,i)=>{
+              const flagged=c.red>0;
+              const isHov=hovered===c.id;
+              const bg=isHov?t.primarySoft:i%2===1?t.cardAlt:"transparent";
+              return(
+                <div key={c.id} onClick={()=>setSelectedClient(c)} onMouseEnter={()=>setHovered(c.id)} onMouseLeave={()=>setHovered(null)} style={{display:"grid",gridTemplateColumns:COLS,columnGap:16,padding:"13px 24px",alignItems:"center",borderTop:`1px solid ${t.lineSoft}`,cursor:"pointer",transition:"background .14s",background:bg,boxShadow:flagged?`inset 3px 0 0 ${t.tiers.review.fg}`:"inset 3px 0 0 transparent"}}>
+                  <span style={{fontWeight:700,fontSize:13.5,color:t.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:16}}>{c.name}</span>
+                  <span style={{fontSize:13.5,color:t.muted,fontWeight:500}}>{c.birType==="vat"?"VAT":"Non-VAT"}</span>
+                  <span style={{fontSize:13.5,color:t.muted,fontWeight:500,textTransform:"capitalize"}}>{c.plan}</span>
+                  <div style={{display:"flex",justifyContent:"center"}}><CountBadge t={t} n={c.red} tier="review"/></div>
+                  <div style={{display:"flex",justifyContent:"center"}}><CountBadge t={t} n={c.yellow} tier="check"/></div>
+                  <div style={{display:"flex",justifyContent:"center"}}><CountBadge t={t} n={c.green} tier="ready"/></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      {selectedClient&&<ClientDetailModal t={t} onClose={()=>setSelectedClient(null)}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
