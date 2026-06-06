@@ -20,7 +20,7 @@ A single component with a discriminated `mode` prop, mirroring `AccountantModal`
 
 ```ts
 type ClientModalProps =
-  | { mode: 'create'; onClose: () => void }
+  | { mode: 'create'; onClose: () => void; onCreated?: (clientId: string) => void }
   | { mode: 'detail'; clientId: string; onClose: () => void }
 ```
 
@@ -32,7 +32,7 @@ Two internal sub-components — `CreateMode` and `DetailMode` — with a single 
 - Fields: Business Name, Mobile, TIN, Email, Contact Person, Plan select, VAT Type select, Accountant select
 - Same zod schema as current `create/page.tsx`: businessName required, mobile required, planType enum, birType enum, accountantId required, tin optional, email optional valid email, contactPerson optional
 - On submit: calls `createClient(data)`
-- On success: inline "Client created!" state showing username + invite link with copy button + "Create Another" button (resets form) + "View Client Profile" button (switches modal to `detail` mode for the new `companyId` — no navigation)
+- On success: inline "Client created!" state showing username + invite link with copy button + "Create Another" button (resets form) + "View Client Profile" button (calls `onCreated(companyId)` — parent switches modal to `detail` mode, no navigation)
 - On error: inline error below form
 
 ### Detail mode
@@ -50,7 +50,7 @@ Two-column layout:
 - Fields: Business Name, Mobile, Email, Contact Person, TIN (all editable), Username (readonly)
 - Below profile fields: Plan select, VAT Type select (merged from `[id]/edit/page.tsx`)
 - Warning banner (amber) shown when `updatePlan` returns a `warning` value
-- A single "Save Changes" button that saves profile fields and plan/VAT together via `updateClient` and `updatePlan` (two calls, or combined if API supports it)
+- A single "Save Changes" button that calls `updateClient` then `updatePlan` sequentially; if `updatePlan` returns a `warning`, the amber banner is shown
 
 **Right sidebar:**
 - Status card: status chip + plan + VAT type
@@ -60,7 +60,7 @@ Two-column layout:
   - "Mark as Overdue" (ACTIVE only)
   - "Suspend Client" / "Reactivate Client" toggle
   - "Reset Access Link" — shows generated link inline with copy button
-  - "Deactivate Client" (red, with `confirm()` guard)
+  - "Deactivate Client" (red, with `confirm()` guard) — on success calls `onClose()` instead of navigating away
 
 #### Documents tab
 
@@ -96,7 +96,7 @@ const [modal, setModal] = useState<
 - "New Client" button click → `setModal({ mode: 'create' })`
 - Row click → `setModal({ mode: 'detail', clientId: c.id })`
 - `onClose` → `setModal(null)`
-- "View Client Profile" in create success state → `setModal({ mode: 'detail', clientId: newId })`
+- `onCreated(id)` callback on `ClientModal` (create mode) → `setModal({ mode: 'detail', clientId: id })`
 
 ## Route Cleanup
 
