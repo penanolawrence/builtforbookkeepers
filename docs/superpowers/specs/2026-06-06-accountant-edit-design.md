@@ -20,6 +20,7 @@ Two related changes to the accountant admin UI:
 - A "Save Changes" button sits at the bottom of the info card.
 - On success: invalidate `['admin-accountant', accountantId]` + show toast "Changes saved."
 - On error: inline error message below the Save button ("Failed to save changes. Please try again.").
+- The mobile input is **always rendered** (not conditionally on `accountant.mobile`) so admins can add a number even when none exists.
 
 ### Validation (frontend, zod)
 
@@ -31,7 +32,7 @@ Two related changes to the accountant admin UI:
 
 ### API call
 
-`PATCH /admin/accountants/{id}` with body `{ name, email, mobile }`.
+`PUT /admin/accountants/{id}` with body `{ name, email, mobile }`.
 
 ## Invite Modal — Add Phone Field
 
