@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateAccountantRequest;
+use App\Http\Requests\Admin\UpdateAccountantRequest;
 use App\Mail\ClientInviteMail;
 use App\Models\AccountantAssignmentLog;
 use App\Models\AdjustingEntry;
@@ -54,6 +55,7 @@ class AccountantController extends Controller
             $user = User::create([
                 'name'     => $request->name,
                 'email'    => $request->email,
+                'mobile'   => $request->mobile,
                 'password' => bcrypt(Str::random(32)),
                 'role'     => 'accountant',
                 'status'   => 'active',
@@ -68,6 +70,19 @@ class AccountantController extends Controller
         });
 
         return response()->json(['userId' => $user->id], 201);
+    }
+
+    public function update(UpdateAccountantRequest $request, string $id): JsonResponse
+    {
+        $accountant = User::where('role', 'accountant')->findOrFail($id);
+        $accountant->update($request->validated());
+
+        return response()->json([
+            'id'     => $accountant->id,
+            'name'   => $accountant->name,
+            'email'  => $accountant->email,
+            'mobile' => $accountant->mobile,
+        ]);
     }
 
     public function show(string $id): JsonResponse

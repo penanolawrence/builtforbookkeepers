@@ -111,6 +111,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/accountants/{id}',                  [Admin\AccountantController::class, 'show']);
         Route::post('/admin/accountants/{id}/reset-password',  [Admin\AccountantController::class, 'resetPassword']);
         Route::post('/admin/accountants/{id}/deactivate',      [Admin\AccountantController::class, 'deactivate']);
+        Route::put('/admin/accountants/{id}',                  [Admin\AccountantController::class, 'update']);
 
         Route::get('/admin/billing',            [Admin\BillingController::class, 'index']);
         Route::get('/admin/billing/{clientId}', [Admin\BillingController::class, 'clientPayments']);
