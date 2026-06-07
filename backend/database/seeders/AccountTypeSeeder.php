@@ -23,6 +23,6 @@ class AccountTypeSeeder extends Seeder
             AccountType::firstOrCreate(['name' => $type['name']], $type);
         }
 
-        $this->command->info('AccountTypeSeeder: 7 account types seeded.');
+        $this->command->info('AccountTypeSeeder: ' . count($types) . ' account types seeded.');
     }
 }
