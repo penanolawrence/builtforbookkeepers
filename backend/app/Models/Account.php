@@ -13,6 +13,7 @@ class Account extends Model
 
     protected $fillable = [
         'company_id',
+        'chart_of_account_id',
         'code',
         'name',
         'type',
@@ -28,5 +29,10 @@ class Account extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function chartOfAccount(): BelongsTo
+    {
+        return $this->belongsTo(ChartOfAccount::class);
     }
 }
