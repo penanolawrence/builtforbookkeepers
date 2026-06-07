@@ -31,12 +31,13 @@ class ChartOfAccountsController extends Controller
             ->orderBy('code')
             ->get()
             ->map(fn ($a) => [
-                'id'              => $a->id,
-                'code'            => $a->code,
-                'name'            => $a->name,
-                'type'            => $a->type,
-                'isActive'        => $a->is_active,
-                'isSystemManaged' => $a->is_system_managed,
+                'id'               => $a->id,
+                'code'             => $a->code,
+                'name'             => $a->name,
+                'type'             => $a->type,
+                'chartOfAccountId' => $a->chart_of_account_id,
+                'isActive'         => $a->is_active,
+                'isSystemManaged'  => $a->is_system_managed,
             ]);
 
         return response()->json($accounts);
