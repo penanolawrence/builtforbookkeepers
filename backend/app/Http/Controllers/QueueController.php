@@ -59,7 +59,7 @@ class QueueController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $document = Document::with(['company', 'ocrResult', 'transactionLines.account', 'transactionLines.subtype'])->findOrFail($id);
+        $document = Document::with(['company', 'transactionLines.account', 'transactionLines.subtype'])->findOrFail($id);
 
         try {
             $journalPreview = (new JournalEntryService())->previewFromDocument($document);
