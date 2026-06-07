@@ -79,10 +79,16 @@ class ChartOfAccountSeeder extends Seeder
         $typeMap = AccountType::pluck('id', 'name');
 
         foreach ($accounts as $account) {
+            $typeId = $typeMap[$account['type']] ?? null;
+            if (! $typeId) {
+                $this->command->warn("ChartOfAccountSeeder: unknown type '{$account['type']}' — skipping.");
+                continue;
+            }
+
             ChartOfAccount::firstOrCreate(
                 ['code' => $account['code']],
                 [
-                    'account_type_id' => $typeMap[$account['type']],
+                    'account_type_id' => $typeId,
                     'name'            => $account['name'],
                     'sort_order'      => $account['sort_order'],
                 ]
