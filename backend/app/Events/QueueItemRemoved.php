@@ -14,14 +14,16 @@ class QueueItemRemoved implements ShouldBroadcastNow
 
     public function __construct(
         public string $documentId,
+        public ?string $accountantId = null,
     ) {}
 
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('accountant.queue'),
-            new PrivateChannel('admin.queue'),
-        ];
+        $channels = [new PrivateChannel('admin.1')];
+        if ($this->accountantId) {
+            $channels[] = new PrivateChannel("accountant.{$this->accountantId}");
+        }
+        return $channels;
     }
 
     public function broadcastAs(): string

@@ -7,7 +7,7 @@ use App\Events\DocumentStatusChanged;
 use App\Http\Requests\Document\ManualEntryRequest;
 use App\Http\Requests\Document\UploadDocumentRequest;
 use App\Jobs\ClassifyWithAI;
-use App\Jobs\ProcessDocumentOCR;
+use App\Jobs\PrepareDocumentForAI;
 use App\Models\Company;
 use App\Models\Document;
 use App\Services\Ref\RefSequenceService;
@@ -43,6 +43,7 @@ class DocumentController extends Controller
             'file_type'         => $request->file('file')->getClientOriginalExtension(),
             'file_hash'         => $hash,
             'document_type'     => $request->declared_type,
+            'payment_method'    => 'cash',
             'status'            => 'processing',
             'internal_status'   => 'PENDING',
             'is_no_receipt'     => false,
@@ -50,7 +51,7 @@ class DocumentController extends Controller
             'note'              => $request->note,
         ]);
 
-        ProcessDocumentOCR::dispatch($document);
+        PrepareDocumentForAI::dispatch($document);
 
         rescue(fn () => event(new DocumentStageUpdated(
             companyId:  $company->id,
@@ -88,7 +89,7 @@ class DocumentController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $document = Document::with(['company', 'ocrResult', 'transactionLines.account', 'transactionLines.subtype'])->findOrFail($id);
+        $document = Document::with(['company', 'transactionLines.account', 'transactionLines.subtype'])->findOrFail($id);
         $user     = auth()->user();
 
         if ($user->role === 'client' && $document->company_id !== $user->company_id) {
@@ -128,7 +129,6 @@ class DocumentController extends Controller
             return response()->json(['message' => 'Only RETURNED documents can be re-uploaded.'], 422);
         }
 
-        $document->ocrResult()?->delete();
         Storage::disk('s3')->delete($document->storage_path);
 
         $newHash = hash_file('sha256', $request->file('file')->getRealPath());
@@ -163,7 +163,7 @@ class DocumentController extends Controller
             'anomaly_reason'  => null,
         ]);
 
-        ProcessDocumentOCR::dispatch($document);
+        PrepareDocumentForAI::dispatch($document);
 
         return response()->json(['documentId' => $document->id]);
     }
@@ -212,7 +212,7 @@ class DocumentController extends Controller
             'storage_path'      => '',
             'document_type'     => $request->declared_type,
             'status'            => 'processing',
-            'internal_status'   => 'OCR_COMPLETE',
+            'internal_status'   => 'READY',
             'flag'              => null,
             'is_no_receipt'     => true,
             'is_ocr_failed'     => false,
@@ -316,7 +316,7 @@ class DocumentController extends Controller
             'anomalyReasons'  => $d->anomaly_reason ?? [],
             'merchantName'    => $d->merchant_name,
             'date'            => $d->document_date?->toDateString(),
-            'amount'          => $d->amount,
+            'amount'          => $d->amount !== null ? (float) $d->amount : null,
             'vatAmount'       => $d->vat_amount,
             'category'        => $d->category,
             'paymentMethod'   => $d->payment_method,
@@ -343,10 +343,6 @@ class DocumentController extends Controller
             'returnedAt'       => $d->returned_at?->toIso8601String(),
             'rejectedAt'       => $d->rejected_at?->toIso8601String(),
             'fieldOverrides'   => $d->field_overrides,
-            'ocrResult'        => $d->ocrResult ? [
-                'rawText'    => $d->ocrResult->extracted_data['raw_text'] ?? null,
-                'confidence' => $d->ocrResult->confidence,
-            ] : null,
             'transactionLines' => $d->transactionLines->map(fn($l) => [
                 'id'          => $l->id,
                 'accountCode' => $l->account_code,

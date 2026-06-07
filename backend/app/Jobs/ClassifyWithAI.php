@@ -59,7 +59,7 @@ class ClassifyWithAI implements ShouldQueue
 
         // STEP C — Classify
         $classifier     = new TransactionClassifier();
-        $classification = $classifier->classify($inputData, $company, $this->document->note);
+        $classification = $classifier->classify($inputData, $company, $this->document->note, $this->document->document_type);
 
         // STEP D — Cross-check rules (upload area mismatch, low confidence)
         if (!$this->document->is_no_receipt) {

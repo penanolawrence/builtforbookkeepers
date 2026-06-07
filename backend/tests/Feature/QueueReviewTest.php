@@ -83,9 +83,8 @@ class QueueReviewTest extends TestCase
     public function test_approve_with_field_overrides_stores_diff(): void
     {
         $this->document->update([
-            'merchant_name'  => 'MERALCO',
-            'document_date'  => '2026-05-20',
-            'account_id'     => $this->expenseAccount->id,
+            'merchant_name' => 'MERALCO',
+            'document_date' => '2026-05-20',
         ]);
 
         TransactionLine::factory()->create([
@@ -125,8 +124,6 @@ class QueueReviewTest extends TestCase
 
     public function test_approve_without_changes_leaves_field_overrides_null(): void
     {
-        $this->document->update(['account_id' => $this->expenseAccount->id]);
-
         TransactionLine::factory()->create([
             'document_id'  => $this->document->id,
             'account_id'   => $this->expenseAccount->id,
@@ -151,8 +148,6 @@ class QueueReviewTest extends TestCase
 
     public function test_approve_updates_existing_transaction_lines(): void
     {
-        $this->document->update(['account_id' => $this->expenseAccount->id]);
-
         $line = TransactionLine::factory()->create([
             'document_id'  => $this->document->id,
             'account_id'   => $this->expenseAccount->id,
@@ -190,8 +185,6 @@ class QueueReviewTest extends TestCase
 
     public function test_approve_creates_new_transaction_lines(): void
     {
-        $this->document->update(['account_id' => $this->expenseAccount->id]);
-
         TransactionLine::factory()->create([
             'document_id'  => $this->document->id,
             'account_id'   => $this->expenseAccount->id,
@@ -222,8 +215,6 @@ class QueueReviewTest extends TestCase
 
     public function test_approve_deletes_removed_lines(): void
     {
-        $this->document->update(['account_id' => $this->expenseAccount->id]);
-
         $line1 = TransactionLine::factory()->create([
             'document_id'  => $this->document->id,
             'account_id'   => $this->expenseAccount->id,

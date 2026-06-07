@@ -214,9 +214,9 @@ return [
 
     'environments' => [
         'local' => [
-            'ocr-supervisor' => [
+            'document-supervisor' => [
                 'connection' => 'redis',
-                'queue'      => ['ocr-pipeline'],
+                'queue'      => ['document-pipeline'],
                 'balance'    => 'simple',
                 'processes'  => 1,
                 'tries'      => 1,
@@ -240,9 +240,9 @@ return [
             ],
         ],
         'production' => [
-            'ocr-supervisor' => [
+            'document-supervisor' => [
                 'connection' => 'redis',
-                'queue'      => ['ocr-pipeline'],
+                'queue'      => ['document-pipeline'],
                 'balance'    => 'auto',
                 'processes'  => 2,
                 'tries'      => 1,

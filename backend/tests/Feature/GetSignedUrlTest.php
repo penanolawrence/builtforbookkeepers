@@ -29,17 +29,20 @@ class GetSignedUrlTest extends TestCase
         ]);
     }
 
-    public function test_url_rewrites_internal_endpoint_to_public_url(): void
+    public function test_presigned_url_is_generated_via_public_endpoint_disk(): void
     {
-        config(['filesystems.disks.s3.endpoint'   => 'http://minio:9000']);
+        // The s3-url disk is configured with MINIO_PUBLIC_URL as its endpoint,
+        // so the HMAC signature is computed against localhost:9000 from the start.
+        // No str_replace is needed — and the signature stays valid.
         config(['filesystems.disks.s3.public_url' => 'http://localhost:9000']);
 
-        $mockDisk = Mockery::mock(Filesystem::class);
-        $mockDisk->shouldReceive('temporaryUrl')
-            ->once()
-            ->andReturn('http://minio:9000/sofia-documents/documents/test.png?X-Amz-Signature=abc');
+        $expectedUrl = 'http://localhost:9000/sofia-documents/documents/test.png?X-Amz-Signature=abc';
 
-        Storage::shouldReceive('disk')->with('s3')->andReturn($mockDisk);
+        $urlDisk = Mockery::mock(Filesystem::class);
+        $urlDisk->shouldReceive('temporaryUrl')->once()->andReturn($expectedUrl);
+
+        Storage::shouldReceive('disk')->with('s3-url')->andReturn($urlDisk);
+        Storage::shouldReceive('disk')->with('s3')->never();
 
         $document = Document::factory()->create([
             'company_id'    => $this->company->id,
@@ -51,11 +54,8 @@ class GetSignedUrlTest extends TestCase
             ->getJson("/api/documents/{$document->id}/image");
 
         $response->assertOk();
-        $url = $response->json('url');
-        $this->assertStringStartsWith('http://localhost:9000/', $url);
-        $this->assertStringContainsString('sofia-documents/documents/test.png', $url);
-        $this->assertStringContainsString('X-Amz-Signature=abc', $url);
-        $this->assertStringNotContainsString('minio:9000', $url);
+        $this->assertSame($expectedUrl, $response->json('url'));
+        $this->assertStringNotContainsString('minio:9000', $response->json('url'));
         $response->assertJsonStructure(['url', 'expiresAt']);
     }
 

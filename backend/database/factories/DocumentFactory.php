@@ -18,7 +18,7 @@ class DocumentFactory extends Factory
             'file_type'         => 'jpg',
             'document_type'     => $this->faker->randomElement(['income', 'expense']),
             'status'            => 'parked',
-            'internal_status'   => 'OCR_COMPLETE',
+            'internal_status'   => 'READY',
             'flag'              => 'GREEN',
             'is_no_receipt'     => false,
             'is_ocr_failed'     => false,

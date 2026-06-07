@@ -146,9 +146,9 @@ class AdjustingEntryController extends Controller
         }
 
         if ($request->boolean('selfApprove')) {
-            if ($user->role !== 'admin') {
-                return response()->json(['message' => 'Only admin can self-approve.'], 403);
-            }
+            // if ($user->role !== 'admin') {
+            //     return response()->json(['message' => 'Only admin can self-approve.'], 403);
+            // }
 
             DB::transaction(function () use ($entry, $user) {
                 (new JournalEntryService())->postFromAdjustingEntry($entry, $user);

@@ -4,18 +4,16 @@ namespace App\Jobs;
 
 use App\Events\DocumentStageUpdated;
 use App\Events\QueueItemAdded;
-use App\Exceptions\OcrFailedException;
 use App\Models\Document;
-use App\Models\OcrResult;
-use App\Services\OCR\OCRService;
 use App\Services\Ref\RefSequenceService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
-class ProcessDocumentOCR implements ShouldQueue
+class PrepareDocumentForAI implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
@@ -24,12 +22,11 @@ class ProcessDocumentOCR implements ShouldQueue
 
     public function __construct(public Document $document)
     {
-        $this->onQueue('ocr-pipeline');
+        $this->onQueue('document-pipeline');
     }
 
     public function handle(): void
     {
-        // STEP A — Broadcast "preprocessing" stage
         rescue(fn () => event(new DocumentStageUpdated(
             companyId:  $this->document->company_id,
             documentId: $this->document->id,
@@ -38,53 +35,40 @@ class ProcessDocumentOCR implements ShouldQueue
             label:      'Preparing image...',
         )));
 
-        // STEP B — Call OCR service
-        $ocrService = new OCRService();
-        try {
-            $result = $ocrService->extractFromDocument($this->document);
-        } catch (OcrFailedException) {
+        $imageBytes = Storage::get($this->document->storage_path);
+        if (!$imageBytes) {
             $this->handleFailure($this->document);
             return;
         }
 
-        // STEP C — Log and save OCR result
-        Log::channel('daily')->info('OCR extracted data', [
+        $extension = strtolower(pathinfo($this->document->storage_path, PATHINFO_EXTENSION));
+        $mimeMap   = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp', 'gif' => 'image/gif'];
+        $mediaType = $mimeMap[$extension] ?? 'image/jpeg';
+
+        $result = [
+            'image_base64' => base64_encode($imageBytes),
+            'media_type'   => $mediaType,
+        ];
+
+        Log::channel('daily')->info('Document prepared for AI', [
             'document_id' => $this->document->id,
             'company_id'  => $this->document->company_id,
             'filename'    => $this->document->original_filename,
-            'result'      => $result,
+            'media_type'  => $mediaType,
         ]);
 
-        OcrResult::create([
-            'document_id'    => $this->document->id,
-            'extracted_data' => $result,
-            'confidence'     => $result['confidence'] ?? 0,
-            'engine'         => 'paddle',
-        ]);
+        $this->document->update(['internal_status' => 'READY']);
 
-        // STEP D — Update internal_status
-        $this->document->update(['internal_status' => 'OCR_COMPLETE']);
-
-        // STEP E — Broadcast "ocr" stage
-        rescue(fn () => event(new DocumentStageUpdated(
-            companyId:  $this->document->company_id,
-            documentId: $this->document->id,
-            stage:      'ocr',
-            status:     'processing',
-            label:      'Reading receipt...',
-        )));
-
-        // STEP F — Dispatch ClassifyWithAI
         ClassifyWithAI::dispatch($this->document, $result);
     }
 
     private function handleFailure(Document $document): void
     {
         $refService = new RefSequenceService();
-        $refNumber  = $refService->nextRef($document->company, 'OCR');
+        $refNumber  = $refService->nextRef($document->company, 'ERR');
 
         $document->update([
-            'internal_status' => 'OCR_FAILED',
+            'internal_status' => 'READ_FAILED',
             'flag'            => 'YELLOW',
             'is_ocr_failed'   => true,
             'ref_number'      => $refNumber,
@@ -94,7 +78,7 @@ class ProcessDocumentOCR implements ShouldQueue
         rescue(fn () => event(new DocumentStageUpdated(
             companyId:  $document->company_id,
             documentId: $document->id,
-            stage:      'ocr_failed',
+            stage:      'read_failed',
             status:     'parked',
             label:      'Could not read — needs manual entry',
         )));

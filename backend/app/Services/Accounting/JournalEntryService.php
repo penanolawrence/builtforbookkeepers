@@ -17,20 +17,20 @@ class JournalEntryService
         return DB::transaction(function () use ($doc, $approvedBy) {
             $company = $doc->company;
 
-            $cashAccountMap = [
-                'cash'  => 'Cash on Hand',
-                'gcash' => 'GCash',
-                'maya'  => 'Maya',
-                'bank'  => 'Bank',
-            ];
-            $cashName    = $cashAccountMap[$doc->payment_method] ?? 'Cash on Hand';
+            $cashName    = in_array($doc->payment_method, ['gcash', 'maya', 'bank'])
+                ? 'Cash in Bank'
+                : 'Cash on Hand';
             $cashAccount = Account::where('company_id', $company->id)
                 ->where('name', $cashName)
                 ->where('type', 'cash')
-                ->first();
+                ->first()
+                ?? Account::where('company_id', $company->id)
+                    ->where('type', 'cash')
+                    ->orderBy('code')
+                    ->first();
 
             if (!$cashAccount) {
-                throw new \RuntimeException("Cash account '{$cashName}' not found for company {$company->id}");
+                throw new \RuntimeException("No cash account found for company {$company->id}");
             }
 
             $entry = JournalEntry::create([
@@ -100,20 +100,20 @@ class JournalEntryService
         $isVat     = $company->bir_type === 'vat';
         $type      = $doc->document_type;
 
-        $cashAccountMap = [
-            'cash'  => 'Cash on Hand',
-            'gcash' => 'GCash',
-            'maya'  => 'Maya',
-            'bank'  => 'Bank',
-        ];
-        $cashName    = $cashAccountMap[$doc->payment_method] ?? 'Cash on Hand';
+        $cashName    = in_array($doc->payment_method, ['gcash', 'maya', 'bank'])
+            ? 'Cash in Bank'
+            : 'Cash on Hand';
         $cashAccount = Account::where('company_id', $company->id)
             ->where('name', $cashName)
             ->where('type', 'cash')
-            ->first();
+            ->first()
+            ?? Account::where('company_id', $company->id)
+                ->where('type', 'cash')
+                ->orderBy('code')
+                ->first();
 
         if (!$cashAccount) {
-            throw new \RuntimeException("Cash account '{$cashName}' not found for company {$company->id}");
+            throw new \RuntimeException("No cash account found for company {$company->id}");
         }
 
         $txAccount = Account::where('company_id', $company->id)

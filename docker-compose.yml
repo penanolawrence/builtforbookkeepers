@@ -27,7 +27,6 @@ x-backend-base: &backend-base
     MAIL_HOST: mailpit
     MAIL_PORT: 1025
     MAIL_FROM_ADDRESS: noreply@sofiabooks.local
-    OCR_SERVICE_URL: http://ocr-service:8001
   volumes:
     - ./backend:/var/www/html   # bind mount — vendor is checked-in to host
   depends_on:
@@ -101,28 +100,6 @@ services:
     networks:
       - sofia-net
 
-  # ── OCR Microservice ─────────────────────────────────────
-  ocr-service:
-    build:
-      context: ./ocr-service
-      dockerfile: Dockerfile
-    container_name: sofia-ocr
-    environment:
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_ENDPOINT_URL: http://minio:9000
-      AWS_DEFAULT_REGION: us-east-1
-      AWS_BUCKET: ${AWS_BUCKET}
-    volumes:
-      - paddleocr_models:/root/.paddleocr   # model weights persist across rebuilds
-    depends_on:
-      - minio
-    ports:
-      - "8001:8001"
-    networks:
-      - sofia-net
-    restart: unless-stopped
-
   # ── PostgreSQL 16 ────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
@@ -189,7 +166,6 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
-  paddleocr_models:   # PaddleOCR model weights (~200MB) — downloaded on first startup
 
 networks:
   sofia-net:

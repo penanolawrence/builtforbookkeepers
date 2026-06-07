@@ -3,6 +3,7 @@
 namespace App\Services\AI;
 
 use Anthropic\Client;
+use App\Models\ChartOfAccountSubtype;
 use App\Models\Company;
 
 class TransactionClassifier
@@ -14,11 +15,21 @@ class TransactionClassifier
         $this->client = $client ?? new Client(apiKey: config('services.anthropic.key'));
     }
 
-    public function classify(array $inputData, Company $company, ?string $userNote = null): array
+    public function classify(array $inputData, Company $company, ?string $userNote = null, ?string $declaredType = null): array
     {
-        $accounts = $company->accounts()->where('is_active', true)->get()
+        $accountsQuery = $company->accounts()->where('is_active', true);
+
+        if ($declaredType === 'expense') {
+            $accountsQuery->whereIn('type', ['expense', 'asset', 'liability', 'equity']);
+        } elseif ($declaredType === 'income') {
+            $accountsQuery->whereIn('type', ['income', 'asset', 'liability', 'equity']);
+        }
+
+        $accounts = $accountsQuery->get()
             ->map(fn($a) => "{$a->code}: {$a->name} ({$a->type})")
             ->join("\n");
+
+        $subtypes = ChartOfAccountSubtype::orderBy('name')->pluck('name')->join("\n");
 
         $vatStatus = $company->bir_type === 'vat' ? 'VAT-Registered' : 'Non-VAT';
 
@@ -27,14 +38,30 @@ class TransactionClassifier
             "Client: {$company->name}\n" .
             "VAT Status: {$vatStatus}\n" .
             "Chart of Accounts:\n{$accounts}\n\n" .
+            "Available Subtypes (use exact names only):\n{$subtypes}\n\n" .
             "Rules:\n" .
             "- Each line must use an account_code from the Chart of Accounts above.\n" .
-            "- For simple single-type documents (all income OR all expense), sum(lines[].amount) MUST equal document.total_amount.\n" .
-            "- For documents that contain BOTH income and expenses (e.g. a daily sales summary with a GROSS SALES figure and an EXPENSES BREAKDOWN section): " .
-            "set document.total_amount to the GROSS SALES amount; " .
-            "create income line(s) for the sales revenue; " .
-            "AND create separate expense line(s) for each expense category listed. " .
-            "Do NOT collapse everything into one income line.\n" .
+            "- Each line's category MUST be an exact name from the Available Subtypes list above. " .
+            "Pick the closest match. Do not invent new category names.\n" .
+            "- sum(lines[].amount) MUST equal document.total_amount.\n";
+
+        if ($declaredType) {
+            $opposite     = $declaredType === 'expense' ? 'income' : 'expense';
+            $systemPrompt .=
+                "- The client declared this document as: {$declaredType}. " .
+                "ALL lines MUST be type '{$declaredType}' — no exceptions. " .
+                "Even if the document contains figures that look like {$opposite}, " .
+                "ignore them completely. Do not create any lines for the opposite type.\n";
+        } else {
+            $systemPrompt .=
+                "- For documents that contain BOTH income and expenses (e.g. a daily sales summary with a GROSS SALES figure and an EXPENSES BREAKDOWN section): " .
+                "set document.total_amount to the GROSS SALES amount; " .
+                "create income line(s) for the sales revenue; " .
+                "AND create separate expense line(s) for each expense category listed. " .
+                "Do NOT collapse everything into one income line.\n";
+        }
+
+        $systemPrompt .=
             "- Use one line for simple single-purpose documents.\n" .
             "- Use multiple lines when the document covers multiple categories, multiple dates, or has an expenses breakdown.\n" .
             "- For each line, always try to assign a date (YYYY-MM-DD). " .
@@ -49,7 +76,7 @@ class TransactionClassifier
         $isOcrPath   = array_key_exists('raw_text', $inputData);
 
         if ($isImagePath) {
-            $messages = $this->buildImageMessages($inputData, $userNote);
+            $messages = $this->buildImageMessages($inputData, $userNote, $declaredType);
         } elseif ($isOcrPath) {
             $messages = [['role' => 'user', 'content' => $this->buildOcrPrompt($inputData, $userNote)]];
         } else {
@@ -111,9 +138,32 @@ class TransactionClassifier
             : '';
     }
 
-    private function buildImageMessages(array $inputData, ?string $userNote = null): array
+    private function buildImageMessages(array $inputData, ?string $userNote = null, ?string $declaredType = null): array
     {
-        $noteBlock = $this->buildNoteBlock($userNote);
+        $parts = ["This is a document photographed by a Philippine SME client."];
+
+        if ($declaredType) {
+            $parts[] = "The client uploaded this as an {$declaredType} document.";
+        }
+
+        if ($userNote !== null && trim($userNote) !== '') {
+            $parts[] = "The client has provided the following note about this document:\n\"{$userNote}\"\n" .
+                       "Use this note as the primary guide when extracting transaction details — " .
+                       "it may clarify the merchant, amounts, dates, or what the document covers.";
+        }
+
+        if ($declaredType) {
+            $opposite = $declaredType === 'expense' ? 'income' : 'expense';
+            $parts[]  = "Only extract {$declaredType} transactions from this document.\n" .
+                        "Even if the document contains {$opposite} figures, ignore them completely.\n" .
+                        "Classify ALL lines as {$declaredType} — no exceptions.";
+        } else {
+            $parts[] = "It may be a receipt, invoice, daily sales summary, or cash collection report.\n\n" .
+                       "If it contains BOTH a gross sales/income figure AND an expenses breakdown, " .
+                       "create income line(s) for the sales AND separate expense line(s) — do not merge them.";
+        }
+
+        $parts[] = "Extract all structured fields and classify the transaction using the classify_transaction tool.";
 
         return [[
             'role'    => 'user',
@@ -128,12 +178,7 @@ class TransactionClassifier
                 ],
                 [
                     'type' => 'text',
-                    'text' => "This is a document photographed by a Philippine SME client.\n\n" .
-                              "It may be a receipt, invoice, daily sales summary, or cash collection report.\n\n" .
-                              "If it contains BOTH a gross sales/income figure AND an expenses breakdown, " .
-                              "create income line(s) for the sales AND separate expense line(s) — do not merge them.\n\n" .
-                              "Extract all structured fields and classify the transaction using the classify_transaction tool." .
-                              $noteBlock,
+                    'text' => implode("\n\n", $parts),
                 ],
             ],
         ]];
@@ -211,15 +256,20 @@ class TransactionClassifier
                         'type'       => 'object',
                         'required'   => ['total_amount'],
                         'properties' => [
-                            'merchant'     => ['type' => ['string', 'null'],
-                                              'description' => 'Business or store name, or null'],
-                            'date'         => ['type' => ['string', 'null'],
-                                              'description' => 'YYYY-MM-DD or null'],
-                            'total_amount' => ['type' => 'number',  'minimum' => 0.01,
-                                              'description' => 'Final total amount on the document'],
-                            'vat_amount'   => ['type' => ['number', 'null'], 'minimum' => 0],
-                            'or_number'    => ['type' => ['string', 'null'],
-                                              'description' => 'Official Receipt or invoice number'],
+                            'merchant'       => ['type' => ['string', 'null'],
+                                                'description' => 'Business or store name, or null'],
+                            'date'           => ['type' => ['string', 'null'],
+                                                'description' => 'YYYY-MM-DD or null'],
+                            'total_amount'   => ['type' => 'number',  'minimum' => 0.01,
+                                                'description' => 'Final total amount on the document'],
+                            'vat_amount'     => ['type' => ['number', 'null'], 'minimum' => 0],
+                            'or_number'      => ['type' => ['string', 'null'],
+                                                'description' => 'Official Receipt or invoice number'],
+                            'payment_method' => [
+                                'type'        => ['string', 'null'],
+                                'enum'        => ['cash', 'gcash', 'maya', 'bank', null],
+                                'description' => 'Payment method visible on the document (e.g. GCash QR, Maya logo, bank transfer slip). Return null if not determinable — the system defaults to cash.',
+                            ],
                         ],
                     ],
 
@@ -237,7 +287,7 @@ class TransactionClassifier
                                                    'description' => 'Code from the Chart of Accounts'],
                                 'type'         => ['type' => 'string', 'enum' => ['income', 'expense']],
                                 'category'     => ['type' => 'string',
-                                                   'description' => 'Short category label'],
+                                                   'description' => 'Exact subtype name from the Available Subtypes list in the system prompt. Must match exactly.'],
                                 'date'         => [
                                     'type'        => ['string', 'null'],
                                     'description' => 'YYYY-MM-DD posting date for this specific line. ' .

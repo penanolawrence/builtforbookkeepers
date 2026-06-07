@@ -197,7 +197,7 @@ class QueueController extends Controller
                 'field_overrides' => $overrideData,
             ]);
 
-            rescue(fn () => event(new QueueItemRemoved($document->id)));
+            rescue(fn () => event(new QueueItemRemoved($document->id, $document->company->accountant_id ? (string) $document->company->accountant_id : null)));
 
             rescue(fn () => event(new DocumentStatusChanged(
                 companyId:      $document->company_id,
@@ -304,7 +304,7 @@ class QueueController extends Controller
                 'expires_at'  => now()->addDays(30),
             ]);
 
-            rescue(fn () => event(new QueueItemRemoved($document->id)));
+            rescue(fn () => event(new QueueItemRemoved($document->id, $document->company->accountant_id ? (string) $document->company->accountant_id : null)));
 
             rescue(fn () => event(new DocumentStatusChanged(
                 companyId:      $document->company_id,
@@ -339,7 +339,7 @@ class QueueController extends Controller
                 'rejected_at'      => now(),
             ]);
 
-            rescue(fn () => event(new QueueItemRemoved($document->id)));
+            rescue(fn () => event(new QueueItemRemoved($document->id, $document->company->accountant_id ? (string) $document->company->accountant_id : null)));
 
             rescue(fn () => event(new DocumentStatusChanged(
                 companyId:      $document->company_id,
@@ -394,7 +394,7 @@ class QueueController extends Controller
                         'approved_at' => now(),
                     ]);
 
-                    rescue(fn () => event(new QueueItemRemoved($doc->id)));
+                    rescue(fn () => event(new QueueItemRemoved($doc->id, $doc->company->accountant_id ? (string) $doc->company->accountant_id : null)));
 
                     rescue(fn () => event(new DocumentStatusChanged(
                         companyId:      $doc->company_id,

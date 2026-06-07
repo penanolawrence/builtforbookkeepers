@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ReceivePaymentRequest;
+use App\Models\Company;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -37,9 +38,12 @@ class BillingController extends Controller
 
     public function receivePayment(ReceivePaymentRequest $request, string $clientId): JsonResponse
     {
+        $company = Company::findOrFail($clientId);
+
         $payment = Payment::create([
             'company_id'       => $clientId,
             'amount'           => $request->amount,
+            'plan'             => $company->plan,
             'date_received'    => $request->dateReceived,
             'reference_number' => $request->referenceNumber,
             'recorded_by'      => auth()->id(),

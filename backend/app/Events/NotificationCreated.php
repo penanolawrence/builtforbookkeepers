@@ -14,9 +14,11 @@ class NotificationCreated implements ShouldBroadcastNow
 
     public function __construct(
         public string $channel,
+        public string $id,
         public string $type,
         public string $message,
         public array $data = [],
+        public string $createdAt = '',
     ) {}
 
     public function broadcastOn(): array
@@ -32,9 +34,12 @@ class NotificationCreated implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'type'    => $this->type,
-            'message' => $this->message,
-            'data'    => $this->data,
+            'id'        => $this->id,
+            'type'      => $this->type,
+            'message'   => $this->message,
+            'data'      => $this->data,
+            'readAt'    => null,
+            'createdAt' => $this->createdAt,
         ];
     }
 }

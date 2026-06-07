@@ -9,12 +9,12 @@ use Illuminate\Console\Command;
 class RequeueStuckDocuments extends Command
 {
     protected $signature   = 'documents:requeue-stuck';
-    protected $description = 'Re-dispatch ClassifyWithAI for documents stuck in processing with OCR_COMPLETE status';
+    protected $description = 'Re-dispatch ClassifyWithAI for documents stuck in processing with READY status';
 
     public function handle(): int
     {
         $stuck = Document::where('status', 'processing')
-            ->where('internal_status', 'OCR_COMPLETE')
+            ->where('internal_status', 'READY')
             ->get();
 
         if ($stuck->isEmpty()) {
