@@ -14,7 +14,7 @@ class DemoDataSeeder extends Seeder
     {
         // ── 1. Users ────────────────────────────────────────────────────
 
-        $admin = User::where('role', 'admin')->firstOrFail();
+        User::where('role', 'admin')->firstOrFail();
 
         $accountant = User::firstOrCreate(
             ['email' => 'maria@sofiabooks.ph'],
