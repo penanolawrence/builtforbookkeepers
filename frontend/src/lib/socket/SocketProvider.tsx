@@ -24,7 +24,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   function connect() {
     if (typeof window === 'undefined') return
-    const token = localStorage.getItem('sofia_token')
+    const token = localStorage.getItem('b4b_token')
     if (!token) return
 
     import('@/lib/socket/socket').then(({ createEcho }) => {
@@ -53,12 +53,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     }
     const handleLogout = () => disconnect()
 
-    window.addEventListener('sofia:login', handleLogin)
-    window.addEventListener('sofia:logout', handleLogout)
+    window.addEventListener('b4b:login', handleLogin)
+    window.addEventListener('b4b:logout', handleLogout)
 
     return () => {
-      window.removeEventListener('sofia:login', handleLogin)
-      window.removeEventListener('sofia:logout', handleLogout)
+      window.removeEventListener('b4b:login', handleLogin)
+      window.removeEventListener('b4b:logout', handleLogout)
       disconnect()
     }
   }, [])

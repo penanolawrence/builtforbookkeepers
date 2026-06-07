@@ -58,8 +58,8 @@ export function Topbar() {
     function handle(e: Event) {
       setQueueCount((e as CustomEvent<{ count: number }>).detail.count)
     }
-    window.addEventListener('sofia:queue-count-changed', handle)
-    return () => window.removeEventListener('sofia:queue-count-changed', handle)
+    window.addEventListener('b4b:queue-count-changed', handle)
+    return () => window.removeEventListener('b4b:queue-count-changed', handle)
   }, [user?.role])
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export function Topbar() {
             color: 'var(--t-ink)',
           }}
         >
-          Sofia Books
+          Built for Bookkeepers
         </span>
       </Link>
 

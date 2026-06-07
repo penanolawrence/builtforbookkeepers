@@ -38,7 +38,7 @@ function Logo() {
   return (
     <div className="auth-logo">
       <div className="auth-logo-dot" />
-      <div className="auth-logo-name">Sofia Books</div>
+      <div className="auth-logo-name">Built for Bookkeepers</div>
     </div>
   )
 }
@@ -147,7 +147,7 @@ function SetupForm() {
   const isClient = role === 'client'
   const subtitle = isClient
     ? 'Welcome! Set your name and a password to get started.'
-    : 'Welcome to Sofia Books. Set your name and choose a password.'
+    : 'Welcome to Built for Bookkeepers. Set your name and choose a password.'
 
   return (
     <div className="auth-bg">

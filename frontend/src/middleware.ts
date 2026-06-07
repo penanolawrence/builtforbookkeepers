@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export function middleware(req: NextRequest) {
-  const role = req.cookies.get('sofia_role')?.value
-  const status = req.cookies.get('sofia_status')?.value
+  const role = req.cookies.get('b4b_role')?.value
+  const status = req.cookies.get('b4b_status')?.value
   const path = req.nextUrl.pathname
 
   if (

@@ -6,7 +6,7 @@ import type { User } from '@/types/auth'
 
 function getStoredUser(): User | null {
   if (typeof window === 'undefined') return null
-  const raw = localStorage.getItem('sofia_user')
+  const raw = localStorage.getItem('b4b_user')
   if (!raw) return null
   try {
     return JSON.parse(raw) as User
@@ -17,7 +17,7 @@ function getStoredUser(): User | null {
 
 function getStoredToken(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem('sofia_token')
+  return localStorage.getItem('b4b_token')
 }
 
 export function useAuth() {
@@ -33,7 +33,7 @@ export function useAuth() {
     const { user: loggedInUser, token: newToken } = await authApi.login(identifier, password)
     setUser(loggedInUser)
     setToken(newToken)
-    window.dispatchEvent(new Event('sofia:login'))
+    window.dispatchEvent(new Event('b4b:login'))
     return loggedInUser
   }, [])
 
@@ -41,7 +41,7 @@ export function useAuth() {
     await authApi.logout()
     setUser(null)
     setToken(null)
-    window.dispatchEvent(new Event('sofia:logout'))
+    window.dispatchEvent(new Event('b4b:logout'))
   }, [])
 
   return {

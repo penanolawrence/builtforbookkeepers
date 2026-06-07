@@ -22,9 +22,9 @@ jest.mock('@/components/layout/ThemeToggle', () => ({
 }))
 
 describe('AccountantTopbar', () => {
-  it('renders Sofia Books brand', () => {
+  it('renders Built for Bookkeepers brand', () => {
     render(<AccountantTopbar />)
-    expect(screen.getByText('Sofia Books')).toBeInTheDocument()
+    expect(screen.getByText('Built for Bookkeepers')).toBeInTheDocument()
   })
 
   it('renders all 5 nav links', () => {

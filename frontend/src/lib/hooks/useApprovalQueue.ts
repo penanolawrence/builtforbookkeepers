@@ -26,13 +26,13 @@ export function useApprovalQueue() {
   }, [fetchQueue])
 
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('sofia:queue-count-changed', { detail: { count: items.length } }))
+    window.dispatchEvent(new CustomEvent('b4b:queue-count-changed', { detail: { count: items.length } }))
   }, [items.length])
 
   useEffect(() => {
     if (!echo) return
 
-    const user = localStorage.getItem('sofia_user')
+    const user = localStorage.getItem('b4b_user')
     if (!user) return
     const parsed = JSON.parse(user)
     const channelName = parsed.role === 'admin' ? 'private-admin.1' : `private-accountant.${parsed.id}`

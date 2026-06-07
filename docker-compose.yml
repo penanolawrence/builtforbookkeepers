@@ -26,7 +26,7 @@ x-backend-base: &backend-base
     MAIL_MAILER: smtp
     MAIL_HOST: mailpit
     MAIL_PORT: 1025
-    MAIL_FROM_ADDRESS: noreply@sofiabooks.local
+    MAIL_FROM_ADDRESS: noreply@builtforbookkeepers.local
   volumes:
     - ./backend:/var/www/html   # bind mount — vendor is checked-in to host
   depends_on:
@@ -37,28 +37,28 @@ x-backend-base: &backend-base
     minio:
       condition: service_started
   networks:
-    - sofia-net
+    - b4b-net
 
 services:
 
   # ── Laravel API ─────────────────────────────────────────
   backend:
     <<: *backend-base
-    container_name: sofia-backend
+    container_name: b4b-backend
     ports:
       - "8000:8000"
 
   # ── Horizon (queue worker) ───────────────────────────────
   horizon:
     <<: *backend-base
-    container_name: sofia-horizon
+    container_name: b4b-horizon
     command: ["php", "artisan", "horizon"]
     restart: unless-stopped
 
   # ── Reverb (WebSocket server) ────────────────────────────
   reverb:
     <<: *backend-base
-    container_name: sofia-reverb
+    container_name: b4b-reverb
     # --host=0.0.0.0 sets the bind address directly; REVERB_HOST=reverb from
     # x-backend-base is the connect target for other containers and is harmless here
     command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001"]
@@ -69,7 +69,7 @@ services:
   # ── Scheduler (cron every minute) ───────────────────────
   scheduler:
     <<: *backend-base
-    container_name: sofia-scheduler
+    container_name: b4b-scheduler
     # Runs schedule:run every 60 seconds in a shell loop
     command: >
       sh -c "while true; do
@@ -84,7 +84,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev              # uses the dev stage — runs npm run dev
-    container_name: sofia-frontend
+    container_name: b4b-frontend
     ports:
       - "3000:3000"
     volumes:
@@ -96,14 +96,14 @@ services:
       NEXT_PUBLIC_REVERB_APP_KEY: ${REVERB_APP_KEY}
       NEXT_PUBLIC_REVERB_HOST: localhost
       NEXT_PUBLIC_REVERB_PORT: "6001"
-      NEXT_PUBLIC_APP_NAME: "Sofia Books"
+      NEXT_PUBLIC_APP_NAME: "Built for Bookkeepers"
     networks:
-      - sofia-net
+      - b4b-net
 
   # ── PostgreSQL 16 ────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: sofia-postgres
+    container_name: b4b-postgres
     environment:
       POSTGRES_DB: ${DB_DATABASE}
       POSTGRES_USER: ${DB_USERNAME}
@@ -118,12 +118,12 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - sofia-net
+      - b4b-net
 
   # ── Redis 7 ──────────────────────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: sofia-redis
+    container_name: b4b-redis
     ports:
       - "6379:6379"
     volumes:
@@ -134,12 +134,12 @@ services:
       timeout: 3s
       retries: 10
     networks:
-      - sofia-net
+      - b4b-net
 
   # ── MinIO (local S3) ─────────────────────────────────────
   minio:
     image: minio/minio:RELEASE.2024-07-04T14-25-45Z
-    container_name: sofia-minio
+    container_name: b4b-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -150,17 +150,17 @@ services:
     volumes:
       - minio_data:/data
     networks:
-      - sofia-net
+      - b4b-net
 
   # ── Mailpit (dev email catcher) ──────────────────────────
   mailpit:
     image: axllent/mailpit:v1.20.0
-    container_name: sofia-mailpit
+    container_name: b4b-mailpit
     ports:
       - "1025:1025"   # SMTP (used by Laravel)
       - "8025:8025"   # Web inbox (browser)
     networks:
-      - sofia-net
+      - b4b-net
 
 volumes:
   postgres_data:
@@ -168,5 +168,5 @@ volumes:
   minio_data:
 
 networks:
-  sofia-net:
+  b4b-net:
     driver: bridge

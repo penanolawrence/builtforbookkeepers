@@ -31,7 +31,7 @@ export function useNotifications() {
   useEffect(() => {
     if (!echo) return
 
-    const user = localStorage.getItem('sofia_user')
+    const user = localStorage.getItem('b4b_user')
     if (!user) return
     const parsed = JSON.parse(user)
 

@@ -7,7 +7,7 @@ jest.mock('next/navigation', () => ({
 }))
 jest.mock('@/lib/hooks/useAuth', () => ({
   useAuth: () => ({
-    user: { name: 'Admin User', role: 'admin', email: 'admin@sofiabooks.ph' },
+    user: { name: 'Admin User', role: 'admin', email: 'admin@builtforbookkeepers.ph' },
     logout: jest.fn(),
   }),
 }))
@@ -22,9 +22,9 @@ describe('Topbar', () => {
     expect(svg).not.toBeNull()
   })
 
-  it('renders Sofia Books brand name', () => {
+  it('renders Built for Bookkeepers brand name', () => {
     render(<Topbar />)
-    expect(screen.getByText('Sofia Books')).toBeInTheDocument()
+    expect(screen.getByText('Built for Bookkeepers')).toBeInTheDocument()
   })
 
   it('renders admin nav links for admin role', () => {

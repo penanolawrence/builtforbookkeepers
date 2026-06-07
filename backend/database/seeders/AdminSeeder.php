@@ -10,14 +10,14 @@ class AdminSeeder extends Seeder
     {
         User::create([
             'name'       => 'Admin',
-            'email'      => 'admin@sofiabooks.ph',
+            'email'      => 'admin@builtforbookkeepers.ph',
             'password'   => 'Admin@2026!',
             'role'       => 'admin',
             'status'     => 'active',
             'company_id' => null,
         ]);
 
-        $this->command->info('Admin user created: admin@sofiabooks.ph / Admin@2026!');
+        $this->command->info('Admin user created: admin@builtforbookkeepers.ph / Admin@2026!');
         $this->command->warn('Change this password immediately after first login.');
     }
 }

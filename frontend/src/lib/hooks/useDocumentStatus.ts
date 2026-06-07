@@ -33,7 +33,7 @@ export function useDocumentStatus(documentId: string) {
   useEffect(() => {
     if (!echo || !documentId) return
 
-    const user = localStorage.getItem('sofia_user')
+    const user = localStorage.getItem('b4b_user')
     const companyId = user ? JSON.parse(user).companyId : null
     if (!companyId) return
 

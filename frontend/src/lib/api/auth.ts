@@ -2,15 +2,15 @@ import api from './client'
 import type { User, Role } from '@/types/auth'
 
 function setCookies(role: string, status: string, companyId: string | null) {
-  document.cookie = `sofia_role=${role}; path=/; SameSite=Lax`
-  document.cookie = `sofia_status=${status}; path=/; SameSite=Lax`
-  document.cookie = `sofia_company_id=${companyId ?? ''}; path=/; SameSite=Lax`
+  document.cookie = `b4b_role=${role}; path=/; SameSite=Lax`
+  document.cookie = `b4b_status=${status}; path=/; SameSite=Lax`
+  document.cookie = `b4b_company_id=${companyId ?? ''}; path=/; SameSite=Lax`
 }
 
 function clearCookies() {
-  document.cookie = 'sofia_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-  document.cookie = 'sofia_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-  document.cookie = 'sofia_company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  document.cookie = 'b4b_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  document.cookie = 'b4b_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  document.cookie = 'b4b_company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
 }
 
 export async function login(
@@ -21,16 +21,16 @@ export async function login(
     identifier,
     password,
   })
-  localStorage.setItem('sofia_token', data.token)
-  localStorage.setItem('sofia_user', JSON.stringify(data.user))
+  localStorage.setItem('b4b_token', data.token)
+  localStorage.setItem('b4b_user', JSON.stringify(data.user))
   setCookies(data.user.role, data.user.status, data.user.companyId)
   return data
 }
 
 export async function logout(): Promise<void> {
   await api.post('/auth/logout')
-  localStorage.removeItem('sofia_token')
-  localStorage.removeItem('sofia_user')
+  localStorage.removeItem('b4b_token')
+  localStorage.removeItem('b4b_user')
   clearCookies()
 }
 
@@ -64,8 +64,8 @@ export async function setupPassword(
     password,
     password_confirmation: password,
   })
-  localStorage.setItem('sofia_token', data.token)
-  localStorage.setItem('sofia_user', JSON.stringify(data.user))
+  localStorage.setItem('b4b_token', data.token)
+  localStorage.setItem('b4b_user', JSON.stringify(data.user))
   setCookies(data.user.role, data.user.status, data.user.companyId)
   return data
 }

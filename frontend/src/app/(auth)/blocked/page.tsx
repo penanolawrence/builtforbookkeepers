@@ -16,7 +16,7 @@ export default function BlockedPage() {
   const [status, setStatus] = useState<string | null>(null)
 
   useEffect(() => {
-    setStatus(getCookieValue('sofia_status'))
+    setStatus(getCookieValue('b4b_status'))
   }, [])
 
   const handleLogout = async () => {
@@ -30,7 +30,7 @@ export default function BlockedPage() {
     <div className="auth-bg">
       <div className="auth-logo">
         <div className="auth-logo-dot" />
-        <span className="auth-logo-name">Sofia Books</span>
+        <span className="auth-logo-name">Built for Bookkeepers</span>
       </div>
 
       <div className="blocked-card">
@@ -42,13 +42,13 @@ export default function BlockedPage() {
           <div className="blocked-body">
             {isInactive
               ? 'This account has been closed and can no longer be accessed.'
-              : 'Your account has been suspended. Please contact Sofia Books to resolve your account.'}
+              : 'Your account has been suspended. Please contact Built for Bookkeepers to resolve your account.'}
           </div>
           <div className={`blocked-contact${isInactive ? ' inactive' : ''}`}>
             <strong>{isInactive ? 'This is permanent.' : 'Need help?'}</strong>
             {isInactive
-              ? 'Inactive accounts cannot be reactivated. If you believe this is an error, contact the Sofia Books team.'
-              : 'Reach out to your accountant or the Sofia Books team to get your account reinstated.'}
+              ? 'Inactive accounts cannot be reactivated. If you believe this is an error, contact the Built for Bookkeepers team.'
+              : 'Reach out to your accountant or the Built for Bookkeepers team to get your account reinstated.'}
           </div>
         </div>
 

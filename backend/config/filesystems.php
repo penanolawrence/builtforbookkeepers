@@ -81,7 +81,7 @@ return [
             'key'                     => env('AWS_ACCESS_KEY_ID'),
             'secret'                  => env('AWS_SECRET_ACCESS_KEY'),
             'region'                  => env('AWS_DEFAULT_REGION', 'us-east-1'),
-            'bucket'                  => env('AWS_BUCKET', 'sofia-documents'),
+            'bucket'                  => env('AWS_BUCKET', 'b4b-documents'),
             'endpoint'                => env('AWS_ENDPOINT', 'http://minio:9000'),
             'use_path_style_endpoint' => true,
             'throw'                   => false,

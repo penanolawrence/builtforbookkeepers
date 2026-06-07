@@ -21,7 +21,7 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_APP_NAME ?? 'Sofia Books',
+  title: process.env.NEXT_PUBLIC_APP_NAME ?? 'Built for Bookkeepers',
   description: 'Philippine SME bookkeeping SaaS',
 }
 

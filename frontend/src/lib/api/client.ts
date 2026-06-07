@@ -6,7 +6,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('sofia_token')
+    const token = localStorage.getItem('b4b_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -22,11 +22,11 @@ api.interceptors.response.use(
       error.response?.status === 401 &&
       !error.config?.url?.includes('/auth/logout')
     ) {
-      localStorage.removeItem('sofia_token')
-      localStorage.removeItem('sofia_user')
-      document.cookie = 'sofia_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-      document.cookie = 'sofia_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-      document.cookie = 'sofia_company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      localStorage.removeItem('b4b_token')
+      localStorage.removeItem('b4b_user')
+      document.cookie = 'b4b_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      document.cookie = 'b4b_status=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      document.cookie = 'b4b_company_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       window.location.href = '/login'
     }
     return Promise.reject(error)

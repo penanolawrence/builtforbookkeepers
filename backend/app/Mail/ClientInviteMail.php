@@ -19,7 +19,7 @@ class ClientInviteMail extends Mailable
 
     public function build(): static
     {
-        return $this->subject("You're invited to Sofia Books")
+        return $this->subject("You're invited to Built for Bookkeepers")
                     ->text('emails.client-invite-plain');
     }
 }

@@ -36,7 +36,7 @@ class GetSignedUrlTest extends TestCase
         // No str_replace is needed — and the signature stays valid.
         config(['filesystems.disks.s3.public_url' => 'http://localhost:9000']);
 
-        $expectedUrl = 'http://localhost:9000/sofia-documents/documents/test.png?X-Amz-Signature=abc';
+        $expectedUrl = 'http://localhost:9000/b4b-documents/documents/test.png?X-Amz-Signature=abc';
 
         $urlDisk = Mockery::mock(Filesystem::class);
         $urlDisk->shouldReceive('temporaryUrl')->once()->andReturn($expectedUrl);
@@ -64,7 +64,7 @@ class GetSignedUrlTest extends TestCase
         config(['filesystems.disks.s3.endpoint'   => null]);
         config(['filesystems.disks.s3.public_url' => null]);
 
-        $rawUrl = 'https://s3.amazonaws.com/sofia-documents/documents/test.png?X-Amz-Signature=abc';
+        $rawUrl = 'https://s3.amazonaws.com/b4b-documents/documents/test.png?X-Amz-Signature=abc';
 
         $mockDisk = Mockery::mock(Filesystem::class);
         $mockDisk->shouldReceive('temporaryUrl')
