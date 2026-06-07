@@ -870,7 +870,7 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
       <AssignAccountantModal
         open={reassignOpen}
         clientId={clientId}
-        currentAccountantId={client?.accountantId}
+        currentAccountantId={client?.accountantId ?? ''}
         onCancel={() => setReassignOpen(false)}
         onConfirm={handleReassign}
       />
