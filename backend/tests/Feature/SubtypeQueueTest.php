@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\ChartOfAccountSubtype;
 use App\Models\Company;
 use App\Models\Document;
-use App\Models\Subtype;
 use App\Models\TransactionLine;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,7 +40,7 @@ class SubtypeQueueTest extends TestCase
 
     public function test_queue_show_includes_subtype_id_and_name_on_lines(): void
     {
-        $subtype = Subtype::factory()->create(['name' => 'Internet']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Internet']);
         TransactionLine::factory()->create([
             'document_id' => $this->document->id,
             'subtype_id'  => $subtype->id,
@@ -94,8 +94,8 @@ class SubtypeQueueTest extends TestCase
             'amount'        => 500,
         ]);
 
-        $oldSubtype = Subtype::factory()->create(['name' => 'Load']);
-        $newSubtype = Subtype::factory()->create(['name' => 'Internet']);
+        $oldSubtype = ChartOfAccountSubtype::factory()->create(['name' => 'Load']);
+        $newSubtype = ChartOfAccountSubtype::factory()->create(['name' => 'Internet']);
 
         $line = TransactionLine::factory()->create([
             'document_id'  => $this->document->id,

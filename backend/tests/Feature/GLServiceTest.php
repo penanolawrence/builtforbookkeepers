@@ -3,11 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\ChartOfAccountSubtype;
 use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
-use App\Models\Subtype;
 use App\Models\TransactionLine;
 use App\Models\User;
 use App\Services\BIR\GLService;
@@ -65,7 +65,7 @@ class GLServiceTest extends TestCase
         string $date,
         float $debit = 0,
         float $credit = 0,
-        ?Subtype $subtype = null,
+        ?ChartOfAccountSubtype $subtype = null,
     ): void {
         $document = Document::factory()->create([
             'company_id'    => $this->company->id,
@@ -249,7 +249,7 @@ class GLServiceTest extends TestCase
     public function test_row_includes_subtype_name_when_transaction_line_has_subtype(): void
     {
         $account = $this->makeAccount('expense');
-        $subtype = Subtype::factory()->create(['name' => 'Internet Expense']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Internet Expense']);
 
         $this->makeEntryWithDocument($account, '2026-02-01', debit: 1000.0, subtype: $subtype);
 
@@ -275,7 +275,7 @@ class GLServiceTest extends TestCase
     public function test_row_includes_account_name_when_subtype_is_present(): void
     {
         $account = $this->makeAccount('expense');
-        $subtype = Subtype::factory()->create(['name' => 'Internet Expense']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Internet Expense']);
 
         $this->makeEntryWithDocument($account, '2026-02-01', debit: 1000.0, subtype: $subtype);
 
@@ -290,8 +290,8 @@ class GLServiceTest extends TestCase
     {
         $account1 = $this->makeAccount('expense');
         $account2 = $this->makeAccount('income');
-        $subtype1 = Subtype::factory()->create(['name' => 'Internet']);
-        $subtype2 = Subtype::factory()->create(['name' => 'Sales']);
+        $subtype1 = ChartOfAccountSubtype::factory()->create(['name' => 'Internet']);
+        $subtype2 = ChartOfAccountSubtype::factory()->create(['name' => 'Sales']);
 
         $document = Document::factory()->create([
             'company_id'    => $this->company->id,
@@ -351,8 +351,8 @@ class GLServiceTest extends TestCase
     public function test_subtype_disambiguates_when_two_lines_share_same_account(): void
     {
         $account  = $this->makeAccount('expense');
-        $subtype1 = Subtype::factory()->create(['name' => 'Internet']);
-        $subtype2 = Subtype::factory()->create(['name' => 'Phone']);
+        $subtype1 = ChartOfAccountSubtype::factory()->create(['name' => 'Internet']);
+        $subtype2 = ChartOfAccountSubtype::factory()->create(['name' => 'Phone']);
 
         $document = Document::factory()->create([
             'company_id'    => $this->company->id,

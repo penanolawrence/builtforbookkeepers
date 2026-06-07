@@ -3,11 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\ChartOfAccountSubtype;
 use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
-use App\Models\Subtype;
 use App\Models\TransactionLine;
 use App\Models\User;
 use App\Services\Report\IncomeStatementService;
@@ -87,7 +87,7 @@ class IncomeStatementServiceTest extends TestCase
 
     public function test_all_lines_have_subtypes_returns_no_others_bucket(): void
     {
-        $subtype = Subtype::factory()->create(['name' => 'Lunch']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Lunch']);
 
         $doc = Document::factory()->create([
             'company_id'    => $this->company->id,
@@ -125,7 +125,7 @@ class IncomeStatementServiceTest extends TestCase
 
     public function test_mixed_lines_include_others_bucket(): void
     {
-        $subtype = Subtype::factory()->create(['name' => 'Coffee']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Coffee']);
 
         $doc = Document::factory()->create([
             'company_id'    => $this->company->id,

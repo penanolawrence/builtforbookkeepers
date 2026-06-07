@@ -3,11 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\ChartOfAccountSubtype;
 use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
-use App\Models\Subtype;
 use App\Models\TransactionLine;
 use App\Models\User;
 use App\Services\BIR\GJService;
@@ -45,7 +45,7 @@ class GJServiceTest extends TestCase
     public function test_row_includes_subtype_name_when_transaction_line_has_subtype(): void
     {
         $account = $this->makeAccount('expense');
-        $subtype = Subtype::factory()->create(['name' => 'Internet Expense']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Internet Expense']);
 
         $document = Document::factory()->create([
             'company_id'    => $this->company->id,

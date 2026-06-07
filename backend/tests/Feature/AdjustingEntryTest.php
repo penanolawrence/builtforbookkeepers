@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Account;
 use App\Models\AdjustingEntry;
 use App\Models\AdjustingEntryLine;
+use App\Models\ChartOfAccountSubtype;
 use App\Models\Company;
-use App\Models\Subtype;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -48,7 +48,7 @@ class AdjustingEntryTest extends TestCase
 
     public function test_create_stores_subtype_and_description_per_line(): void
     {
-        $subtype = Subtype::factory()->create(['name' => 'Office Supplies']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Office Supplies']);
 
         $response = $this->actingAs($this->accountant)
             ->postJson('/api/adjusting-entries', [
@@ -88,7 +88,7 @@ class AdjustingEntryTest extends TestCase
 
     public function test_show_returns_subtype_and_description_per_line(): void
     {
-        $subtype = Subtype::factory()->create(['name' => 'Travel']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Travel']);
 
         $entry = AdjustingEntry::create([
             'company_id'  => $this->company->id,
@@ -131,7 +131,7 @@ class AdjustingEntryTest extends TestCase
 
     public function test_update_stores_subtype_and_description_per_line(): void
     {
-        $subtype = Subtype::factory()->create(['name' => 'Repairs']);
+        $subtype = ChartOfAccountSubtype::factory()->create(['name' => 'Repairs']);
 
         $entry = AdjustingEntry::create([
             'company_id'  => $this->company->id,
