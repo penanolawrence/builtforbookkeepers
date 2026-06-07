@@ -67,7 +67,11 @@ class GLService
         }
 
         // Step 4 — Normal balance derived from account type
-        $normalBalance = in_array($account->type, ['cash', 'expense']) ? 'debit' : 'credit';
+        $normalBalance = match($account->type) {
+            'cash', 'expense'         => 'debit',
+            'income', 'equity', 'vat' => 'credit',
+            default                   => 'credit',
+        };
 
         // Step 5 — Parked documents within the selected date range
         $parkedCount = \App\Models\Document::where('company_id', $co->id)
