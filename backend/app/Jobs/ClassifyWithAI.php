@@ -5,8 +5,8 @@ namespace App\Jobs;
 use App\Events\DocumentStageUpdated;
 use App\Events\QueueItemAdded;
 use App\Models\Account;
+use App\Models\ChartOfAccountSubtype;
 use App\Models\Document;
-use App\Models\Subtype;
 use App\Services\AI\TransactionClassifier;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -95,7 +95,7 @@ class ClassifyWithAI implements ShouldQueue
 
             $subtypeId = null;
             if (!empty($line['category'])) {
-                $subtypeId = Subtype::firstOrCreate(['name' => trim($line['category'])])->id;
+                $subtypeId = ChartOfAccountSubtype::where('name', trim($line['category']))->value('id');
             }
 
             $this->document->transactionLines()->create([
@@ -115,6 +115,10 @@ class ClassifyWithAI implements ShouldQueue
             $this->document->merchant_name = $doc['merchant']     ?? $this->document->merchant_name;
             $this->document->document_date = $doc['date']         ?? $this->document->document_date;
             $this->document->vat_amount    = $doc['vat_amount']   ?? $this->document->vat_amount;
+
+            if (!empty($doc['payment_method'])) {
+                $this->document->payment_method = $doc['payment_method'];
+            }
 
             if (empty($this->document->ref_number) && !empty($doc['or_number'])) {
                 $this->document->ref_number = $doc['or_number'];
