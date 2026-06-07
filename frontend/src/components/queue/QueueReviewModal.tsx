@@ -1,0 +1,649 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { getQueueItem, approveItem, returnItem, rejectItem } from '@/lib/api/queue'
+import { getSignedUrl } from '@/lib/api/documents'
+import { getAccounts } from '@/lib/api/accounts'
+import type { Account } from '@/types/admin'
+import type { LinePayload } from '@/lib/api/queue'
+import { SubtypeCombobox } from './SubtypeCombobox'
+
+interface LineState {
+  id?: string
+  type: 'income' | 'expense'
+  accountId: string
+  accountCode: string
+  subtypeId: string | null
+  subtypeName: string | null
+  amount: string
+  description: string
+  date: string
+}
+
+interface Props {
+  documentId: string
+  onClose: () => void
+  onRemoved?: (id: string) => void
+}
+
+function AccountSelect({
+  value,
+  accounts,
+  onChange,
+}: {
+  value: string
+  accounts: Account[]
+  onChange: (accountId: string, accountCode: string) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [open, setOpen]     = useState(false)
+
+  const selected = accounts.find((a) => a.id === value)
+  const filtered = accounts.filter(
+    (a) =>
+      a.code.toLowerCase().includes(search.toLowerCase()) ||
+      a.name.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        value={open ? search : selected ? `${selected.code} — ${selected.name}` : ''}
+        onFocus={() => { setOpen(true); setSearch('') }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border border-t-line rounded px-2 py-1 text-xs"
+        placeholder="Search accounts…"
+      />
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-50 w-full bg-t-card border border-t-line rounded shadow-md max-h-48 overflow-y-auto text-xs">
+          {filtered.map((a) => (
+            <li
+              key={a.id}
+              onMouseDown={() => { onChange(a.id, a.code); setOpen(false) }}
+              className="px-2 py-1.5 hover:bg-t-surface cursor-pointer"
+            >
+              {a.code} — {a.name}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function LineRow({
+  line,
+  accounts,
+  isNew,
+  onChange,
+  onRemove,
+}: {
+  line: LineState & { index: number }
+  accounts: Account[]
+  isNew: boolean
+  onChange: (patch: Partial<LineState>) => void
+  onRemove: () => void
+}) {
+  return (
+    <div className={`flex gap-1.5 items-center mb-1.5 ${isNew ? 'border-l-2 border-t-primary pl-2' : ''}`}>
+      <div className="w-44 shrink-0">
+        <AccountSelect
+          value={line.accountId}
+          accounts={accounts}
+          onChange={(accountId, accountCode) => onChange({ accountId, accountCode })}
+        />
+      </div>
+      <div className="w-40 shrink-0">
+        <SubtypeCombobox
+          subtypeId={line.subtypeId}
+          subtypeName={line.subtypeName}
+          onChange={(subtypeId, subtypeName) => onChange({ subtypeId, subtypeName })}
+        />
+      </div>
+      <div className="relative w-24 shrink-0">
+        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-t-muted pointer-events-none">₱</span>
+        <input
+          type="number"
+          value={line.amount}
+          onChange={(e) => onChange({ amount: e.target.value })}
+          placeholder="0"
+          className="border border-t-line rounded pl-5 pr-2 py-1 text-xs w-full"
+        />
+      </div>
+      <input
+        type="date"
+        value={line.date}
+        onChange={(e) => onChange({ date: e.target.value })}
+        className="border border-t-line rounded px-2 py-1 text-xs w-32"
+      />
+      <input
+        type="text"
+        value={line.description}
+        onChange={(e) => onChange({ description: e.target.value })}
+        placeholder="Description"
+        className="border border-t-line rounded px-2 py-1 text-xs flex-1"
+      />
+      <button
+        onClick={onRemove}
+        className="text-t-faint hover:text-red-500 transition-colors text-sm px-1 shrink-0"
+        title="Remove line"
+      >
+        ✕
+      </button>
+    </div>
+  )
+}
+
+export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
+  const { data: item, isLoading } = useQuery({
+    queryKey: ['queue-item', documentId],
+    queryFn:  () => getQueueItem(documentId),
+  })
+
+  const { data: accounts = [] } = useQuery({
+    queryKey: ['accounts', item?.clientId],
+    queryFn:  () => getAccounts(item!.clientId),
+    enabled:  !!item?.clientId,
+  })
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+
+  useEffect(() => {
+    if (!item || item.isNoReceipt) return
+    let cancelled = false
+    getSignedUrl(documentId)
+      .then(({ url }) => { if (!cancelled) setImageUrl(url) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [documentId, item?.isNoReceipt])
+
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightboxOpen(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [lightboxOpen])
+
+  const [merchantName, setMerchantName]     = useState('')
+  const [date, setDate]                     = useState('')
+  const [declaredType, setDeclaredType]     = useState<'income' | 'expense'>('expense')
+  const [paymentMethod, setPaymentMethod]   = useState('')
+
+  const [lines, setLines]                   = useState<LineState[]>([])
+  const [removedLineIds, setRemovedLineIds] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!item) return
+    setMerchantName(item.merchantName ?? '')
+    setDate(item.date ?? '')
+    setDeclaredType(item.declaredType ?? 'expense')
+    setPaymentMethod((item.paymentMethod ?? '').toLowerCase())
+    setLines(
+      item.transactionLines.map((l) => ({
+        id:          l.id,
+        type:        l.type,
+        accountId:   l.accountId ?? '',
+        accountCode: l.accountCode ?? '',
+        subtypeId:   l.subtypeId ?? null,
+        subtypeName: l.subtypeName ?? null,
+        amount:      String(l.amount ?? ''),
+        description: l.description ?? '',
+        date:        l.date ?? '',
+      }))
+    )
+  }, [item])
+
+  const [footerMode, setFooterMode]       = useState<'default' | 'reject' | 'return'>('default')
+  const [rejectReason, setRejectReason]   = useState('')
+  const [returnNote, setReturnNote]       = useState('')
+  const [submitting, setSubmitting]       = useState(false)
+  const [toast, setToast]                 = useState<string | null>(null)
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  function updateLine(index: number, patch: Partial<LineState>) {
+    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
+  }
+
+  function removeLine(index: number) {
+    const line = lines[index]
+    if (line.id) setRemovedLineIds((prev) => prev.includes(line.id!) ? prev : [...prev, line.id!])
+    setLines((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function addLine(type: 'income' | 'expense') {
+    setLines((prev) => [
+      ...prev,
+      { type, accountId: '', accountCode: '', subtypeId: null, subtypeName: null, amount: '', description: '', date: '' },
+    ])
+  }
+
+  const handleApprove = async () => {
+    if (!item) return
+    setSubmitting(true)
+    try {
+      const linePayloads: LinePayload[] = lines
+        .filter((l) => l.type === declaredType)
+        .map((l) => ({
+          id:          l.id,
+          type:        l.type,
+          accountId:   l.accountId || null,
+          accountCode: l.accountCode || null,
+          subtypeId:   l.subtypeId || null,
+          amount:      parseFloat(l.amount) || 0,
+          description: l.description || null,
+          date:        l.date || null,
+        }))
+
+      await approveItem(documentId, {
+        fields: {
+          merchantName:  merchantName || null,
+          date:          date || null,
+          declaredType,
+          paymentMethod: paymentMethod || null,
+        },
+        lines:          linePayloads,
+        removedLineIds: removedLineIds,
+      })
+
+      showToast('Document approved.')
+      setTimeout(() => onRemoved ? onRemoved(documentId) : onClose(), 500)
+    } catch {
+      showToast('Approval failed. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleReject = async () => {
+    if (!rejectReason.trim()) return
+    setSubmitting(true)
+    try {
+      await rejectItem(documentId, rejectReason)
+      showToast('Document rejected.')
+      setTimeout(() => onRemoved ? onRemoved(documentId) : onClose(), 500)
+    } catch {
+      showToast('Rejection failed. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleReturn = async () => {
+    if (!returnNote.trim()) return
+    setSubmitting(true)
+    try {
+      await returnItem(documentId, returnNote)
+      showToast('Document returned for re-upload.')
+      setTimeout(() => onRemoved ? onRemoved(documentId) : onClose(), 500)
+    } catch {
+      showToast('Return failed. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const incomeLines  = lines.map((l, i) => ({ ...l, index: i })).filter((l) => l.type === 'income')
+  const expenseLines = lines.map((l, i) => ({ ...l, index: i })).filter((l) => l.type === 'expense')
+
+  function aiHint(current: string, original: string | null | undefined) {
+    if (!original || current === original) return null
+    return <div className="text-[10px] text-amber-500 mt-0.5">AI: {original}</div>
+  }
+
+  const flagCls: Record<string, string> = {
+    RED:    'bg-red-100 text-red-700',
+    YELLOW: 'bg-yellow-100 text-yellow-700',
+    GREEN:  'bg-green-100 text-green-700',
+  }
+
+  const incomeAccounts  = accounts.filter((a) => a.type === 'income')
+  const expenseAccounts = accounts.filter((a) => a.type === 'expense')
+
+  return (
+    <>
+      {toast && (
+        <div className="fixed top-4 right-4 z-[60] px-4 py-2.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg">
+          {toast}
+        </div>
+      )}
+
+      <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+        <DialogContent className="sm:max-w-7xl p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh]">
+
+          {/* Header */}
+          <div className="px-6 pt-5 pb-4 pr-10 border-b border-t-line shrink-0 flex items-center justify-between">
+            <div>
+              <div className="text-[15px] font-bold text-t-ink">
+                {item?.refNumber ?? `#${documentId.slice(0, 8)}`}
+              </div>
+              <div className="text-[11px] text-t-muted mt-0.5">{item?.clientName}</div>
+            </div>
+            {item?.flag && (
+              <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full ${flagCls[item.flag] ?? ''}`}>
+                {item.flag}
+              </span>
+            )}
+          </div>
+
+          {/* Body */}
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center text-sm text-t-faint p-8">Loading…</div>
+          ) : (
+            <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+
+              {/* TOP: receipt (left) | document fields (right) */}
+              <div className="grid grid-cols-2 divide-x divide-t-line border-b border-t-line">
+
+                {/* Left: receipt */}
+                <div className="p-5 overflow-y-auto max-h-[350px]">
+                {item?.isNoReceipt ? (
+                  <div className="bg-t-surface border border-dashed border-t-line rounded-lg py-10 text-center">
+                    <div className="text-3xl mb-2">📋</div>
+                    <div className="text-[11px] text-t-faint">Manual Entry — no receipt</div>
+                  </div>
+                ) : imageUrl ? (
+                  <div
+                    data-testid="receipt-viewer"
+                    role="button"
+                    tabIndex={0}
+                    className="relative group w-full rounded-lg border border-t-line overflow-hidden cursor-pointer"
+                    onClick={() => setLightboxOpen(true)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setLightboxOpen(true)
+                      }
+                    }}
+                  >
+                    <img src={imageUrl} alt="Receipt" className="w-full object-contain block" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-[rgba(26,15,46,0.42)] backdrop-blur-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-[180ms]">
+                      <button
+                        className="w-11 h-11 rounded-xl bg-white/[0.18] border border-white/[0.32] text-white flex items-center justify-center pointer-events-none"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                      >
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-t-surface rounded-lg h-48 flex items-center justify-center border border-t-line">
+                    <div className="text-3xl">🧾</div>
+                  </div>
+                )}
+                </div>
+
+                {/* Right: document fields */}
+                <div className="p-5 overflow-y-auto space-y-3">
+                  <div className="text-[10px] font-bold text-t-faint uppercase tracking-wide">Document Fields</div>
+
+                  <div>
+                    <label className="block text-[11px] text-t-muted mb-1">Merchant Name</label>
+                    <input
+                      type="text"
+                      value={merchantName}
+                      onChange={(e) => setMerchantName(e.target.value)}
+                      className="w-full border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink"
+                    />
+                    {aiHint(merchantName, item?.merchantName)}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-t-muted mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink"
+                    />
+                    {aiHint(date, item?.date)}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-t-muted mb-1">Declared Type</label>
+                    <select
+                      value={declaredType}
+                      onChange={(e) => setDeclaredType(e.target.value as 'income' | 'expense')}
+                      className="w-full border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink bg-t-card"
+                    >
+                      <option value="income">Income</option>
+                      <option value="expense">Expense</option>
+                    </select>
+                    {aiHint(declaredType, item?.declaredType ?? undefined)}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-t-muted mb-1">Payment Method</label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink bg-t-card"
+                    >
+                      <option value="">— Select —</option>
+                      <option value="cash">Cash</option>
+                      <option value="gcash">GCash</option>
+                      <option value="maya">Maya</option>
+                      <option value="bank">Bank</option>
+                      <option value="check">Check</option>
+                    </select>
+                    {aiHint(paymentMethod, item?.paymentMethod ?? 'cash')}
+                  </div>
+                </div>
+              </div>
+
+              {/* BOTTOM: transaction lines + anomalies */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
+
+                <div className="text-[10px] font-bold text-t-faint uppercase tracking-wide">Transaction Lines</div>
+
+                {/* Income */}
+                {declaredType === 'income' && (
+                <div data-testid="income-lines-section">
+                  <div className="text-xs font-semibold text-green-700 mb-1">Income</div>
+                  <div className="flex gap-1.5 items-center mb-1">
+                    <div className="w-44 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Account</div>
+                    <div className="w-40 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Category</div>
+                    <div className="w-24 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Amount</div>
+                    <div className="w-32 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Date</div>
+                    <div className="flex-1 text-[10px] font-semibold text-t-faint uppercase">Notes</div>
+                    <div className="w-6 shrink-0" />
+                  </div>
+                  {incomeLines.length === 0 && (
+                    <div className="text-[11px] text-t-faint mb-2">No income lines.</div>
+                  )}
+                  {incomeLines.map((l) => (
+                    <LineRow
+                      key={l.id ?? `new-${l.index}`}
+                      line={l}
+                      accounts={incomeAccounts}
+                      isNew={!l.id}
+                      onChange={(patch) => updateLine(l.index, patch)}
+                      onRemove={() => removeLine(l.index)}
+                    />
+                  ))}
+                  <button
+                    onClick={() => addLine('income')}
+                    className="text-[11px] text-t-primary hover:underline mt-1"
+                  >
+                    + Add income line
+                  </button>
+                </div>
+                )}
+
+                {/* Expense */}
+                {declaredType === 'expense' && (
+                <div data-testid="expense-lines-section">
+                  <div className="text-xs font-semibold text-red-700 mb-1">Expense</div>
+                  <div className="flex gap-1.5 items-center mb-1">
+                    <div className="w-44 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Account</div>
+                    <div className="w-40 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Category</div>
+                    <div className="w-24 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Amount</div>
+                    <div className="w-32 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Date</div>
+                    <div className="flex-1 text-[10px] font-semibold text-t-faint uppercase">Notes</div>
+                    <div className="w-6 shrink-0" />
+                  </div>
+                  {expenseLines.length === 0 && (
+                    <div className="text-[11px] text-t-faint mb-2">No expense lines.</div>
+                  )}
+                  {expenseLines.map((l) => (
+                    <LineRow
+                      key={l.id ?? `new-${l.index}`}
+                      line={l}
+                      accounts={expenseAccounts}
+                      isNew={!l.id}
+                      onChange={(patch) => updateLine(l.index, patch)}
+                      onRemove={() => removeLine(l.index)}
+                    />
+                  ))}
+                  <button
+                    onClick={() => addLine('expense')}
+                    className="text-[11px] text-t-primary hover:underline mt-1"
+                  >
+                    + Add expense line
+                  </button>
+                </div>
+                )}
+
+                {/* Anomaly reasons */}
+                {item?.anomalyReasons && item.anomalyReasons.length > 0 && (
+                  <div className="border-t border-t-line pt-4">
+                    <div className="text-[10px] font-bold text-t-faint uppercase tracking-wide mb-2">
+                      Anomaly Reasons
+                    </div>
+                    <ul className="space-y-1">
+                      {item.anomalyReasons.map((r, i) => (
+                        <li key={i} className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-1.5">
+                          · {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="border-t border-t-line px-6 py-3 shrink-0">
+            {footerMode === 'default' && (
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setFooterMode('reject')}
+                  className="border border-red-300 text-red-600 hover:bg-red-50 text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+                >
+                  Reject
+                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setFooterMode('return')}
+                    className="border border-amber-400 text-amber-600 hover:bg-amber-50 text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Return for Re-upload
+                  </button>
+                  <button
+                    onClick={handleApprove}
+                    disabled={submitting}
+                    className="bg-t-primary hover:bg-t-primary-deep text-white text-xs font-semibold px-5 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {submitting ? 'Approving…' : 'Approve'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {footerMode === 'reject' && (
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-t-ink">Reason for rejection</div>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  rows={2}
+                  className="w-full border border-t-line rounded-md px-3 py-2 text-xs resize-none"
+                  placeholder="Enter rejection reason…"
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => { setFooterMode('default'); setRejectReason('') }}
+                    className="text-xs text-t-muted hover:text-t-ink px-3 py-1.5"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReject}
+                    disabled={!rejectReason.trim() || submitting}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {submitting ? 'Rejecting…' : 'Confirm Reject'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {footerMode === 'return' && (
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-t-ink">Note for client</div>
+                <textarea
+                  value={returnNote}
+                  onChange={(e) => setReturnNote(e.target.value)}
+                  rows={2}
+                  className="w-full border border-t-line rounded-md px-3 py-2 text-xs resize-none"
+                  placeholder="Explain what needs to be corrected…"
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => { setFooterMode('default'); setReturnNote('') }}
+                    className="text-xs text-t-muted hover:text-t-ink px-3 py-1.5"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReturn}
+                    disabled={!returnNote.trim() || submitting}
+                    className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {submitting ? 'Returning…' : 'Confirm Return'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+        </DialogContent>
+      </Dialog>
+
+      {lightboxOpen && imageUrl && (
+        <div
+          data-testid="receipt-lightbox"
+          className="fixed inset-0 z-[400] flex items-center justify-center bg-[rgba(10,8,18,0.82)] backdrop-blur-[8px]"
+          onClick={(e) => { if (e.target === e.currentTarget) setLightboxOpen(false) }}
+        >
+          <button
+            className="absolute top-5 right-6 w-10 h-10 rounded-[11px] bg-white/[0.12] border border-white/[0.2] text-white flex items-center justify-center text-lg"
+            onClick={() => setLightboxOpen(false)}
+            aria-label="Close lightbox"
+            autoFocus
+          >
+            ✕
+          </button>
+          <img
+            src={imageUrl}
+            alt="Receipt full view"
+            className="max-w-[min(800px,92vw)] max-h-[90vh] object-contain rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+          />
+        </div>
+      )}
+    </>
+  )
+}

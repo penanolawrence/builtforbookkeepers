@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '../styles/theme.css';
+
+@layer base {
+  :root {
+    --background:             var(--t-card);
+    --foreground:             var(--t-ink);
+    --card:                   var(--t-card);
+    --card-foreground:        var(--t-ink);
+    --popover:                var(--t-card-alt);
+    --popover-foreground:     var(--t-ink);
+    --primary:                var(--t-primary);
+    --primary-foreground:     #ffffff;
+    --secondary:              var(--t-surface);
+    --secondary-foreground:   var(--t-ink);
+    --muted:                  var(--t-surface);
+    --muted-foreground:       var(--t-muted);
+    --accent:                 var(--t-surface);
+    --accent-foreground:      var(--t-ink);
+    --destructive:            #ef4444;
+    --destructive-foreground: #ffffff;
+    --border:                 var(--t-line);
+    --input:                  var(--t-field-bg);
+    --ring:                   var(--t-primary);
+    --radius:                 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Dashboard-style table: transparent header, beige rows, rounded first/last */
+  .sb-table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .sb-table thead th {
+    background: transparent;
+    border-bottom: none;
+  }
+  .sb-table tbody tr {
+    background: var(--t-card-alt);
+  }
+  .sb-table tbody tr + tr td {
+    border-top: 1px solid var(--t-line-soft);
+  }
+  .sb-table tbody tr:first-child td:first-child { border-radius: 10px 0 0 0; }
+  .sb-table tbody tr:first-child td:last-child  { border-radius: 0 10px 0 0; }
+  .sb-table tbody tr:last-child  td:first-child { border-radius: 0 0 0 10px; }
+  .sb-table tbody tr:last-child  td:last-child  { border-radius: 0 0 10px 0; }
+}
