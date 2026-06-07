@@ -33,6 +33,6 @@ class AdjustingEntryLine extends Model
 
     public function subtype(): BelongsTo
     {
-        return $this->belongsTo(Subtype::class);
+        return $this->belongsTo(ChartOfAccountSubtype::class);
     }
 }
