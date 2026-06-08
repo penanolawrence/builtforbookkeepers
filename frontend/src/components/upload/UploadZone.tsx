@@ -40,7 +40,7 @@ function validateFiles(files: File[]): { valid: File[]; errors: string[] } {
     if (file.size > MAX_SIZE) {
       errors.push(`${file.name} — File too large (max 10MB)`)
     } else if (!ACCEPTED_TYPES.includes(file.type)) {
-      errors.push(`${file.name} — only JPG, PNG, PDF accepted`)
+      errors.push(`${file.name} — Only JPG, PNG, PDF accepted`)
     } else {
       valid.push(file)
     }
