@@ -117,6 +117,7 @@ export function Topbar() {
           </svg>
         </span>
         <span
+          className="hidden md:inline"
           style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 700,
@@ -130,7 +131,7 @@ export function Topbar() {
       </Link>
 
       {/* Nav */}
-      <nav style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+      <nav className="hidden md:flex" style={{ gap: 4, marginLeft: 8 }}>
         {links.map((link) => {
           const active = pathname.startsWith(link.href)
           const count  = link.badge ? queueCount : 0
