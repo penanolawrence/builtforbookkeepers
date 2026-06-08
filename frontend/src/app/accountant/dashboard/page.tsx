@@ -54,6 +54,7 @@ export default function AccountantDashboard() {
 
   return (
     <div
+      className="acct-dash-root"
       style={{
         maxWidth: 1280,
         marginLeft: 'auto',
@@ -68,7 +69,7 @@ export default function AccountantDashboard() {
       }}
     >
       {/* Row 1 — Greeting + Mascot */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+      <div className="acct-dash-greeting" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
         <div style={{ flex: 1 }}>
           <h1
             style={{
@@ -86,7 +87,7 @@ export default function AccountantDashboard() {
             {today} · {clients.length} active clients · {(queue as QueueItem[]).length} items in your queue
           </p>
         </div>
-        <div style={{ width: 430, flexShrink: 0 }}>
+        <div className="acct-dash-mascot" style={{ width: 430, flexShrink: 0 }}>
           <MascotCompanion theme={theme} />
         </div>
       </div>
@@ -170,7 +171,7 @@ export default function AccountantDashboard() {
         </section>
 
         {/* Week Rail */}
-        <aside style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <aside className="acct-dash-week" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div
             style={{
               background: 'var(--t-card)',

@@ -105,4 +105,12 @@
   .dashboard-recent-date {
     display: none !important;
   }
+
+  /* ── Accountant Dashboard ── */
+  .acct-dash-root { padding: 16px !important; gap: 16px !important; }
+  .acct-dash-greeting { align-items: flex-start !important; }
+  .acct-dash-mascot { display: none !important; }
+  .dash-tier-grid { grid-template-columns: 1fr 1fr !important; }
+  .dash-bottom-grid { grid-template-columns: 1fr !important; }
+  .acct-dash-week { display: none !important; }
 }
