@@ -3,20 +3,31 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { LayoutDashboard, Upload, FileText, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, Upload, FileText, BarChart2, Inbox, Users } from 'lucide-react'
 
-const TABS = [
+const CLIENT_TABS = [
   { href: '/client/dashboard', label: 'Home',      Icon: LayoutDashboard },
   { href: '/client/upload',    label: 'Upload',    Icon: Upload          },
   { href: '/client/documents', label: 'Documents', Icon: FileText        },
   { href: '/client/reports',   label: 'Reports',   Icon: BarChart2       },
 ]
 
+const ACCOUNTANT_TABS = [
+  { href: '/accountant/dashboard', label: 'Home',    Icon: LayoutDashboard },
+  { href: '/accountant/queue',     label: 'Queue',   Icon: Inbox           },
+  { href: '/accountant/clients',   label: 'Clients', Icon: Users           },
+  { href: '/accountant/reports',   label: 'Reports', Icon: BarChart2       },
+]
+
 export function BottomTabBar() {
   const pathname = usePathname()
   const { user }  = useAuth()
 
-  if (user?.role !== 'client') return null
+  const tabs = user?.role === 'client'     ? CLIENT_TABS
+             : user?.role === 'accountant' ? ACCOUNTANT_TABS
+             : null
+
+  if (!tabs) return null
 
   return (
     <nav
@@ -33,7 +44,7 @@ export function BottomTabBar() {
         borderTop:      '1px solid var(--t-line)',
       }}
     >
-      {TABS.map(({ href, label, Icon }) => {
+      {tabs.map(({ href, label, Icon }) => {
         const active = pathname.startsWith(href)
         return (
           <Link

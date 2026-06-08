@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { Topbar } from '@/components/layout/Topbar'
+import { BottomTabBar } from '@/components/layout/BottomTabBar'
 
 export default function AccountantLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,8 +18,11 @@ export default function AccountantLayout({ children }: { children: React.ReactNo
       >
         <Topbar />
         <main style={{ flex: 1, overflow: 'auto' }}>
-          {children}
+          <div className="pb-20 md:pb-0">
+            {children}
+          </div>
         </main>
+        <BottomTabBar />
       </div>
     </ThemeProvider>
   )
