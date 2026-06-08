@@ -33,7 +33,7 @@ export function ReturnedDocumentCard({ document, onReupload }: Props) {
   }, [document.id, document.isNoReceipt, document.expiresAt])
 
   return (
-    <div className="border rounded-lg p-4 bg-white space-y-3">
+    <div className="border border-t-line border-l-4 border-l-[var(--t-tier-review-fg)] rounded-lg p-4 bg-t-card space-y-3">
       <div className="flex gap-3">
         <div className="h-16 w-16 rounded-md bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
           {imgUrl ? (
@@ -71,6 +71,7 @@ export function ReturnedDocumentCard({ document, onReupload }: Props) {
       <Button
         variant="outline"
         size="sm"
+        className="w-full md:w-auto"
         onClick={() => fileInputRef.current?.click()}
       >
         Re-upload

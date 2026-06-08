@@ -27,8 +27,16 @@ export default function ReturnedPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Returned Documents</h1>
+    <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
+      <div className="mb-[22px]">
+        <h1
+          className="text-[28px] md:text-[34px] font-bold tracking-[-0.025em] text-t-ink m-0"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Returned
+        </h1>
+        <p className="text-[14px] text-t-muted mt-1">Documents that need re-uploading</p>
+      </div>
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
@@ -36,7 +44,7 @@ export default function ReturnedPage() {
       ) : docs?.length === 0 ? (
         <EmptyState message="No returned documents." />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 pb-4">
           {docs?.map((doc) => (
             <ReturnedDocumentCard
               key={doc.id}
