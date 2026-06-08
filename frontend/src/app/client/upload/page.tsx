@@ -87,7 +87,7 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-9 py-7">
+    <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
       <Breadcrumb crumbs={[{ label: 'My Business', href: '/client' }, { label: 'Upload Documents' }]} />
 
       <div className="mb-[22px]">
