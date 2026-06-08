@@ -34,11 +34,10 @@ export function ConfirmUploadDialog({ open, files, onConfirm, onCancel }: Props)
     onCancel()
   }
 
+  if (!open || files.length === 0) return null
+
   const count = files.length
-  const typeLabel = files[0]?.declaredType === 'income' ? 'Income' : 'Expense'
-  const typeBadgeCls = files[0]?.declaredType === 'income'
-    ? 'bg-green-100 text-green-700'
-    : 'bg-red-100 text-red-700'
+  const typeLabel = files[0].declaredType === 'income' ? 'Income' : 'Expense'
   const title = `Upload ${count} ${typeLabel} ${count === 1 ? 'Document' : 'Documents'}`
 
   return (
@@ -50,21 +49,26 @@ export function ConfirmUploadDialog({ open, files, onConfirm, onCancel }: Props)
 
           {/* File list */}
           <div className="space-y-2 overflow-y-auto" style={{ maxHeight: 220 }}>
-            {files.map(({ file, declaredType }, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3"
-              >
-                <div className="text-xl">📄</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-gray-800 truncate">{file.name}</div>
-                  <div className="text-[11px] text-gray-400 mt-0.5">{formatFileSize(file.size)}</div>
+            {files.map(({ file, declaredType }, i) => {
+              const badgeCls = declaredType === 'income'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3"
+                >
+                  <div className="text-xl">📄</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-gray-800 truncate">{file.name}</div>
+                    <div className="text-[11px] text-gray-400 mt-0.5">{formatFileSize(file.size)}</div>
+                  </div>
+                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${badgeCls}`}>
+                    {declaredType === 'income' ? 'Income' : 'Expense'}
+                  </span>
                 </div>
-                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${typeBadgeCls}`}>
-                  {declaredType === 'income' ? 'Income' : 'Expense'}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Shared context note */}
