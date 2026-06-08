@@ -68,7 +68,7 @@
 /* ── Dashboard mobile overrides ─────────────────────────────────────── */
 @media (max-width: 767px) {
   .dashboard-root {
-    gap: 16px;
+    gap: 16px !important;
   }
 
   .dashboard-greeting {
