@@ -48,37 +48,49 @@ export default function ClientSettingsPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-md">
-      <h1 className="text-xl font-semibold">Settings</h1>
+    <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
+      <div className="mb-[22px]">
+        <h1
+          className="text-[28px] md:text-[34px] font-bold tracking-[-0.025em] text-t-ink m-0"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Settings
+        </h1>
+        <p className="text-[14px] text-t-muted mt-1">Your account details</p>
+      </div>
 
-      {user?.username && (
-        <div className="space-y-1">
-          <Label>Your login username</Label>
-          <p className="text-sm text-muted-foreground">{user.username}</p>
-        </div>
-      )}
+      <div className="max-w-md">
+        <div className="bg-t-card border border-t-line rounded-2xl p-5 md:p-6 shadow-sm space-y-4">
+          {user?.username && (
+            <div className="space-y-1 pb-3 border-b border-t-line">
+              <Label className="text-t-muted">Your login username</Label>
+              <p className="text-sm font-semibold text-t-primary">{user.username}</p>
+            </div>
+          )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1">
-          <Label>Full Name</Label>
-          <Input {...register('name')} />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-1">
+              <Label>Full Name</Label>
+              <Input {...register('name')} />
+            </div>
+            <div className="space-y-1">
+              <Label>Email</Label>
+              <Input type="email" {...register('email')} />
+            </div>
+            <div className="space-y-1">
+              <Label>Mobile Number</Label>
+              <Input {...register('mobile')} />
+            </div>
+            <div className="space-y-1">
+              <Label>TIN</Label>
+              <Input {...register('tin')} />
+            </div>
+            <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </form>
         </div>
-        <div className="space-y-1">
-          <Label>Email</Label>
-          <Input type="email" {...register('email')} />
-        </div>
-        <div className="space-y-1">
-          <Label>Mobile Number</Label>
-          <Input {...register('mobile')} />
-        </div>
-        <div className="space-y-1">
-          <Label>TIN</Label>
-          <Input {...register('tin')} />
-        </div>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </form>
+      </div>
     </div>
   )
 }
