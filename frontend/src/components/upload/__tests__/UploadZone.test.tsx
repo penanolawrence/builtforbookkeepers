@@ -49,50 +49,58 @@ describe('UploadZone — expense', () => {
 })
 
 describe('UploadZone — multi-file selection', () => {
+  function getBrowseInput() {
+    return screen.getByTestId('file-browse-input') as HTMLInputElement
+  }
+
   it('calls onFilesSelect with array of valid files', () => {
     const onFilesSelect = jest.fn()
     wrap({ declaredType: 'income', onFilesSelect })
-    const input = document.querySelector('input[type="file"]:not([capture])') as HTMLInputElement
     const file1 = new File(['a'], 'receipt1.jpg', { type: 'image/jpeg' })
     const file2 = new File(['b'], 'receipt2.png', { type: 'image/png' })
-    fireEvent.change(input, { target: { files: [file1, file2] } })
+    fireEvent.change(getBrowseInput(), { target: { files: [file1, file2] } })
     expect(onFilesSelect).toHaveBeenCalledWith([file1, file2])
   })
 
   it('calls onFilesSelect with only valid files when some fail validation', () => {
     const onFilesSelect = jest.fn()
     wrap({ declaredType: 'income', onFilesSelect })
-    const input = document.querySelector('input[type="file"]:not([capture])') as HTMLInputElement
     const goodFile = new File(['a'], 'receipt.jpg', { type: 'image/jpeg' })
     const badFile = new File(['b'], 'receipt.bmp', { type: 'image/bmp' })
-    fireEvent.change(input, { target: { files: [goodFile, badFile] } })
+    fireEvent.change(getBrowseInput(), { target: { files: [goodFile, badFile] } })
     expect(onFilesSelect).toHaveBeenCalledWith([goodFile])
   })
 
   it('does not call onFilesSelect when all files fail validation', () => {
     const onFilesSelect = jest.fn()
     wrap({ declaredType: 'income', onFilesSelect })
-    const input = document.querySelector('input[type="file"]:not([capture])') as HTMLInputElement
     const badFile = new File(['b'], 'receipt.bmp', { type: 'image/bmp' })
-    fireEvent.change(input, { target: { files: [badFile] } })
+    fireEvent.change(getBrowseInput(), { target: { files: [badFile] } })
     expect(onFilesSelect).not.toHaveBeenCalled()
   })
 
   it('shows a rejection summary when some files are invalid', () => {
     wrap({ declaredType: 'income', onFilesSelect: jest.fn() })
-    const input = document.querySelector('input[type="file"]:not([capture])') as HTMLInputElement
     const goodFile = new File(['a'], 'receipt.jpg', { type: 'image/jpeg' })
     const badFile = new File(['b'], 'receipt.bmp', { type: 'image/bmp' })
-    fireEvent.change(input, { target: { files: [goodFile, badFile] } })
+    fireEvent.change(getBrowseInput(), { target: { files: [goodFile, badFile] } })
     expect(screen.getByText(/1 rejected/i)).toBeInTheDocument()
   })
 
   it('shows a size error when a file exceeds 10MB', () => {
     wrap({ declaredType: 'income', onFilesSelect: jest.fn() })
-    const input = document.querySelector('input[type="file"]:not([capture])') as HTMLInputElement
     const bigFile = new File(['x'], 'big.jpg', { type: 'image/jpeg' })
     Object.defineProperty(bigFile, 'size', { value: 11 * 1024 * 1024 })
-    fireEvent.change(input, { target: { files: [bigFile] } })
+    fireEvent.change(getBrowseInput(), { target: { files: [bigFile] } })
     expect(screen.getByText(/File too large/i)).toBeInTheDocument()
+  })
+
+  it('calls onFilesSelect via drag-and-drop', () => {
+    const onFilesSelect = jest.fn()
+    const { container } = wrap({ declaredType: 'income', onFilesSelect })
+    const dropZone = container.querySelector('.border-dashed') as HTMLElement
+    const file = new File(['a'], 'receipt.jpg', { type: 'image/jpeg' })
+    fireEvent.drop(dropZone, { dataTransfer: { files: [file] } })
+    expect(onFilesSelect).toHaveBeenCalledWith([file])
   })
 })
