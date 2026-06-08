@@ -97,7 +97,7 @@ function DocumentsContent() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-9 py-7">
+    <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
       <Breadcrumb crumbs={[{ label: 'My Business', href: '/client' }, { label: 'Documents' }]} />
 
       {/* Page header */}
@@ -112,7 +112,7 @@ function DocumentsContent() {
           <p className="text-[14.5px] text-t-muted mt-[5px]">Your submitted documents</p>
         </div>
         <div className="flex gap-2.5 items-center mt-1">
-          <button className="flex items-center gap-2 border border-t-line rounded-[12px] px-4 py-2.5 text-[13.5px] font-semibold text-t-ink bg-t-card cursor-pointer">
+          <button className="hidden md:flex items-center gap-2 border border-t-line rounded-[12px] px-4 py-2.5 text-[13.5px] font-semibold text-t-ink bg-t-card cursor-pointer">
             <Download className="h-4 w-4" /> Export
           </button>
           <button
@@ -130,7 +130,7 @@ function DocumentsContent() {
 
       {/* Summary cards */}
       {!isLoading && (
-        <div className="flex gap-[14px] mb-[22px]">
+        <div className="grid grid-cols-2 gap-3 md:flex md:gap-[14px] mb-[22px]">
           <SummaryCard
             label="Total Entries"
             value={String(docs?.length ?? 0)}
@@ -160,7 +160,7 @@ function DocumentsContent() {
       {/* Filter bar */}
       <div className="mb-5 flex flex-col gap-2.5">
         {/* Row 1: Status + Type */}
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {/* Status */}
           <div className="relative">
             <Select value={status || 'all'} onValueChange={(v) => setParam('status', v === 'all' ? '' : v)}>

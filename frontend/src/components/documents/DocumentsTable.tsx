@@ -118,133 +118,187 @@ export function DocumentsTable({ docs, onRowClick, title = 'Documents', subtitle
         )}
       </div>
 
-      {/* ── Column headers ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}>
-        {COL_HEADERS.map(({ label, align, color }) => (
-          <span key={label} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color, textAlign: align }}>
-            {label}
-          </span>
-        ))}
-      </div>
+      {/* ── Desktop table — hidden on mobile ── */}
+      <div className="hidden md:block">
 
-      {/* ── Data rows ── */}
-      {docs.map((doc, i) => {
-        const { label: statusLabel, tier } = STATUS[doc.status]
-        const { text: note, color: noteColor } = getNoteText(doc)
-        const ref         = doc.refNumber ?? `#${doc.id.slice(0, 8)}`
-        const isProcessing = doc.status === 'PROCESSING'
-        const flagTier    = doc.status === 'RETURNED' || doc.status === 'REJECTED' ? 'review'
-                          : doc.status === 'PARKED' ? 'check'
-                          : null
-
-        const isHovered = hoveredId === doc.id
-        const rowBg     = isHovered ? 'var(--t-primary-soft)' : i % 2 === 1 ? 'var(--t-card-alt)' : 'transparent'
-
-        return (
-          <div
-            key={doc.id}
-            onClick={() => onRowClick(doc)}
-            onMouseEnter={() => setHoveredId(doc.id)}
-            onMouseLeave={() => setHoveredId(null)}
-            style={{
-              display:              'grid',
-              gridTemplateColumns:  COLS,
-              columnGap:            16,
-              padding:              '13px 24px',
-              alignItems:           'center',
-              borderBottom:         '1px solid var(--t-line-soft)',
-              cursor:               'pointer',
-              transition:           'background 0.14s',
-              background:           rowBg,
-              boxShadow:            flagTier
-                ? `inset 3px 0 0 var(--t-tier-${flagTier}-fg)`
-                : 'inset 3px 0 0 transparent',
-            }}
-          >
-            {/* Reference */}
-            <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 16 }}>
-              {ref}
+        {/* ── Column headers ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}>
+          {COL_HEADERS.map(({ label, align, color }) => (
+            <span key={label} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color, textAlign: align }}>
+              {label}
             </span>
+          ))}
+        </div>
 
-            {/* Source chip */}
-            <div style={{ display: 'flex' }}>
+        {/* ── Data rows ── */}
+        {docs.map((doc, i) => {
+          const { label: statusLabel, tier } = STATUS[doc.status]
+          const { text: note, color: noteColor } = getNoteText(doc)
+          const ref         = doc.refNumber ?? `#${doc.id.slice(0, 8)}`
+          const isProcessing = doc.status === 'PROCESSING'
+          const flagTier    = doc.status === 'RETURNED' || doc.status === 'REJECTED' ? 'review'
+                            : doc.status === 'PARKED' ? 'check'
+                            : null
+
+          const isHovered = hoveredId === doc.id
+          const rowBg     = isHovered ? 'var(--t-primary-soft)' : i % 2 === 1 ? 'var(--t-card-alt)' : 'transparent'
+
+          return (
+            <div
+              key={doc.id}
+              onClick={() => onRowClick(doc)}
+              onMouseEnter={() => setHoveredId(doc.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              style={{
+                display:              'grid',
+                gridTemplateColumns:  COLS,
+                columnGap:            16,
+                padding:              '13px 24px',
+                alignItems:           'center',
+                borderBottom:         '1px solid var(--t-line-soft)',
+                cursor:               'pointer',
+                transition:           'background 0.14s',
+                background:           rowBg,
+                boxShadow:            flagTier
+                  ? `inset 3px 0 0 var(--t-tier-${flagTier}-fg)`
+                  : 'inset 3px 0 0 transparent',
+              }}
+            >
+              {/* Reference */}
+              <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 16 }}>
+                {ref}
+              </span>
+
+              {/* Source chip */}
+              <div style={{ display: 'flex' }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '3px 10px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
+                  ...(doc.isNoReceipt
+                    ? { background: 'var(--t-tier-pending-bg)', color: 'var(--t-tier-pending-fg)', border: '1px solid var(--t-tier-pending-ring)' }
+                    : { background: 'var(--t-chip-bg)',         color: 'var(--t-muted)',            border: '1px solid var(--t-line)' }
+                  ),
+                }}>
+                  {doc.isNoReceipt ? 'Manual' : 'Upload'}
+                </span>
+              </div>
+
+              {/* Uploaded date */}
+              <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>
+                {fmtDate(doc.createdAt)}
+              </span>
+
+              {/* Inflow */}
+              {!isProcessing && doc.inflow > 0 ? (
+                <span style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--t-tier-ready-fg)', fontVariantNumeric: 'tabular-nums' }}>
+                  {formatCurrency(doc.inflow)}
+                </span>
+              ) : (
+                <span style={{ textAlign: 'right', color: 'var(--t-faint)' }}>—</span>
+              )}
+
+              {/* Outflow */}
+              {!isProcessing && doc.outflow > 0 ? (
+                <span style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--t-tier-review-fg)', fontVariantNumeric: 'tabular-nums' }}>
+                  {formatCurrency(doc.outflow)}
+                </span>
+              ) : (
+                <span style={{ textAlign: 'right', color: 'var(--t-faint)' }}>—</span>
+              )}
+
+              {/* Status chip — wrapped to prevent grid stretching */}
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '4px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
+                  ...tierStyle(tier),
+                }}>
+                  {statusLabel}
+                </span>
+              </div>
+
+              {/* Note — no-wrap + ellipsis to keep rows single-height */}
               <span style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                padding: '3px 10px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
-                ...(doc.isNoReceipt
-                  ? { background: 'var(--t-tier-pending-bg)', color: 'var(--t-tier-pending-fg)', border: '1px solid var(--t-tier-pending-ring)' }
-                  : { background: 'var(--t-chip-bg)',         color: 'var(--t-muted)',            border: '1px solid var(--t-line)' }
-                ),
+                fontSize: 13, color: note ? noteColor : 'var(--t-faint)', fontStyle: 'italic',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
-                {doc.isNoReceipt ? 'Manual' : 'Upload'}
+                {note || '—'}
               </span>
             </div>
+          )
+        })}
 
-            {/* Uploaded date */}
-            <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>
-              {fmtDate(doc.createdAt)}
-            </span>
+        {/* ── Footer row ── */}
+        <div style={{
+          display:             'grid',
+          gridTemplateColumns: COLS,
+          columnGap:           16,
+          padding:             '14px 24px',
+          borderTop:           '2px solid var(--t-line)',
+          background:          'var(--t-card-alt)',
+        }}>
+          <span style={{ gridColumn: '1 / 4', fontSize: 13, fontWeight: 700, color: 'var(--t-muted)' }}>
+            {docs.length} {docs.length === 1 ? 'entry' : 'entries'}
+          </span>
+          <span style={{ textAlign: 'right', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 15, color: 'var(--t-tier-ready-fg)', fontVariantNumeric: 'tabular-nums' }}>
+            {totalInflow > 0 ? formatCurrency(totalInflow) : '—'}
+          </span>
+          <span style={{ textAlign: 'right', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 15, color: 'var(--t-tier-review-fg)', fontVariantNumeric: 'tabular-nums' }}>
+            {totalOutflow > 0 ? formatCurrency(totalOutflow) : '—'}
+          </span>
+          <span />
+          <span />
+        </div>
 
-            {/* Inflow */}
-            {!isProcessing && doc.inflow > 0 ? (
-              <span style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--t-tier-ready-fg)', fontVariantNumeric: 'tabular-nums' }}>
-                {formatCurrency(doc.inflow)}
-              </span>
-            ) : (
-              <span style={{ textAlign: 'right', color: 'var(--t-faint)' }}>—</span>
-            )}
+      </div>
 
-            {/* Outflow */}
-            {!isProcessing && doc.outflow > 0 ? (
-              <span style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--t-tier-review-fg)', fontVariantNumeric: 'tabular-nums' }}>
-                {formatCurrency(doc.outflow)}
-              </span>
-            ) : (
-              <span style={{ textAlign: 'right', color: 'var(--t-faint)' }}>—</span>
-            )}
+      {/* ── Mobile card list — visible on mobile only ── */}
+      <div className="block md:hidden">
+        {docs.map((doc, i) => {
+          const { label: statusLabel, tier } = STATUS[doc.status]
+          const ref = doc.refNumber ?? `#${doc.id.slice(0, 8)}`
+          const amount = doc.inflow > 0
+            ? formatCurrency(doc.inflow)
+            : doc.outflow > 0
+            ? formatCurrency(doc.outflow)
+            : null
+          const amountColor = doc.inflow > 0
+            ? 'var(--t-tier-ready-fg)'
+            : doc.outflow > 0
+            ? 'var(--t-tier-review-fg)'
+            : 'var(--t-faint)'
 
-            {/* Status chip — wrapped to prevent grid stretching */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                padding: '4px 12px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
-                ...tierStyle(tier),
-              }}>
+          return (
+            <div
+              key={doc.id}
+              onClick={() => onRowClick(doc)}
+              className="flex items-center justify-between px-4 py-3 cursor-pointer"
+              style={{
+                borderBottom: '1px solid var(--t-line-soft)',
+                background: i % 2 === 1 ? 'var(--t-card-alt)' : 'transparent',
+              }}
+            >
+              <div className="flex flex-col gap-[3px] min-w-0 pr-3">
+                <span className="font-bold text-[13.5px] text-t-ink truncate" style={{ maxWidth: 200 }}>
+                  {ref}
+                </span>
+                <span className="text-[12px] text-t-muted">
+                  {fmtDate(doc.createdAt)}
+                  {doc.isNoReceipt ? ' · Manual' : ' · Upload'}
+                  {amount && (
+                    <span style={{ color: amountColor }}>{` · ${amount}`}</span>
+                  )}
+                </span>
+              </div>
+              <span
+                className="flex-shrink-0 inline-flex items-center justify-center px-3 py-1 rounded-full text-[12px] font-bold whitespace-nowrap"
+                style={tierStyle(tier)}
+              >
                 {statusLabel}
               </span>
             </div>
-
-            {/* Note — no-wrap + ellipsis to keep rows single-height */}
-            <span style={{
-              fontSize: 13, color: note ? noteColor : 'var(--t-faint)', fontStyle: 'italic',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
-              {note || '—'}
-            </span>
-          </div>
-        )
-      })}
-
-      {/* ── Footer row ── */}
-      <div style={{
-        display:             'grid',
-        gridTemplateColumns: COLS,
-        columnGap:           16,
-        padding:             '14px 24px',
-        borderTop:           '2px solid var(--t-line)',
-        background:          'var(--t-card-alt)',
-      }}>
-        <span style={{ gridColumn: '1 / 4', fontSize: 13, fontWeight: 700, color: 'var(--t-muted)' }}>
-          {docs.length} {docs.length === 1 ? 'entry' : 'entries'}
-        </span>
-        <span style={{ textAlign: 'right', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 15, color: 'var(--t-tier-ready-fg)', fontVariantNumeric: 'tabular-nums' }}>
-          {totalInflow > 0 ? formatCurrency(totalInflow) : '—'}
-        </span>
-        <span style={{ textAlign: 'right', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 15, color: 'var(--t-tier-review-fg)', fontVariantNumeric: 'tabular-nums' }}>
-          {totalOutflow > 0 ? formatCurrency(totalOutflow) : '—'}
-        </span>
-        <span />
-        <span />
+          )
+        })}
       </div>
 
     </div>
