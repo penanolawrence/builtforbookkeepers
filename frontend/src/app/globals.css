@@ -64,3 +64,34 @@
   .sb-table tbody tr:last-child  td:first-child { border-radius: 0 0 0 10px; }
   .sb-table tbody tr:last-child  td:last-child  { border-radius: 0 0 10px 0; }
 }
+
+/* ── Dashboard mobile overrides ─────────────────────────────────────── */
+@media (max-width: 767px) {
+  .dashboard-root {
+    gap: 16px;
+  }
+
+  .dashboard-greeting {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+
+  .dashboard-mascot {
+    display: none !important;
+  }
+
+  .dashboard-stats {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-sidebar {
+    display: none !important;
+  }
+}

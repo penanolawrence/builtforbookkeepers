@@ -186,10 +186,10 @@ export default function ClientDashboard() {
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <div className="dashboard-root" style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
 
       {/* Greeting row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+      <div className="dashboard-greeting" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
         <div style={{ flex: 1 }}>
           <h1 style={{
             fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 34,
@@ -205,13 +205,13 @@ export default function ClientDashboard() {
             {parkedCount} parked
           </p>
         </div>
-        <div style={{ width: 430, flexShrink: 0 }}>
+        <div className="dashboard-mascot" style={{ width: 430, flexShrink: 0 }}>
           <MascotCompanion theme={theme} brief={mascotBrief} />
         </div>
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'flex', gap: 16 }}>
+      <div className="dashboard-stats" style={{ display: 'flex', gap: 16 }}>
         {statCards.map((card) => (
           <div key={card.label} style={{
             flex: 1, background: 'var(--t-card)', border: '1px solid var(--t-line)',
@@ -247,7 +247,7 @@ export default function ClientDashboard() {
       </div>
 
       {/* Bottom grid */}
-      <div style={{
+      <div className="dashboard-grid" style={{
         display: 'grid', gridTemplateColumns: '1fr 320px',
         gap: 16, alignItems: 'stretch',
       }}>
@@ -322,7 +322,7 @@ export default function ClientDashboard() {
         </div>
 
         {/* Sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, height: '100%' }}>
+        <div className="dashboard-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: 16, height: '100%' }}>
 
           {/* Recent Activity */}
           <div style={{
