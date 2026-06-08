@@ -53,43 +53,54 @@ export default function ClientReportsPage() {
     setPending(null)
   }
 
-  const cardCls  = 'bg-t-card border-[1.5px] border-t-line rounded-lg p-5 cursor-pointer hover:border-t-primary hover:shadow-[0_0_0_3px_#eef2ff] transition-all flex flex-col'
+  const cardCls  = 'bg-t-card border-[1.5px] border-t-line rounded-lg p-4 md:p-5 cursor-pointer hover:border-t-primary hover:shadow-[0_0_0_3px_#eef2ff] transition-all flex items-center gap-3 md:flex-col md:items-start md:gap-0'
   const inputCls = 'border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink bg-t-card w-full'
   const labelCls = 'text-[10px] font-bold uppercase tracking-wide text-t-muted mb-1 block'
 
   return (
-    <div>
+    <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
       <div className="mb-5">
-        <div className="text-lg font-bold text-t-ink tracking-tight">Reports</div>
-        <div className="text-xs text-t-faint mt-0.5">Read-only — your accountant handles BIR filing</div>
+        <h1
+          className="text-[28px] md:text-[34px] font-bold tracking-[-0.025em] text-t-ink m-0"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Reports
+        </h1>
+        <p className="text-[14px] text-t-muted mt-1">Read-only · your accountant handles BIR filing</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div onClick={() => openModal('income-statement')} className={cardCls}>
-          <div className="text-[28px] mb-3">📊</div>
-          <div className="text-sm font-bold text-t-ink mb-1">Income Statement</div>
-          <div className="text-xs text-t-muted leading-relaxed flex-1">
-            Compare your total income against expenses for any period. Shows net profit or loss.
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📊</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">Income Statement</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              Compare your total income against expenses for any period. Shows net profit or loss.
+            </div>
           </div>
-          <div className="mt-3.5 text-xs font-bold text-t-primary">View Report →</div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">View Report →</div>
         </div>
 
         <div onClick={() => openModal('expense-breakdown')} className={cardCls}>
-          <div className="text-[28px] mb-3">🧾</div>
-          <div className="text-sm font-bold text-t-ink mb-1">Expense Breakdown</div>
-          <div className="text-xs text-t-muted leading-relaxed flex-1">
-            See where your money went, grouped by expense category with percentage totals.
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">🧾</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">Expense Breakdown</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              See where your money went, grouped by expense category with percentage totals.
+            </div>
           </div>
-          <div className="mt-3.5 text-xs font-bold text-t-primary">View Report →</div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">View Report →</div>
         </div>
 
         <div onClick={() => openModal('bir')} className={cardCls}>
-          <div className="text-[28px] mb-3">📚</div>
-          <div className="text-sm font-bold text-t-ink mb-1">BIR Books</div>
-          <div className="text-xs text-t-muted leading-relaxed flex-1">
-            Cash books and journals formatted for BIR loose-leaf submission. For reference only.
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📚</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">BIR Books</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              Cash books and journals formatted for BIR loose-leaf submission. For reference only.
+            </div>
           </div>
-          <div className="mt-3.5 text-xs font-bold text-t-primary">Open Books →</div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Open Books →</div>
         </div>
       </div>
 
