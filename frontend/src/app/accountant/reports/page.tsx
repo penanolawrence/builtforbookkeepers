@@ -48,43 +48,54 @@ export default function AccountantReportsPage() {
     setPending(null)
   }
 
-  const cardCls  = 'bg-t-card border-[1.5px] border-t-line rounded-lg p-5 cursor-pointer hover:border-t-primary hover:shadow-[0_0_0_3px_#eef2ff] transition-all flex flex-col'
+  const cardCls  = 'bg-t-card border-[1.5px] border-t-line rounded-lg p-4 md:p-5 cursor-pointer hover:border-t-primary hover:shadow-[0_0_0_3px_#eef2ff] transition-all flex items-center gap-3 md:flex-col md:items-start md:gap-0'
   const inputCls = 'border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink bg-t-card w-full'
   const labelCls = 'text-[10px] font-bold uppercase tracking-wide text-t-muted mb-1 block'
 
   return (
-    <div className="max-w-[1100px] mx-auto p-6">
+    <div className="max-w-[1100px] mx-auto px-4 py-5 md:p-6">
       <div className="mb-5">
-        <div className="text-lg font-bold text-t-ink tracking-tight">Reports</div>
-        <div className="text-xs text-t-faint mt-0.5">Select a report to view for a client</div>
+        <h1
+          className="text-[28px] md:text-[34px] font-bold tracking-[-0.025em] text-t-ink m-0"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          Reports
+        </h1>
+        <p className="text-[14px] text-t-muted mt-1">Select a report to view for a client</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div onClick={() => openModal('income-statement')} className={cardCls}>
-          <div className="text-[28px] mb-3">📊</div>
-          <div className="text-sm font-bold text-t-ink mb-1">Income Statement</div>
-          <div className="text-xs text-t-muted leading-relaxed flex-1">
-            Revenue vs expenses for the selected period. Shows gross income, total expenses, and net income.
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📊</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">Income Statement</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              Revenue vs expenses for the selected period. Shows gross income, total expenses, and net income.
+            </div>
           </div>
-          <div className="mt-3.5 text-xs font-bold text-t-primary">View Report →</div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">View Report →</div>
         </div>
 
         <div onClick={() => openModal('expense-breakdown')} className={cardCls}>
-          <div className="text-[28px] mb-3">🧾</div>
-          <div className="text-sm font-bold text-t-ink mb-1">Expense Breakdown</div>
-          <div className="text-xs text-t-muted leading-relaxed flex-1">
-            Expenses by account category with totals. Useful for spotting over-spend by category.
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">🧾</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">Expense Breakdown</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              Expenses by account category with totals. Useful for spotting over-spend by category.
+            </div>
           </div>
-          <div className="mt-3.5 text-xs font-bold text-t-primary">View Report →</div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">View Report →</div>
         </div>
 
         <Link href="/accountant/reports/bir" className={cardCls}>
-          <div className="text-[28px] mb-3">📋</div>
-          <div className="text-sm font-bold text-t-ink mb-1">BIR Books</div>
-          <div className="text-xs text-t-muted leading-relaxed flex-1">
-            Official BIR books of account: CRB, CDB, General Journal, General Ledger.
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📋</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">BIR Books</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              Official BIR books of account: CRB, CDB, General Journal, General Ledger.
+            </div>
           </div>
-          <div className="mt-3.5 text-xs font-bold text-t-primary">View Book →</div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">View Book →</div>
         </Link>
       </div>
 
