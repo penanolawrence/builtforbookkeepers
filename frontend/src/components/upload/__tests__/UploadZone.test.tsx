@@ -26,7 +26,7 @@ describe('UploadZone — income', () => {
 
   it('does not render the count badge when count is undefined', () => {
     wrap({ declaredType: 'income' })
-    expect(screen.queryByText(/files/)).toBeNull()
+    expect(screen.queryByText(/^\d+ files$/)).toBeNull()
   })
 
   it('renders Browse files and Take photo buttons', () => {
