@@ -103,7 +103,7 @@ export default function UploadPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="flex gap-[14px] mb-[22px]">
+      <div className="grid grid-cols-3 gap-2 md:flex md:gap-[14px] mb-[22px]">
         <SummaryCard
           label="Income This Month"
           value={String(incomeCount)}

@@ -10,7 +10,7 @@ interface SummaryCardProps {
 export function SummaryCard({ label, value, subnote, valueStyle }: SummaryCardProps) {
   return (
     <div
-      className="flex-1 bg-t-card border border-t-line rounded-[16px] p-5"
+      className="flex-1 bg-t-card border border-t-line rounded-[16px] p-3 md:p-5"
       style={{ boxShadow: 'var(--t-shadow)' }}
     >
       <div className="text-[11px] font-bold text-t-faint uppercase tracking-[.06em] mb-2">
