@@ -94,4 +94,15 @@
   .dashboard-sidebar {
     display: none !important;
   }
+
+  .dashboard-recent-headers,
+  .dashboard-recent-row {
+    grid-template-columns: 1fr auto !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .dashboard-recent-date {
+    display: none !important;
+  }
 }

@@ -276,14 +276,14 @@ export default function ClientDashboard() {
           </div>
 
           {/* Column headers */}
-          <div style={{
+          <div className="dashboard-recent-headers" style={{
             display: 'grid', gridTemplateColumns: '1fr 100px 120px',
             padding: '10px 24px', borderBottom: '1px solid var(--t-line)',
             fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
             letterSpacing: '.06em', color: 'var(--t-faint)',
           }}>
             <span>File</span>
-            <span>Date</span>
+            <span className="dashboard-recent-date">Date</span>
             <span style={{ textAlign: 'center' }}>Status</span>
           </div>
 
@@ -298,7 +298,7 @@ export default function ClientDashboard() {
           ) : (
             <div>
               {recentDocs.map((doc, i) => (
-                <div key={doc.id} style={{
+                <div key={doc.id} className="dashboard-recent-row" style={{
                   display: 'grid', gridTemplateColumns: '1fr 100px 120px',
                   padding: '13px 24px', alignItems: 'center',
                   borderBottom: i < recentDocs.length - 1 ? '1px solid var(--t-line-soft)' : 'none',
@@ -309,7 +309,7 @@ export default function ClientDashboard() {
                   <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-ink)' }}>
                     {doc.refNumber ?? doc.merchantName ?? `${doc.declaredType} #${doc.id.slice(0, 6)}`}
                   </span>
-                  <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>
+                  <span className="dashboard-recent-date" style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>
                     {fmtShortDate(doc.createdAt)}
                   </span>
                   <span style={{ textAlign: 'center' }}>
