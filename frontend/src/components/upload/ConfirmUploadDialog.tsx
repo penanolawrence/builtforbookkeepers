@@ -55,7 +55,7 @@ export function ConfirmUploadDialog({ open, files, onConfirm, onCancel }: Props)
                 : 'bg-red-100 text-red-700'
               return (
                 <div
-                  key={i}
+                  key={`${file.name}-${file.size}-${i}`}
                   className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3"
                 >
                   <div className="text-xl">📄</div>
