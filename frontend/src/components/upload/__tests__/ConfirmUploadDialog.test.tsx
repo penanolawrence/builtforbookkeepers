@@ -78,6 +78,6 @@ describe('ConfirmUploadDialog', () => {
 
   it('does not render when open is false', () => {
     wrap({ open: false })
-    expect(screen.queryByText(/Upload \d/)).toBeNull()
+    expect(screen.queryByText(/Upload \d+ (Income|Expense) Document/)).toBeNull()
   })
 })
