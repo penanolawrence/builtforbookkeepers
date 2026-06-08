@@ -123,7 +123,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-9 py-7">
+    <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
       {toast && (
         <div className="fixed top-4 right-4 z-50 px-4 py-2.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg">
           {toast}
@@ -147,7 +147,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
       </div>
 
       {!isLoading && (
-        <div className="flex gap-[14px] mb-[22px]">
+        <div className="grid grid-cols-2 gap-3 md:flex md:gap-[14px] mb-[22px]">
           <SummaryCard label="Total Items" value={String(items.length)} subnote="in queue" />
           <SummaryCard
             label="RED Flags"
@@ -171,11 +171,11 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
       )}
 
       {/* Filter bar */}
-      <div className="flex gap-2.5 items-center mb-5 flex-wrap">
+      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-2.5 mb-5">
         <select
           value={clientFilter}
           onChange={(e) => setClientFilter(e.target.value)}
-          className="h-10 pl-3.5 pr-9 rounded-[11px] border-[1.5px] border-t-line bg-t-card text-[13.5px] font-semibold text-t-ink appearance-none"
+          className="h-10 w-full md:w-auto pl-3.5 pr-9 rounded-[11px] border-[1.5px] border-t-line bg-t-card text-[13.5px] font-semibold text-t-ink appearance-none"
         >
           <option value="">All Clients</option>
           {clients.map((c: ClientProfile) => (
@@ -185,7 +185,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
         <select
           value={flagFilter}
           onChange={(e) => setFlagFilter(e.target.value)}
-          className="h-10 pl-3.5 pr-9 rounded-[11px] border-[1.5px] border-t-line bg-t-card text-[13.5px] font-semibold text-t-ink appearance-none"
+          className="h-10 w-full md:w-auto pl-3.5 pr-9 rounded-[11px] border-[1.5px] border-t-line bg-t-card text-[13.5px] font-semibold text-t-ink appearance-none"
         >
           <option value="">All Flags</option>
           <option value="RED">RED</option>
@@ -196,7 +196,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
           <select
             value={accountantFilter}
             onChange={(e) => setAccountantFilter(e.target.value)}
-            className="h-10 pl-3.5 pr-9 rounded-[11px] border-[1.5px] border-t-line bg-t-card text-[13.5px] font-semibold text-t-ink appearance-none"
+            className="h-10 w-full md:w-auto pl-3.5 pr-9 rounded-[11px] border-[1.5px] border-t-line bg-t-card text-[13.5px] font-semibold text-t-ink appearance-none"
           >
             <option value="">All Accountants</option>
             {accountants.map((a) => (
@@ -204,11 +204,11 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
             ))}
           </select>
         )}
-        <div className="flex-1" />
+        <div className="hidden md:block flex-1" />
         <button
           onClick={handleBatchApprove}
           disabled={selected.size === 0 || approving}
-          className="flex items-center gap-2 rounded-[12px] px-5 py-3 text-[14px] font-bold text-white disabled:opacity-40"
+          className="flex items-center justify-center gap-2 w-full md:w-auto rounded-[12px] px-5 py-3 text-[14px] font-bold text-white disabled:opacity-40"
           style={{
             background: 'linear-gradient(150deg, var(--t-primary), var(--t-primary-deep))',
             boxShadow: '0 12px 22px -12px var(--t-primary)',
@@ -285,143 +285,202 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
               <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>No items in the queue.</div>
             ) : (
               <>
-                {/* Column headers */}
-                <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}>
-                  {COL_HEADERS.map(({ label, align, color }, idx) => (
-                    <span key={idx} style={{
-                      fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-                      letterSpacing: '.06em', color, textAlign: align,
-                      overflow: 'hidden', whiteSpace: 'nowrap',
-                    }}>
-                      {label}
-                    </span>
-                  ))}
+                {/* ── Desktop table — hidden on mobile ── */}
+                <div className="hidden md:block">
+                  {/* Column headers */}
+                  <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}>
+                    {COL_HEADERS.map(({ label, align, color }, idx) => (
+                      <span key={idx} style={{
+                        fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                        letterSpacing: '.06em', color, textAlign: align,
+                        overflow: 'hidden', whiteSpace: 'nowrap',
+                      }}>
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Data rows — RED then YELLOW then GREEN, no section banners */}
+                  {allRows.map((item) => {
+                    const flagTier = item.flag === 'RED' ? 'review' : item.flag === 'YELLOW' ? 'check' : null
+                    const isGreen  = item.flag === 'GREEN'
+                    const gIdx     = isGreen ? greenIndex++ : 0
+                    const isHovered = hoveredId === item.documentId
+
+                    const rowBg = flagTier
+                      ? `var(--t-tier-${flagTier}-bg)`
+                      : isHovered
+                      ? 'var(--t-primary-soft)'
+                      : gIdx % 2 === 1 ? 'var(--t-card-alt)' : 'transparent'
+
+                    const inflow  = item.declaredType === 'income'  ? item.amount : null
+                    const outflow = item.declaredType === 'expense' ? item.amount : null
+
+                    return (
+                      <div
+                        key={item.documentId}
+                        onMouseEnter={() => setHoveredId(item.documentId)}
+                        onMouseLeave={() => setHoveredId(null)}
+                        onClick={() => setReviewingId(item.documentId)}
+                        style={{
+                          display: 'grid', gridTemplateColumns: COLS,
+                          columnGap: 16,
+                          padding: '13px 24px', alignItems: 'center',
+                          borderBottom: '1px solid var(--t-line-soft)',
+                          transition: 'background 0.14s',
+                          background: rowBg,
+                          cursor: 'pointer',
+                          boxShadow: flagTier
+                            ? `inset 3px 0 0 var(--t-tier-${flagTier}-fg)`
+                            : 'inset 3px 0 0 transparent',
+                        }}
+                      >
+                        {/* Checkbox — only GREEN rows */}
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                          {isGreen ? (
+                            <input
+                              type="checkbox"
+                              checked={selected.has(item.documentId)}
+                              onChange={() => toggleSelect(item.documentId)}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ width: 14, height: 14, cursor: 'pointer', accentColor: 'var(--t-primary)' }}
+                            />
+                          ) : <span />}
+                        </div>
+
+                        {/* Flag chip */}
+                        <div style={{ display: 'flex' }}>
+                          {(() => {
+                            const chipMap = { RED: { label: '⚠ RED', tier: 'review' }, YELLOW: { label: '● YEL', tier: 'check' }, GREEN: { label: '✓ GRN', tier: 'ready' } }
+                            const { label, tier } = chipMap[item.flag]
+                            return (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                                background: `var(--t-tier-${tier}-bg)`, color: `var(--t-tier-${tier}-fg)`,
+                                border: `1px solid var(--t-tier-${tier}-ring)`, whiteSpace: 'nowrap',
+                              }}>{label}</span>
+                            )
+                          })()}
+                        </div>
+
+                        {/* Client */}
+                        <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 12 }}>
+                          {item.clientName}
+                        </span>
+
+                        {/* Reference */}
+                        <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.refNumber ?? '—'}
+                        </span>
+
+                        {/* Type chip */}
+                        <div style={{ display: 'flex' }}>
+                          {item.declaredType ? (() => {
+                            const tier = item.declaredType === 'income' ? 'ready' : 'review'
+                            return (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                padding: '3px 10px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
+                                background: `var(--t-tier-${tier}-bg)`, color: `var(--t-tier-${tier}-fg)`,
+                                border: `1px solid var(--t-tier-${tier}-ring)`,
+                              }}>
+                                {item.declaredType === 'income' ? 'Income' : 'Expense'}
+                              </span>
+                            )
+                          })() : <span style={{ color: 'var(--t-faint)' }}>—</span>}
+                        </div>
+
+                        {/* Inflow */}
+                        {inflow != null && inflow > 0 ? (
+                          <span style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--t-tier-ready-fg)', fontVariantNumeric: 'tabular-nums' }}>
+                            {fmtAmount(inflow)}
+                          </span>
+                        ) : (
+                          <span style={{ textAlign: 'right', color: 'var(--t-faint)' }}>—</span>
+                        )}
+
+                        {/* Outflow */}
+                        {outflow != null && outflow > 0 ? (
+                          <span style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--t-tier-review-fg)', fontVariantNumeric: 'tabular-nums' }}>
+                            {fmtAmount(outflow)}
+                          </span>
+                        ) : (
+                          <span style={{ textAlign: 'right', color: 'var(--t-faint)' }}>—</span>
+                        )}
+
+                        {/* Uploaded */}
+                        <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>
+                          {fmtDate(item.date)}
+                        </span>
+
+                        {/* Accountant (admin only) */}
+                        {showAccountant && (
+                          <span style={{ fontSize: 13, color: 'var(--t-muted)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {item.accountantName ?? '—'}
+                          </span>
+                        )}
+
+                      </div>
+                    )
+                  })}
                 </div>
 
-                {/* Data rows — RED then YELLOW then GREEN, no section banners */}
-                {allRows.map((item) => {
-                  const flagTier = item.flag === 'RED' ? 'review' : item.flag === 'YELLOW' ? 'check' : null
-                  const isGreen  = item.flag === 'GREEN'
-                  const gIdx     = isGreen ? greenIndex++ : 0
-                  const isHovered = hoveredId === item.documentId
+                {/* ── Mobile cards — visible on mobile only ── */}
+                <div className="block md:hidden">
+                  {allRows.map((item) => {
+                    const flagTier  = item.flag === 'RED' ? 'review' : item.flag === 'YELLOW' ? 'check' : 'ready'
+                    const chipMap   = { RED: { label: '⚠ RED', tier: 'review' }, YELLOW: { label: '● YEL', tier: 'check' }, GREEN: { label: '✓ GRN', tier: 'ready' } }
+                    const { label: flagLabel, tier: chipTier } = chipMap[item.flag]
+                    const amount    = item.amount != null && item.amount > 0 ? fmtAmount(item.amount) : null
+                    const amtColor  = item.declaredType === 'income' ? 'var(--t-tier-ready-fg)' : 'var(--t-tier-review-fg)'
+                    const isGreen   = item.flag === 'GREEN'
 
-                  const rowBg = flagTier
-                    ? `var(--t-tier-${flagTier}-bg)`
-                    : isHovered
-                    ? 'var(--t-primary-soft)'
-                    : gIdx % 2 === 1 ? 'var(--t-card-alt)' : 'transparent'
-
-                  const inflow  = item.declaredType === 'income'  ? item.amount : null
-                  const outflow = item.declaredType === 'expense' ? item.amount : null
-
-                  return (
-                    <div
-                      key={item.documentId}
-                      onMouseEnter={() => setHoveredId(item.documentId)}
-                      onMouseLeave={() => setHoveredId(null)}
-                      onClick={() => setReviewingId(item.documentId)}
-                      style={{
-                        display: 'grid', gridTemplateColumns: COLS,
-                        columnGap: 16,
-                        padding: '13px 24px', alignItems: 'center',
-                        borderBottom: '1px solid var(--t-line-soft)',
-                        transition: 'background 0.14s',
-                        background: rowBg,
-                        cursor: 'pointer',
-                        boxShadow: flagTier
-                          ? `inset 3px 0 0 var(--t-tier-${flagTier}-fg)`
-                          : 'inset 3px 0 0 transparent',
-                      }}
-                    >
-                      {/* Checkbox — only GREEN rows */}
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        {isGreen ? (
+                    return (
+                      <div
+                        key={item.documentId}
+                        onClick={() => setReviewingId(item.documentId)}
+                        className="flex items-center gap-3 px-4 py-3 cursor-pointer"
+                        style={{
+                          borderBottom: '1px solid var(--t-line-soft)',
+                          background: item.flag !== 'GREEN' ? `var(--t-tier-${flagTier}-bg)` : 'transparent',
+                          boxShadow: item.flag !== 'GREEN' ? `inset 3px 0 0 var(--t-tier-${flagTier}-fg)` : 'inset 3px 0 0 transparent',
+                        }}
+                      >
+                        {/* Checkbox for GREEN */}
+                        {isGreen && (
                           <input
                             type="checkbox"
                             checked={selected.has(item.documentId)}
                             onChange={() => toggleSelect(item.documentId)}
                             onClick={(e) => e.stopPropagation()}
-                            style={{ width: 14, height: 14, cursor: 'pointer', accentColor: 'var(--t-primary)' }}
+                            style={{ width: 14, height: 14, cursor: 'pointer', accentColor: 'var(--t-primary)', flexShrink: 0 }}
                           />
-                        ) : <span />}
+                        )}
+                        {/* Flag chip */}
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          padding: '3px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0,
+                          background: `var(--t-tier-${chipTier}-bg)`, color: `var(--t-tier-${chipTier}-fg)`,
+                          border: `1px solid var(--t-tier-${chipTier}-ring)`,
+                        }}>{flagLabel}</span>
+                        {/* Main content */}
+                        <div className="flex-1 min-w-0 flex flex-col gap-[3px]">
+                          <span className="font-bold text-[13px] text-t-ink truncate">{item.clientName}</span>
+                          <span className="text-[11.5px] text-t-muted">
+                            {item.refNumber ?? '—'} · {item.declaredType ?? '—'} · {fmtDate(item.date)}
+                          </span>
+                        </div>
+                        {/* Amount */}
+                        {amount && (
+                          <span className="text-[13px] font-bold flex-shrink-0" style={{ color: amtColor }}>
+                            {amount}
+                          </span>
+                        )}
                       </div>
-
-                      {/* Flag chip */}
-                      <div style={{ display: 'flex' }}>
-                        {(() => {
-                          const chipMap = { RED: { label: '⚠ RED', tier: 'review' }, YELLOW: { label: '● YEL', tier: 'check' }, GREEN: { label: '✓ GRN', tier: 'ready' } }
-                          const { label, tier } = chipMap[item.flag]
-                          return (
-                            <span style={{
-                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                              padding: '3px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                              background: `var(--t-tier-${tier}-bg)`, color: `var(--t-tier-${tier}-fg)`,
-                              border: `1px solid var(--t-tier-${tier}-ring)`, whiteSpace: 'nowrap',
-                            }}>{label}</span>
-                          )
-                        })()}
-                      </div>
-
-                      {/* Client */}
-                      <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 12 }}>
-                        {item.clientName}
-                      </span>
-
-                      {/* Reference */}
-                      <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {item.refNumber ?? '—'}
-                      </span>
-
-                      {/* Type chip */}
-                      <div style={{ display: 'flex' }}>
-                        {item.declaredType ? (() => {
-                          const tier = item.declaredType === 'income' ? 'ready' : 'review'
-                          return (
-                            <span style={{
-                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                              padding: '3px 10px', borderRadius: 8, fontSize: 12.5, fontWeight: 600,
-                              background: `var(--t-tier-${tier}-bg)`, color: `var(--t-tier-${tier}-fg)`,
-                              border: `1px solid var(--t-tier-${tier}-ring)`,
-                            }}>
-                              {item.declaredType === 'income' ? 'Income' : 'Expense'}
-                            </span>
-                          )
-                        })() : <span style={{ color: 'var(--t-faint)' }}>—</span>}
-                      </div>
-
-                      {/* Inflow */}
-                      {inflow != null && inflow > 0 ? (
-                        <span style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--t-tier-ready-fg)', fontVariantNumeric: 'tabular-nums' }}>
-                          {fmtAmount(inflow)}
-                        </span>
-                      ) : (
-                        <span style={{ textAlign: 'right', color: 'var(--t-faint)' }}>—</span>
-                      )}
-
-                      {/* Outflow */}
-                      {outflow != null && outflow > 0 ? (
-                        <span style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--t-tier-review-fg)', fontVariantNumeric: 'tabular-nums' }}>
-                          {fmtAmount(outflow)}
-                        </span>
-                      ) : (
-                        <span style={{ textAlign: 'right', color: 'var(--t-faint)' }}>—</span>
-                      )}
-
-                      {/* Uploaded */}
-                      <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>
-                        {fmtDate(item.date)}
-                      </span>
-
-                      {/* Accountant (admin only) */}
-                      {showAccountant && (
-                        <span style={{ fontSize: 13, color: 'var(--t-muted)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {item.accountantName ?? '—'}
-                        </span>
-                      )}
-
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </>
             )}
           </div>
@@ -429,7 +488,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
       })()}
 
       {selected.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-t-card border-t border-t-line shadow-lg">
+        <div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-40 bg-t-card border-t border-t-line shadow-lg">
           <div className="max-w-[1100px] mx-auto px-6 py-3 flex items-center justify-between">
             <span className="text-sm text-t-muted">
               <span className="font-semibold text-t-ink">{selected.size}</span> GREEN {selected.size === 1 ? 'item' : 'items'} selected
