@@ -15,7 +15,7 @@ const ZONE_CONFIG = {
     arrow: '↑',
     chipBg: '#DCFCE7',
     chipFg: '#15803D',
-    dropHint: 'Upload your income document',
+    dropHint: 'Drop income documents here',
   },
   expense: {
     label: 'Expense',
@@ -23,7 +23,7 @@ const ZONE_CONFIG = {
     arrow: '↓',
     chipBg: '#FEE2E2',
     chipFg: '#B91C1C',
-    dropHint: 'Upload your expense document',
+    dropHint: 'Drop expense documents here',
   },
 }
 
@@ -144,7 +144,7 @@ export function UploadZone({ declaredType, onFilesSelect, count }: UploadZonePro
 
       {errors.length > 0 && (
         <div className="mx-3 mb-3 text-[11px] text-red-600">
-          {errors.length} rejected: {errors.map((e) => e.split(' — ')[1]).join(', ')}
+          {errors.length} rejected: {errors.join(' · ')}
         </div>
       )}
 
@@ -160,7 +160,6 @@ export function UploadZone({ declaredType, onFilesSelect, count }: UploadZonePro
       <input
         ref={cameraInputRef}
         type="file"
-        multiple
         accept="image/*"
         capture="environment"
         className="hidden"

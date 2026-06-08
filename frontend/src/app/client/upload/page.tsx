@@ -20,6 +20,7 @@ export default function UploadPage() {
     file: File
     declaredType: DeclaredType
   }>>([])
+  const [uploading, setUploading] = useState(false)
 
   const { data: allDocs = [] } = useQuery({
     queryKey: ['client-documents-upload'],
@@ -40,12 +41,14 @@ export default function UploadPage() {
   )
 
   function handleFilePicked(files: File[], declaredType: DeclaredType) {
+    if (uploading) return
     setPendingFiles(files.map((file) => ({ file, declaredType })))
   }
 
   async function handleConfirmUpload(note: string) {
     const batch = pendingFiles
     setPendingFiles([])
+    setUploading(true)
     const failed: string[] = []
     for (const { file, declaredType } of batch) {
       try {
@@ -54,13 +57,14 @@ export default function UploadPage() {
         failed.push(file.name)
       }
     }
+    setUploading(false)
     queryClient.invalidateQueries({ queryKey: ['client-documents-upload'] })
     if (failed.length > 0) {
       const total = batch.length
       toast({
         title: failed.length === total
           ? 'Upload failed — please try again.'
-          : `${total - failed.length} of ${total} uploaded. ${failed.length} failed — please try again.`,
+          : `${failed.length} of ${total} uploads failed — please try again.`,
         variant: 'destructive',
       })
     }
