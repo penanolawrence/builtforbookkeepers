@@ -10,22 +10,16 @@ const MAX_SIZE = 10 * 1024 * 1024
 
 const ZONE_CONFIG = {
   income: {
-    name: 'Income',
     label: 'Income',
     sub: 'Sales receipts, invoices received',
-    hint: 'Drop income documents here',
-    description: 'Official receipts, invoices received, sales records',
     arrow: '↑',
     chipBg: '#DCFCE7',
     chipFg: '#15803D',
     dropHint: 'Upload your income document',
   },
   expense: {
-    name: 'Expense',
     label: 'Expense',
     sub: 'Purchase receipts, utility bills',
-    hint: 'Drop expense documents here',
-    description: 'Receipts paid, supplier invoices, disbursements',
     arrow: '↓',
     chipBg: '#FEE2E2',
     chipFg: '#B91C1C',
@@ -35,28 +29,37 @@ const ZONE_CONFIG = {
 
 interface UploadZoneProps {
   declaredType: DeclaredType
-  onFileSelect: (file: File) => void
+  onFilesSelect: (files: File[]) => void
   count?: number
 }
 
-export function UploadZone({ declaredType, onFileSelect, count }: UploadZoneProps) {
+function validateFiles(files: File[]): { valid: File[]; errors: string[] } {
+  const valid: File[] = []
+  const errors: string[] = []
+  for (const file of files) {
+    if (file.size > MAX_SIZE) {
+      errors.push(`${file.name} — File too large (max 10MB)`)
+    } else if (!ACCEPTED_TYPES.includes(file.type)) {
+      errors.push(`${file.name} — only JPG, PNG, PDF accepted`)
+    } else {
+      valid.push(file)
+    }
+  }
+  return { valid, errors }
+}
+
+export function UploadZone({ declaredType, onFilesSelect, count }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [errors, setErrors] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const config = ZONE_CONFIG[declaredType]
 
-  function validate(file: File): string | null {
-    if (file.size > MAX_SIZE) return 'File too large (max 10MB)'
-    if (!ACCEPTED_TYPES.includes(file.type)) return 'Only JPG, PNG, PDF accepted'
-    return null
-  }
-
-  function handleFile(file: File) {
-    const err = validate(file)
-    if (err) { setError(err); return }
-    setError(null)
-    onFileSelect(file)
+  function handleFiles(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return
+    const { valid, errors: errs } = validateFiles(Array.from(fileList))
+    setErrors(errs)
+    if (valid.length > 0) onFilesSelect(valid)
   }
 
   const onDragOver = (e: DragEvent) => { e.preventDefault(); setIsDragging(true) }
@@ -64,8 +67,7 @@ export function UploadZone({ declaredType, onFileSelect, count }: UploadZoneProp
   const onDrop = (e: DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
+    handleFiles(e.dataTransfer.files)
   }
 
   return (
@@ -114,7 +116,7 @@ export function UploadZone({ declaredType, onFileSelect, count }: UploadZoneProp
           <Upload className="h-5 w-5" />
         </div>
         <div className="text-[12.5px] font-bold text-t-ink mb-1">
-          Drop file here or click to browse
+          Drop files here or click to browse
         </div>
         <div className="text-[11px] text-t-muted mb-3.5">{config.dropHint}</div>
         <div className="flex gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
@@ -137,35 +139,32 @@ export function UploadZone({ declaredType, onFileSelect, count }: UploadZoneProp
 
       {/* Formats hint */}
       <div className="text-[10px] text-t-faint text-center mx-3 mb-3">
-        Accepts JPG, PNG, PDF · max 10 MB
+        Accepts JPG, PNG, PDF · max 10 MB · multiple files supported
       </div>
 
-      {error && (
-        <div className="mx-3 mb-3 text-[11px] text-red-600">{error}</div>
+      {errors.length > 0 && (
+        <div className="mx-3 mb-3 text-[11px] text-red-600">
+          {errors.length} rejected: {errors.map((e) => e.split(' — ')[1]).join(', ')}
+        </div>
       )}
 
       <input
         ref={fileInputRef}
+        data-testid="file-browse-input"
         type="file"
+        multiple
         accept=".jpg,.jpeg,.png,.pdf"
         className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0]
-          if (file) handleFile(file)
-          e.target.value = ''
-        }}
+        onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }}
       />
       <input
         ref={cameraInputRef}
         type="file"
+        multiple
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0]
-          if (file) handleFile(file)
-          e.target.value = ''
-        }}
+        onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }}
       />
     </div>
   )
