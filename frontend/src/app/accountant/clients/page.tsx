@@ -53,7 +53,7 @@ export default function AccountantClientsPage() {
   }).length
 
   return (
-    <div className="max-w-[1280px] mx-auto px-9 py-7">
+    <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
       <Breadcrumb crumbs={[{ label: 'Dashboard', href: '/accountant' }, { label: 'My Clients' }]} />
 
       <div className="flex items-start justify-between mb-[22px]">
@@ -68,7 +68,7 @@ export default function AccountantClientsPage() {
       </div>
 
       {!isLoading && (
-        <div className="flex gap-[14px] mb-[22px]">
+        <div className="grid grid-cols-2 gap-3 md:flex md:gap-[14px] mb-[22px]">
           <SummaryCard label="Total Clients" value={String(clients?.length ?? 0)} subnote="assigned to you" />
           <SummaryCard label="Need Attention" value={String(needAttention)} subnote="have RED flags" valueStyle={{ color: 'var(--t-tier-review-fg)' }} />
           <SummaryCard label="Pending Review" value={String(pendingReview)} subnote="total flagged items" valueStyle={{ color: 'var(--t-tier-check-fg)' }} />
@@ -78,7 +78,7 @@ export default function AccountantClientsPage() {
 
       {/* Search + count */}
       <div className="flex gap-2.5 items-center mb-5">
-        <div className="flex items-center gap-2 h-10 px-3.5 border-[1.5px] border-t-line rounded-[11px] bg-t-card w-72">
+        <div className="flex items-center gap-2 h-10 px-3.5 border-[1.5px] border-t-line rounded-[11px] bg-t-card w-full md:w-72">
           <Search className="h-4 w-4 text-t-faint flex-none" />
           <input
             type="text"
@@ -145,58 +145,75 @@ export default function AccountantClientsPage() {
               <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>No clients found.</div>
             ) : (
               <>
-                {/* Column headers */}
-                <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}>
-                  {COL_HEADERS.map(({ label, align, color }) => (
-                    <span key={label} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color, textAlign: align, overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      {label}
-                    </span>
-                  ))}
+                {/* ── Desktop table ── */}
+                <div className="hidden md:block">
+                  <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}>
+                    {COL_HEADERS.map(({ label, align, color }) => (
+                      <span key={label} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color, textAlign: align, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                  {filtered.map((c: ClientProfile, i: number) => {
+                    const counts    = queueCountsForClient(c.id, queue ?? [])
+                    const isFlagged = counts.red > 0
+                    const isHovered = hoveredId === c.id
+                    const rowBg     = isHovered ? 'var(--t-primary-soft)' : i % 2 === 1 ? 'var(--t-card-alt)' : 'transparent'
+                    return (
+                      <div
+                        key={c.id}
+                        onClick={() => setSelectedClient(c)}
+                        onMouseEnter={() => setHoveredId(c.id)}
+                        onMouseLeave={() => setHoveredId(null)}
+                        style={{
+                          display: 'grid', gridTemplateColumns: COLS, columnGap: 16,
+                          padding: '13px 24px', alignItems: 'center',
+                          borderBottom: '1px solid var(--t-line-soft)',
+                          cursor: 'pointer', transition: 'background 0.14s',
+                          background: rowBg,
+                          boxShadow: isFlagged ? 'inset 3px 0 0 var(--t-tier-review-fg)' : 'inset 3px 0 0 transparent',
+                        }}
+                      >
+                        <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 16 }}>{c.name}</span>
+                        <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>{c.birType === 'vat' ? 'VAT' : 'Non-VAT'}</span>
+                        <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500, textTransform: 'capitalize' }}>{c.plan}</span>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}><CountBadge n={counts.red}    tier="review" /></div>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}><CountBadge n={counts.yellow} tier="check"  /></div>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}><CountBadge n={counts.green}  tier="ready"  /></div>
+                      </div>
+                    )
+                  })}
                 </div>
 
-                {/* Data rows */}
-                {filtered.map((c: ClientProfile, i: number) => {
-                  const counts    = queueCountsForClient(c.id, queue ?? [])
-                  const isFlagged = counts.red > 0
-                  const isHovered = hoveredId === c.id
-                  const rowBg     = isHovered ? 'var(--t-primary-soft)' : i % 2 === 1 ? 'var(--t-card-alt)' : 'transparent'
-
-                  return (
-                    <div
-                      key={c.id}
-                      onClick={() => setSelectedClient(c)}
-                      onMouseEnter={() => setHoveredId(c.id)}
-                      onMouseLeave={() => setHoveredId(null)}
-                      style={{
-                        display: 'grid', gridTemplateColumns: COLS, columnGap: 16,
-                        padding: '13px 24px', alignItems: 'center',
-                        borderBottom: '1px solid var(--t-line-soft)',
-                        cursor: 'pointer', transition: 'background 0.14s',
-                        background: rowBg,
-                        boxShadow: isFlagged ? 'inset 3px 0 0 var(--t-tier-review-fg)' : 'inset 3px 0 0 transparent',
-                      }}
-                    >
-                      <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--t-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: 16 }}>
-                        {c.name}
-                      </span>
-                      <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>
-                        {c.birType === 'vat' ? 'VAT' : 'Non-VAT'}
-                      </span>
-                      <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500, textTransform: 'capitalize' }}>
-                        {c.plan}
-                      </span>
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <CountBadge n={counts.red}    tier="review" />
+                {/* ── Mobile cards ── */}
+                <div className="block md:hidden">
+                  {filtered.map((c: ClientProfile, i: number) => {
+                    const counts    = queueCountsForClient(c.id, queue ?? [])
+                    const isFlagged = counts.red > 0
+                    return (
+                      <div
+                        key={c.id}
+                        onClick={() => setSelectedClient(c)}
+                        className="flex items-center justify-between px-4 py-3 cursor-pointer"
+                        style={{
+                          borderBottom: '1px solid var(--t-line-soft)',
+                          background: i % 2 === 1 ? 'var(--t-card-alt)' : 'transparent',
+                          boxShadow: isFlagged ? 'inset 3px 0 0 var(--t-tier-review-fg)' : 'inset 3px 0 0 transparent',
+                        }}
+                      >
+                        <div className="flex flex-col gap-[3px] min-w-0 pr-3">
+                          <span className="font-bold text-[13.5px] text-t-ink truncate">{c.name}</span>
+                          <span className="text-[12px] text-t-muted capitalize">{c.birType === 'vat' ? 'VAT' : 'Non-VAT'} · {c.plan}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <CountBadge n={counts.red}    tier="review" />
+                          <CountBadge n={counts.yellow} tier="check"  />
+                          <CountBadge n={counts.green}  tier="ready"  />
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <CountBadge n={counts.yellow} tier="check" />
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <CountBadge n={counts.green}  tier="ready" />
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </>
             )}
           </div>
