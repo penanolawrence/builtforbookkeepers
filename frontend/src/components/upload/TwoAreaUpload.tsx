@@ -6,7 +6,7 @@ import { ManualEntryForm } from './ManualEntryForm'
 import type { DeclaredType } from '@/types/document'
 
 interface Props {
-  onFilePicked: (file: File, declaredType: DeclaredType) => void
+  onFilePicked: (files: File[], declaredType: DeclaredType) => void
   onManualSuccess: (documentId: string) => void
   incomeCount?: number
   expenseCount?: number
@@ -20,12 +20,12 @@ export function TwoAreaUpload({ onFilePicked, onManualSuccess, incomeCount, expe
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <UploadZone
           declaredType="income"
-          onFileSelect={(file) => onFilePicked(file, 'income')}
+          onFilesSelect={(files) => onFilePicked(files, 'income')}
           count={incomeCount}
         />
         <UploadZone
           declaredType="expense"
-          onFileSelect={(file) => onFilePicked(file, 'expense')}
+          onFilesSelect={(files) => onFilePicked(files, 'expense')}
           count={expenseCount}
         />
       </div>
