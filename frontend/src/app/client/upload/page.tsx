@@ -16,10 +16,10 @@ export default function UploadPage() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
-  const [pendingUpload, setPendingUpload] = useState<{
+  const [pendingFiles, setPendingFiles] = useState<Array<{
     file: File
     declaredType: DeclaredType
-  } | null>(null)
+  }>>([])
 
   const { data: allDocs = [] } = useQuery({
     queryKey: ['client-documents-upload'],
@@ -39,19 +39,30 @@ export default function UploadPage() {
     ['PROCESSING', 'PARKED', 'RETURNED'].includes(d.status)
   )
 
-  function handleFilePicked(file: File, declaredType: DeclaredType) {
-    setPendingUpload({ file, declaredType })
+  function handleFilePicked(files: File[], declaredType: DeclaredType) {
+    setPendingFiles(files.map((file) => ({ file, declaredType })))
   }
 
   async function handleConfirmUpload(note: string) {
-    if (!pendingUpload) return
-    const { file, declaredType } = pendingUpload
-    setPendingUpload(null)
-    try {
-      await uploadDocument(file, declaredType, note || undefined)
-      queryClient.invalidateQueries({ queryKey: ['client-documents-upload'] })
-    } catch {
-      toast({ title: 'Upload failed', description: 'Please try again.', variant: 'destructive' })
+    const batch = pendingFiles
+    setPendingFiles([])
+    const failed: string[] = []
+    for (const { file, declaredType } of batch) {
+      try {
+        await uploadDocument(file, declaredType, note || undefined)
+      } catch {
+        failed.push(file.name)
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['client-documents-upload'] })
+    if (failed.length > 0) {
+      const total = batch.length
+      toast({
+        title: failed.length === total
+          ? 'Upload failed — please try again.'
+          : `${total - failed.length} of ${total} uploaded. ${failed.length} failed — please try again.`,
+        variant: 'destructive',
+      })
     }
   }
 
@@ -132,11 +143,10 @@ export default function UploadPage() {
       />
 
       <ConfirmUploadDialog
-        open={pendingUpload !== null}
-        file={pendingUpload?.file ?? null}
-        declaredType={pendingUpload?.declaredType ?? 'income'}
+        open={pendingFiles.length > 0}
+        files={pendingFiles}
         onConfirm={handleConfirmUpload}
-        onCancel={() => setPendingUpload(null)}
+        onCancel={() => setPendingFiles([])}
       />
 
       <div className="mt-4">
