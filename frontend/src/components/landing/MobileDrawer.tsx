@@ -20,7 +20,7 @@ export function MobileDrawer() {
         <span />
       </button>
 
-      <div className={`ld-drawer${open ? ' ld-drawer--open' : ''}`} role="dialog" aria-label="Navigation menu">
+      <div className={`ld-drawer${open ? ' ld-drawer--open' : ''}`} role="navigation" aria-label="Site navigation">
         <a href="#how-it-works" className="ld-drawer__link" onClick={() => setOpen(false)}>How it works</a>
         <a href="#pricing"      className="ld-drawer__link" onClick={() => setOpen(false)}>Pricing</a>
         <a href="#faq"          className="ld-drawer__link" onClick={() => setOpen(false)}>FAQ</a>

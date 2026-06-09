@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Bricolage_Grotesque, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
-import './landing.css'
 import { QueryProvider } from '@/lib/providers/QueryProvider'
 import { SocketProvider } from '@/lib/socket/SocketProvider'
 import { Toaster } from '@/components/ui/toaster'

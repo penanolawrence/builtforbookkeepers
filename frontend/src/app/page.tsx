@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import './landing.css'
 import { LandingNav }          from '@/components/landing/LandingNav'
 import { HeroSection }         from '@/components/landing/HeroSection'
 import { ProblemsSection }     from '@/components/landing/ProblemsSection'
