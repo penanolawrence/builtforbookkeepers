@@ -358,16 +358,6 @@ html { scroll-behavior: smooth; }
   font-size: 11px; color: var(--t-ink); line-height: 1.4; white-space: nowrap;
 }
 
-/* ── Mascot banner ── */
-.ld-mascot-banner {
-  display: flex; align-items: center; gap: 18px;
-  background: var(--t-primary-soft); border: 1px solid var(--t-line);
-  border-radius: 18px; padding: 20px 24px;
-  box-shadow: var(--t-shadow);
-}
-.ld-mascot-banner__name { font-size: 13px; font-weight: 700; color: var(--t-primary); margin: 0 0 4px; }
-.ld-mascot-banner__line { font-size: 14px; color: var(--t-ink); line-height: 1.55; margin: 0; }
-
 /* ── Pricing ── */
 .ld-pricing__card {
   background: var(--t-card); border: 2px solid var(--t-primary);
