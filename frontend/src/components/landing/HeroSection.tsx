@@ -1,5 +1,5 @@
 // src/components/landing/HeroSection.tsx
-import PugMascot from '@/components/login/PugMascot'
+import { ReviewQueueMockup } from '@/components/landing/ReviewQueueMockup'
 
 export function HeroSection() {
   return (
@@ -7,28 +7,25 @@ export function HeroSection() {
       <div className="ld-hero__copy">
         <p className="ld-hero__badge">✦ Built for Philippine Bookkeepers</p>
         <h1 id="hero-heading" className="ld-hero__h1">
-          Take on more clients<br />without adding more hours
+          Take on more clients,<br />
+          <em>not more hours</em>
         </h1>
         <p className="ld-hero__sub">
-          Sofia Books organizes your clients&rsquo; receipts, flags what needs your
-          attention, and generates your BIR books on demand — so you can grow your
-          practice without burning out.
+          Sofia Books organizes your clients&rsquo; receipts, sorts everything into
+          an AI-powered review queue, and generates your BIR books on demand — so
+          you can grow without burning out.
         </p>
         <div className="ld-hero__ctas">
           <a href="#cta" className="ld-btn-primary">Get Started — ₱999/mo</a>
           <a href="#how-it-works" className="ld-btn-ghost">See how it works →</a>
         </div>
+        <p className="ld-hero__trust">
+          No contracts <span aria-hidden="true">·</span> Cancel anytime <span aria-hidden="true">·</span> Everything included
+        </p>
       </div>
 
-      <div className="ld-hero__mascot" aria-hidden="true">
-        <PugMascot
-          variant="sofia"
-          accent="#E2568C"
-          accentGlow="#FFADD2"
-          peeking={false}
-          happy={false}
-          size={160}
-        />
+      <div className="ld-hero__mockup">
+        <ReviewQueueMockup />
       </div>
     </section>
   )
