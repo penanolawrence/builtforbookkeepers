@@ -44,4 +44,12 @@ describe('LandingPage', () => {
     expect(screen.getByRole('link', { name: /email us/i })).toHaveAttribute('href', expect.stringContaining('mailto:'))
   })
 
+  it('renders all 4 BIR book badges', () => {
+    render(<LandingPage />)
+    expect(screen.getByText('Cash Receipts Book')).toBeInTheDocument()
+    expect(screen.getByText('Cash Disbursements Book')).toBeInTheDocument()
+    expect(screen.getByText('General Journal')).toBeInTheDocument()
+    expect(screen.getByText('General Ledger')).toBeInTheDocument()
+  })
+
 })
