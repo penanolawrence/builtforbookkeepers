@@ -48,4 +48,14 @@ describe('LandingPage', () => {
     expect(screen.getByText('General Ledger')).toBeInTheDocument()
   })
 
+  it('renders "not more hours" in the hero h1', () => {
+    render(<LandingPage />)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/not more hours/i)
+  })
+
+  it('renders the trust line copy', () => {
+    render(<LandingPage />)
+    expect(screen.getByText(/no contracts.*cancel anytime.*everything included/i)).toBeInTheDocument()
+  })
+
 })
