@@ -5,14 +5,17 @@ html { scroll-behavior: smooth; }
 
 /* ── Layout shells ── */
 .ld-page   { background: var(--t-surface); color: var(--t-ink); }
-.ld-section { padding: 56px 24px; }
+.ld-section {
+  padding: 56px max(24px, calc((100% - 1100px) / 2));
+  border-top: 1px solid var(--t-line);
+}
 .ld-section--alt { background: var(--t-card-alt); }
 
 /* ── Nav ── */
 .ld-nav {
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px; height: 60px;
+  padding: 0 max(24px, calc((100% - 1100px) / 2)); height: 60px;
   background: var(--t-nav-bg);
   border-bottom: 1px solid var(--t-line);
   backdrop-filter: blur(12px);
@@ -72,7 +75,7 @@ html { scroll-behavior: smooth; }
   background: var(--t-card);
   border-bottom: 1px solid var(--t-line);
   box-shadow: 0 8px 24px rgba(0,0,0,.1);
-  transform: translateY(-110%);
+  transform: translateY(calc(-100% - 60px));
   transition: transform 0.25s cubic-bezier(.4,0,.2,1);
 }
 .ld-drawer--open { transform: translateY(0); }
@@ -94,7 +97,7 @@ html { scroll-behavior: smooth; }
 /* ── Hero ── */
 .ld-hero {
   display: flex; align-items: center; gap: 32px;
-  padding: 64px 24px 56px;
+  padding: 64px max(24px, calc((100% - 1100px) / 2)) 56px;
   background: linear-gradient(145deg, var(--t-primary-soft) 0%, var(--t-surface) 60%);
 }
 .ld-hero__copy { flex: 1; }
@@ -144,6 +147,9 @@ html { scroll-behavior: smooth; }
   .ld-hero__mascot { order: -1; }
   .ld-btn-primary, .ld-btn-ghost { width: 100%; justify-content: center; }
 }
+
+/* ── Anchor scroll offset for sticky nav ── */
+[id] { scroll-margin-top: 72px; }
 
 /* ── Section label / title ── */
 .ld-label {
@@ -195,13 +201,19 @@ html { scroll-behavior: smooth; }
 .ld-step:last-child .ld-step__line { display: none; }
 .ld-step__title { font-size: 15px; font-weight: 700; color: var(--t-ink); margin: 2px 0 4px; }
 .ld-step__desc { font-size: 13px; color: var(--t-muted); line-height: 1.55; }
+.ld-step__ai-chip {
+  display: inline-flex; align-items: center;
+  background: var(--t-primary-soft); color: var(--t-primary);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+  padding: 2px 8px; border-radius: 999px;
+  margin-left: 8px; vertical-align: middle;
+}
 
 /* ── Features ── */
 .ld-features__grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
 }
-@media (max-width: 860px) { .ld-features__grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px)  { .ld-features__grid { grid-template-columns: 1fr; } }
+@media (max-width: 540px) { .ld-features__grid { grid-template-columns: 1fr; } }
 .ld-feature-card {
   background: var(--t-card); border-radius: 14px;
   border: 1px solid var(--t-line); padding: 20px;
@@ -282,7 +294,7 @@ html { scroll-behavior: smooth; }
 
 /* ── Final CTA ── */
 .ld-cta {
-  background: var(--t-primary); padding: 64px 24px;
+  background: var(--t-primary); padding: 64px max(24px, calc((100% - 1100px) / 2));
   text-align: center;
 }
 .ld-cta__h2 {
@@ -302,13 +314,12 @@ html { scroll-behavior: smooth; }
 .ld-cta__btn-email:hover { opacity: 0.9; }
 .ld-cta__btn-viber {
   display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(255,255,255,0.15); color: #fff;
+  background: var(--t-primary-soft); color: var(--t-primary-deep);
   font-size: 14px; font-weight: 700;
   padding: 13px 28px; border-radius: 999px;
-  border: 1.5px solid rgba(255,255,255,0.4);
-  text-decoration: none; transition: background 0.15s;
+  text-decoration: none; transition: opacity 0.15s;
 }
-.ld-cta__btn-viber:hover { background: rgba(255,255,255,0.25); }
+.ld-cta__btn-viber:hover { opacity: 0.85; }
 .ld-cta__pug { margin-top: 24px; opacity: 0.9; }
 
 @media (max-width: 480px) {
@@ -319,7 +330,7 @@ html { scroll-behavior: smooth; }
 /* ── Footer ── */
 .ld-footer {
   background: var(--t-surface); border-top: 1px solid var(--t-line);
-  padding: 20px 24px; text-align: center;
+  padding: 20px max(24px, calc((100% - 1100px) / 2)); text-align: center;
   font-size: 12px; color: var(--t-muted);
 }
 .ld-footer a { color: var(--t-muted); text-decoration: none; }
