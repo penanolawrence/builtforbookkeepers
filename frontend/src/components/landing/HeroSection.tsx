@@ -17,7 +17,7 @@ export function HeroSection() {
         </p>
         <div className="ld-hero__ctas">
           <a href="#cta" className="ld-btn-primary">Get Started — ₱999/mo</a>
-          <a href="#how-it-works" className="ld-btn-ghost">See how it works →</a>
+          <a href="#how-it-works" className="ld-btn-ghost">See how it works <span aria-hidden="true">→</span></a>
         </div>
         <p className="ld-hero__trust">
           No contracts <span aria-hidden="true">·</span> Cancel anytime <span aria-hidden="true">·</span> Everything included
