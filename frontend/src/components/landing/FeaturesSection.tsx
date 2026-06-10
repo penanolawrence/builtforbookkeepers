@@ -8,6 +8,13 @@ const FEATURES = [
   { icon: '📱', title: 'Mobile-first upload',          desc: 'Clients upload from any phone browser — no app install. GCash screenshots accepted.' },
 ]
 
+const BIR_BOOKS = [
+  'Cash Receipts Book',
+  'Cash Disbursements Book',
+  'General Journal',
+  'General Ledger',
+]
+
 export function FeaturesSection() {
   return (
     <section id="features" className="ld-section" aria-labelledby="features-heading">
@@ -24,6 +31,21 @@ export function FeaturesSection() {
           </li>
         ))}
       </ul>
+
+      <div className="ld-bir-callout" aria-label="BIR books generated">
+        <div className="ld-bir-callout__copy">
+          <p className="ld-bir-callout__title">BIR-ready books, always</p>
+          <p className="ld-bir-callout__desc">
+            Every approved transaction automatically flows into the four required
+            books of accounts. Formatted for loose-leaf printing and BIR submission.
+          </p>
+        </div>
+        <ul className="ld-bir-callout__chips" role="list">
+          {BIR_BOOKS.map((b) => (
+            <li key={b} className="ld-bir-callout__chip">{b}</li>
+          ))}
+        </ul>
+      </div>
     </section>
   )
 }

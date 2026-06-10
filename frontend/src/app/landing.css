@@ -223,16 +223,30 @@ html { scroll-behavior: smooth; }
 .ld-feature-card__title { font-size: 14px; font-weight: 700; color: var(--t-ink); margin: 0 0 5px; }
 .ld-feature-card__desc { font-size: 13px; color: var(--t-muted); line-height: 1.5; }
 
-/* ── BIR ── */
-.ld-bir__books { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 18px; }
-.ld-bir__badge {
-  background: var(--t-primary-soft); color: var(--t-primary-deep);
-  font-size: 12px; font-weight: 700;
-  padding: 6px 14px; border-radius: 999px;
-  border: 1px solid var(--t-line);
+/* ── Features BIR callout ── */
+.ld-bir-callout {
+  display: flex; flex-wrap: wrap; gap: 20px;
+  justify-content: space-between; align-items: flex-start;
+  margin-top: 20px;
+  background: var(--t-primary-soft);
+  border-radius: 16px; padding: 24px;
 }
-.ld-bir__note { font-size: 13px; color: var(--t-muted); line-height: 1.6; }
-.ld-bir__note strong { color: var(--t-ink); }
+.ld-bir-callout__copy { flex: 1; min-width: 220px; }
+.ld-bir-callout__title {
+  font-size: 15px; font-weight: 700; color: var(--t-ink); margin: 0 0 6px;
+}
+.ld-bir-callout__desc {
+  font-size: 13px; color: var(--t-muted); line-height: 1.6; margin: 0;
+}
+.ld-bir-callout__chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  align-items: flex-start; list-style: none; padding: 0; margin: 0;
+}
+.ld-bir-callout__chip {
+  font-size: 12px; font-weight: 600; color: var(--t-primary);
+  border: 1px solid var(--t-primary); background: var(--t-card);
+  padding: 5px 14px; border-radius: 999px;
+}
 
 /* ── Mascot banner ── */
 .ld-mascot-banner {
