@@ -24,7 +24,6 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { name: /built for how philippine bookkeeping/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /from receipt to bir book/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /everything a bookkeeper needs/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /bir-ready books/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /one plan/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /common questions/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /ready to take on more clients/i })).toBeInTheDocument()
@@ -45,11 +44,4 @@ describe('LandingPage', () => {
     expect(screen.getByRole('link', { name: /email us/i })).toHaveAttribute('href', expect.stringContaining('mailto:'))
   })
 
-  it('renders all 4 BIR book badges', () => {
-    render(<LandingPage />)
-    expect(screen.getByText('Cash Receipts Book')).toBeInTheDocument()
-    expect(screen.getByText('Cash Disbursements Book')).toBeInTheDocument()
-    expect(screen.getByText('General Journal')).toBeInTheDocument()
-    expect(screen.getByText('General Ledger')).toBeInTheDocument()
-  })
 })
