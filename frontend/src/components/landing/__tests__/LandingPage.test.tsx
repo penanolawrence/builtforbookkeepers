@@ -1,15 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import LandingPage from '@/app/page'
 
-// Mock client components
 jest.mock('@/components/landing/NavThemeIcon', () => ({
   NavThemeIcon: () => <button aria-label="Switch to dark mode">🌙</button>,
 }))
 jest.mock('@/components/landing/MobileDrawer', () => ({
   MobileDrawer: () => <div data-testid="mobile-drawer" />,
-}))
-jest.mock('@/components/landing/MascotBanner', () => ({
-  MascotBanner: () => <section aria-label="Meet Sofia">Meet Sofia — your AI co-pilot</section>,
 }))
 jest.mock('@/components/login/PugMascot', () => () => <div data-testid="pug-mascot" />)
 
