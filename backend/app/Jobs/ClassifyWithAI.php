@@ -134,8 +134,13 @@ class ClassifyWithAI implements ShouldQueue
         DetectAnomalies::dispatch($this->document);
     }
 
-    public function failed(\Throwable $_e): void
+    public function failed(\Throwable $e): void
     {
+        \Illuminate\Support\Facades\Log::error('ClassifyWithAI failed', [
+            'document_id' => $this->document->id,
+            'error'       => $e->getMessage(),
+        ]);
+
         $this->document->update([
             'flag'           => 'YELLOW',
             'anomaly_reason' => ['AI classification failed — needs manual review'],
