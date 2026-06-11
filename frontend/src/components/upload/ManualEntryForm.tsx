@@ -15,13 +15,14 @@ interface Props {
   open: boolean
   onClose: () => void
   onSuccess: (documentId: string) => void
+  clientId?: string
 }
 
 const today = () => new Date().toISOString().split('T')[0]
 
 const emptyLine = (id: number): Line => ({ id, description: '', amount: '' })
 
-export function ManualEntryForm({ open, onClose, onSuccess }: Props) {
+export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
   const [type, setType]               = useState<DeclaredType>('expense')
   const [date, setDate]               = useState(today())
   const [paymentMethod, setPaymentMethod] = useState('Cash')
@@ -83,6 +84,7 @@ export function ManualEntryForm({ open, onClose, onSuccess }: Props) {
           description: l.description.trim(),
           amount:      parseFloat(l.amount),
         })),
+        clientId,
       })
       handleClose()
       onSuccess(documentId)
