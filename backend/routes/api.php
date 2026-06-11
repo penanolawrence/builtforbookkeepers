@@ -36,9 +36,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Document signed URL — available to all authenticated users (client, accountant, admin)
     Route::get('/documents/{id}/image', [DocumentController::class, 'getSignedUrl']);
 
+    // Document upload — available to clients, accountants, and admins
+    Route::post('/documents', [DocumentController::class, 'upload'])->middleware(['throttle:30,1', 'client.active']);
+
     // Client routes
     Route::middleware(['role:client', 'client.active'])->group(function () {
-        Route::post('/documents',               [DocumentController::class, 'upload'])->middleware('throttle:30,1');
         Route::post('/documents/manual',        [DocumentController::class, 'manualEntry'])->middleware('throttle:30,1');
         Route::get('/documents',                [DocumentController::class, 'index']);
         Route::get('/documents/{id}',           [DocumentController::class, 'show']);

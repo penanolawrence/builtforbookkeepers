@@ -17,6 +17,7 @@ class UploadDocumentRequest extends FormRequest
             'file'          => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'],
             'declared_type' => ['required', 'string', 'in:income,expense'],
             'note'          => ['nullable', 'string', 'max:1000'],
+            'client_id'     => ['nullable', 'string', 'exists:companies,id'],
         ];
     }
 }
