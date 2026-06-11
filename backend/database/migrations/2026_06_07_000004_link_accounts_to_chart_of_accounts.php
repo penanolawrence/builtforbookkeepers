@@ -19,8 +19,10 @@ return new class extends Migration
         });
 
         // 2. Expand type ENUM — PostgreSQL stores this as a CHECK constraint
-        DB::statement("ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_type_check");
-        DB::statement("ALTER TABLE accounts ADD CONSTRAINT accounts_type_check CHECK (type IN ('income','expense','cash','vat','equity'))");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_type_check");
+            DB::statement("ALTER TABLE accounts ADD CONSTRAINT accounts_type_check CHECK (type IN ('income','expense','cash','vat','equity'))");
+        }
     }
 
     public function down(): void
@@ -30,7 +32,9 @@ return new class extends Migration
             $table->dropColumn('chart_of_account_id');
         });
 
-        DB::statement("ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_type_check");
-        DB::statement("ALTER TABLE accounts ADD CONSTRAINT accounts_type_check CHECK (type IN ('income','expense','cash','vat'))");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_type_check");
+            DB::statement("ALTER TABLE accounts ADD CONSTRAINT accounts_type_check CHECK (type IN ('income','expense','cash','vat'))");
+        }
     }
 };
