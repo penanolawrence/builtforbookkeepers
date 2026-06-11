@@ -19,6 +19,7 @@ class PrepareDocumentForAI implements ShouldQueue
 
     public int $timeout = 120;
     public int $tries = 1;
+    public bool $deleteWhenMissingModels = true;
 
     public function __construct(public Document $document)
     {

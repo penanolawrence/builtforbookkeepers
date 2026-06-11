@@ -19,6 +19,7 @@ class ClassifyWithAI implements ShouldQueue
 
     public int $timeout = 60;
     public int $tries = 3;
+    public bool $deleteWhenMissingModels = true;
 
     public function __construct(
         public Document $document,

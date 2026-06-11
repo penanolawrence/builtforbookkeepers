@@ -16,6 +16,8 @@ class DetectAnomalies implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
+    public bool $deleteWhenMissingModels = true;
+
     public function __construct(public Document $document)
     {
         $this->onQueue('ai-pipeline');
