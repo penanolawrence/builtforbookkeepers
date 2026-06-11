@@ -102,7 +102,7 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 bg-black/40 z-[110] flex items-end sm:items-center justify-center"
       onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
     >
       <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-[480px] max-h-[92vh] overflow-y-auto shadow-2xl">
