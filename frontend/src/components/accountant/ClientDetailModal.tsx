@@ -9,8 +9,9 @@ import { getAccountantClient, getAccountantClientDocuments } from '@/lib/api/acc
 import { resetClientAccess, getChartOfAccounts, saveChartOfAccounts } from '@/lib/api/admin/clients'
 import { lastSevenDayRange } from '@/app/client/documents/utils'
 import { DocumentsTable } from '@/components/documents/DocumentsTable'
+import { SubmitTab } from '@/components/upload/SubmitTab'
 
-type Tab = 'overview' | 'documents' | 'coa'
+type Tab = 'overview' | 'documents' | 'coa' | 'submit'
 
 interface Props {
   client: ClientProfile
@@ -387,6 +388,7 @@ export function ClientDetailModal({ client, onClose }: Props) {
     { id: 'overview',  label: 'Overview' },
     { id: 'documents', label: 'Documents' },
     { id: 'coa',       label: 'Chart of Accounts' },
+    { id: 'submit',    label: 'Submit' },
   ]
 
   return (
@@ -455,6 +457,12 @@ export function ClientDetailModal({ client, onClose }: Props) {
           {tab === 'overview' && <OverviewTab client={client} />}
           {tab === 'documents' && <DocumentsTab clientId={client.id} />}
           {tab === 'coa'       && <CoaTab clientId={client.id} isVat={client.birType === 'vat'} />}
+          {tab === 'submit' && (
+            <SubmitTab
+              clientId={client.id}
+              docsQueryKey={['client-modal-docs', client.id]}
+            />
+          )}
         </div>
       </div>
     </div>
