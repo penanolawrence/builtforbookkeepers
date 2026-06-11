@@ -28,10 +28,17 @@ jest.mock('@tanstack/react-query', () => ({
     }
     if (queryKey[0] === 'accountant-clients') {
       return {
-        data: [
-          { id: 'c1', name: 'ABC Trading Corp.', birType: 'vat',   plan: 'Growth' },
-          { id: 'c2', name: 'Northwind Logistics', birType: 'vat', plan: 'Growth' },
-        ],
+        data: {
+          data: [
+            { id: 'c1', name: 'ABC Trading Corp.',  birType: 'vat', plan: 'Growth', queueCounts: { red: 0, yellow: 0, green: 0 } },
+            { id: 'c2', name: 'Northwind Logistics', birType: 'vat', plan: 'Growth', queueCounts: { red: 0, yellow: 0, green: 0 } },
+          ],
+          total: 2,
+          perPage: 15,
+          currentPage: 1,
+          lastPage: 1,
+          summary: { needAttention: 0, pendingReview: 0, allClear: 0 },
+        },
         isLoading: false,
       }
     }

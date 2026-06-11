@@ -29,7 +29,8 @@ export default function AccountantDashboard() {
 
   const { data: queue   = [] } = useQuery({ queryKey: ['accountant-queue'],           queryFn: () => getQueue() })
   const { data: pending = [] } = useQuery({ queryKey: ['accountant-pending-entries'], queryFn: () => getEntries({ status: 'PENDING' }) })
-  const { data: clients = [], isLoading: cLoading } = useQuery({ queryKey: ['accountant-clients'], queryFn: getAccountantClients })
+  const { data: clientsPage, isLoading: cLoading } = useQuery({ queryKey: ['accountant-clients'], queryFn: () => getAccountantClients() })
+  const clients = clientsPage?.data ?? []
 
   const firstName = user?.name?.split(' ')[0] ?? 'there'
   const today     = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
@@ -84,7 +85,7 @@ export default function AccountantDashboard() {
             Good morning, {firstName}
           </h1>
           <p style={{ margin: 0, color: 'var(--t-muted)', fontSize: 14.5 }}>
-            {today} · {clients.length} active clients · {(queue as QueueItem[]).length} items in your queue
+            {today} · {clientsPage?.total ?? clients.length} active clients · {(queue as QueueItem[]).length} items in your queue
           </p>
         </div>
         <div className="acct-dash-mascot" style={{ width: 430, flexShrink: 0 }}>
