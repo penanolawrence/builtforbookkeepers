@@ -27,9 +27,6 @@ class DocumentController extends Controller
             if ($user->role === 'accountant' && $company->accountant_id !== $user->id) {
                 return response()->json(['message' => 'Forbidden.'], 403);
             }
-            if ($user->role !== 'admin' && $user->role !== 'accountant' && $company->id !== $user->company_id) {
-                return response()->json(['message' => 'Forbidden.'], 403);
-            }
         } else {
             $company = Company::findOrFail($user->company_id);
         }

@@ -45,7 +45,7 @@ class SubmitOnBehalfTest extends TestCase
         ]);
 
         $response->assertStatus(201);
-        $this->assertDatabaseHas('documents', ['company_id' => $company->id]);
+        $this->assertDatabaseHas('documents', ['company_id' => $company->id, 'uploaded_by' => $admin->id]);
     }
 
     public function test_accountant_can_upload_for_assigned_client(): void
@@ -63,7 +63,7 @@ class SubmitOnBehalfTest extends TestCase
         ]);
 
         $response->assertStatus(201);
-        $this->assertDatabaseHas('documents', ['company_id' => $company->id]);
+        $this->assertDatabaseHas('documents', ['company_id' => $company->id, 'uploaded_by' => $accountant->id]);
     }
 
     public function test_accountant_cannot_upload_for_unassigned_client(): void
