@@ -18,10 +18,11 @@ import { ReceivePaymentModal } from '@/components/admin/ReceivePaymentModal'
 import type { Account } from '@/types/admin'
 import type { Document, DocumentStatus } from '@/types/document'
 import type { AccountStatus } from '@/types/auth'
+import { SubmitTab } from '@/components/upload/SubmitTab'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'documents' | 'coa'
+type Tab = 'overview' | 'documents' | 'coa' | 'submit'
 type EditableAccount = Account & { _new?: boolean }
 
 export type ClientModalProps =
@@ -497,7 +498,7 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
 
         {/* Tabs */}
         <div className="flex border-b border-t-line flex-shrink-0">
-          {(['overview', 'documents', 'coa'] as Tab[]).map((t) => (
+          {(['overview', 'documents', 'coa', 'submit'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -507,7 +508,7 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
                   : 'text-t-faint border-transparent hover:text-t-ink'
               }`}
             >
-              {t === 'overview' ? 'Overview' : t === 'documents' ? 'Documents' : 'Chart of Accounts'}
+              {t === 'overview' ? 'Overview' : t === 'documents' ? 'Documents' : t === 'coa' ? 'Chart of Accounts' : 'Submit'}
             </button>
           ))}
         </div>
@@ -815,6 +816,14 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* ── SUBMIT TAB ── */}
+              {tab === 'submit' && (
+                <SubmitTab
+                  clientId={clientId}
+                  docsQueryKey={['admin-client-docs', clientId]}
+                />
               )}
 
               {/* ── COA TAB ── */}
