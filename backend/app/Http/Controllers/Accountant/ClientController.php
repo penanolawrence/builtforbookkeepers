@@ -12,18 +12,66 @@ use Illuminate\Http\Request;
 
 class ClientController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user    = auth()->user();
-        $clients = Company::with(['users' => fn ($q) => $q->where('role', 'client')])
-            ->where('accountant_id', $user->id)
-            ->get();
+        $search  = $request->get('search', '');
+        $perPage = min(100, max(1, (int) $request->get('per_page', 15)));
+        $page    = max(1, (int) $request->get('page', 1));
 
-        return response()->json($clients->map(function ($company) use ($user) {
+        $baseQuery = Company::where('accountant_id', $user->id)
+            ->when($search !== '', fn ($q) => $q->where('name', 'LIKE', "%{$search}%"));
+
+        // ── Summary (all matching companies, not just this page) ─────────────
+        $allIds = (clone $baseQuery)->pluck('id');
+
+        $parkedAll = Document::whereIn('company_id', $allIds)
+            ->where('status', 'parked')
+            ->selectRaw('company_id, flag, COUNT(*) as cnt')
+            ->groupBy('company_id', 'flag')
+            ->get()
+            ->groupBy('company_id');
+
+        $needAttention = $allIds->filter(fn ($id) =>
+            ($parkedAll[$id] ?? collect())->where('flag', 'RED')->sum('cnt') > 0
+        )->count();
+
+        $pendingReview = $allIds->sum(fn ($id) =>
+            ($parkedAll[$id] ?? collect())->whereIn('flag', ['RED', 'YELLOW'])->sum('cnt')
+        );
+
+        $allClear = $allIds->filter(function ($id) use ($parkedAll) {
+            $counts = $parkedAll[$id] ?? collect();
+            return $counts->where('flag', 'RED')->sum('cnt') === 0
+                && $counts->where('flag', 'YELLOW')->sum('cnt') === 0
+                && $counts->where('flag', 'GREEN')->sum('cnt') > 0;
+        })->count();
+
+        // ── Paginated fetch ───────────────────────────────────────────────────
+        $paginated = (clone $baseQuery)
+            ->with(['users' => fn ($q) => $q->where('role', 'client')])
+            ->latest('id')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        // ── Per-page queue counts (one query for the current page) ────────────
+        $pageIds = $paginated->getCollection()->pluck('id');
+
+        $parkedPage = Document::whereIn('company_id', $pageIds)
+            ->where('status', 'parked')
+            ->selectRaw('company_id, flag, COUNT(*) as cnt')
+            ->groupBy('company_id', 'flag')
+            ->get()
+            ->groupBy('company_id');
+
+        $lastPayments = Payment::whereIn('company_id', $pageIds)
+            ->latest('date_received')
+            ->get()
+            ->groupBy('company_id');
+
+        $data = $paginated->getCollection()->map(function ($company) use ($user, $parkedPage, $lastPayments) {
             $client      = $company->users->first();
-            $lastPayment = Payment::where('company_id', $company->id)
-                ->latest('date_received')
-                ->first();
+            $lastPayment = ($lastPayments[$company->id] ?? collect())->first();
+            $counts      = $parkedPage[$company->id] ?? collect();
 
             return [
                 'id'             => $company->id,
@@ -44,8 +92,26 @@ class ClientController extends Controller
                     'dateReceived'    => $lastPayment->date_received?->toDateString(),
                     'referenceNumber' => $lastPayment->reference_number,
                 ] : null,
+                'queueCounts'    => [
+                    'red'    => (int) $counts->where('flag', 'RED')->sum('cnt'),
+                    'yellow' => (int) $counts->where('flag', 'YELLOW')->sum('cnt'),
+                    'green'  => (int) $counts->where('flag', 'GREEN')->sum('cnt'),
+                ],
             ];
-        }));
+        });
+
+        return response()->json([
+            'data'        => $data,
+            'total'       => $paginated->total(),
+            'perPage'     => $perPage,
+            'currentPage' => $paginated->currentPage(),
+            'lastPage'    => $paginated->lastPage(),
+            'summary'     => [
+                'needAttention' => $needAttention,
+                'pendingReview' => (int) $pendingReview,
+                'allClear'      => $allClear,
+            ],
+        ]);
     }
 
     public function show(string $id): JsonResponse
