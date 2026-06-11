@@ -48,10 +48,10 @@ Add optional `clientId?: string` prop. Pass to `createManualEntry` when provided
 
 Add `submit` as the 4th tab value in both modals.
 
-| Modal | `clientId` source |
-|---|---|
-| `ClientDetailModal` (accountant) | `client.id` from props |
-| `ClientModal` (admin) | `clientId` from modal state |
+| Modal | `clientId` source | Shown when |
+|---|---|---|
+| `ClientDetailModal` (accountant) | `client.id` from props | Always (modal is detail-only) |
+| `ClientModal` (admin) | `clientId` from modal state | `mode === 'detail'` only — hidden in `create` mode |
 
 Tab content:
 
