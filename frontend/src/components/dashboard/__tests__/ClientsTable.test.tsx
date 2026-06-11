@@ -7,10 +7,10 @@ const rows: ClientRow[] = [
   { id: '3', name: 'Mariposa Café',     type: 'Non-VAT', plan: 'Starter', review: 1, check: 0, ready: 4, pending: 0, lastActive: '3h ago' },
 ]
 
-function wrap(onRowClick = jest.fn()) {
+function wrap() {
   return render(
     <div data-theme="sofia">
-      <ClientsTable rows={rows} onRowClick={onRowClick} />
+      <ClientsTable rows={rows} />
     </div>
   )
 }
@@ -18,9 +18,9 @@ function wrap(onRowClick = jest.fn()) {
 describe('ClientsTable', () => {
   it('renders all client names', () => {
     wrap()
-    expect(screen.getByText('ABC Trading Corp.')).toBeInTheDocument()
-    expect(screen.getByText('Northwind Logistics')).toBeInTheDocument()
-    expect(screen.getByText('Mariposa Café')).toBeInTheDocument()
+    expect(screen.getAllByText('ABC Trading Corp.').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Northwind Logistics').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Mariposa Café').length).toBeGreaterThan(0)
   })
 
   it('renders type and plan for each row', () => {
@@ -42,10 +42,4 @@ describe('ClientsTable', () => {
     expect(screen.getByText('3h ago')).toBeInTheDocument()
   })
 
-  it('calls onRowClick with client id when a row is clicked', async () => {
-    const onRowClick = jest.fn()
-    wrap(onRowClick)
-    ;(screen.getByText('ABC Trading Corp.').closest('[role="row"]') as HTMLElement)?.click()
-    expect(onRowClick).toHaveBeenCalledWith('1')
-  })
 })

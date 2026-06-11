@@ -22,11 +22,12 @@ export default function UploadPage() {
   }>>([])
   const [uploading, setUploading] = useState(false)
 
-  const { data: allDocs = [] } = useQuery({
+  const { data: pagedDocs } = useQuery({
     queryKey: ['client-documents-upload'],
     queryFn: () => getDocuments(),
     refetchInterval: 8000,
   })
+  const allDocs = pagedDocs?.data ?? []
 
   const now = new Date()
   const thisMonth = allDocs.filter((d) => {

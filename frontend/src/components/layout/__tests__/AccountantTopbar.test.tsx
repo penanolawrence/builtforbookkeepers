@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { AccountantTopbar } from '../AccountantTopbar'
+import { Topbar } from '../Topbar'
 
 jest.mock('next/navigation', () => ({
   usePathname: () => '/accountant/dashboard',
@@ -21,14 +21,14 @@ jest.mock('@/components/layout/ThemeToggle', () => ({
   ThemeToggle: () => <div data-testid="theme-toggle" />,
 }))
 
-describe('AccountantTopbar', () => {
+describe('Topbar', () => {
   it('renders Built for Bookkeepers brand', () => {
-    render(<AccountantTopbar />)
+    render(<Topbar />)
     expect(screen.getByText('Built for Bookkeepers')).toBeInTheDocument()
   })
 
   it('renders all 5 nav links', () => {
-    render(<AccountantTopbar />)
+    render(<Topbar />)
     expect(screen.getByRole('link', { name: /Dashboard/    })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Queue/        })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Adj\. Entries/})).toBeInTheDocument()
@@ -37,12 +37,12 @@ describe('AccountantTopbar', () => {
   })
 
   it('renders user initials in avatar', () => {
-    render(<AccountantTopbar />)
+    render(<Topbar />)
     expect(screen.getByText('MS')).toBeInTheDocument()
   })
 
   it('renders ThemeToggle and NotificationBell', () => {
-    render(<AccountantTopbar />)
+    render(<Topbar />)
     expect(screen.getByTestId('theme-toggle')).toBeInTheDocument()
     expect(screen.getByTestId('notification-bell')).toBeInTheDocument()
   })

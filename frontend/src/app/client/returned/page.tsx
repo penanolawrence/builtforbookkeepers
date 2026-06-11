@@ -41,11 +41,11 @@ export default function ReturnedPage() {
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
         </div>
-      ) : docs?.length === 0 ? (
+      ) : docs?.data?.length === 0 ? (
         <EmptyState message="No returned documents." />
       ) : (
         <div className="space-y-3 pb-4">
-          {docs?.map((doc) => (
+          {docs?.data?.map((doc) => (
             <ReturnedDocumentCard
               key={doc.id}
               document={doc}

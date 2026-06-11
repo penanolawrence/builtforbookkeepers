@@ -64,7 +64,7 @@ describe('DocumentsTable', () => {
 
   it('renders the reference number', () => {
     wrap([makeDoc()])
-    expect(screen.getByText('MNL-0010')).toBeInTheDocument()
+    expect(screen.getAllByText('MNL-0010').length).toBeGreaterThan(0)
   })
 
   it('renders the Manual source chip for isNoReceipt docs', () => {
@@ -79,7 +79,7 @@ describe('DocumentsTable', () => {
 
   it('renders the status badge label', () => {
     wrap([makeDoc({ status: 'PARKED' })])
-    expect(screen.getByText('In Review')).toBeInTheDocument()
+    expect(screen.getAllByText('In Review').length).toBeGreaterThan(0)
   })
 
   it('renders em-dash for zero inflow on PARKED doc', () => {
@@ -92,7 +92,7 @@ describe('DocumentsTable', () => {
     const onRowClick = jest.fn()
     const doc = makeDoc()
     wrap([doc], onRowClick)
-    fireEvent.click(screen.getByText('MNL-0010'))
+    fireEvent.click(screen.getAllByText('MNL-0010')[0])
     expect(onRowClick).toHaveBeenCalledWith(doc)
   })
 

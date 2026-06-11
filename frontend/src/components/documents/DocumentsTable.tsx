@@ -47,12 +47,12 @@ function getNoteText(doc: Document): { text: string; color: string } {
 
 interface Props {
   docs: Document[]
-  totalDocs: number
-  lastPage: number
-  page: number
-  perPage: number
-  onPageChange: (page: number) => void
   onRowClick: (doc: Document) => void
+  totalDocs?: number
+  lastPage?: number
+  page?: number
+  perPage?: number
+  onPageChange?: (page: number) => void
   title?: string
   subtitle?: string
   inReview?: number
@@ -68,7 +68,7 @@ const COL_HEADERS: { label: string; align: CSSProperties['textAlign']; color: st
   { label: 'Note',      align: 'left',   color: 'var(--t-faint)' },
 ]
 
-export function DocumentsTable({ docs, totalDocs, lastPage, page, perPage, onPageChange, onRowClick, title = 'Documents', subtitle, inReview = 0 }: Props) {
+export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, page = 1, perPage = docs.length || 1, onPageChange = () => {}, onRowClick, title = 'Documents', subtitle, inReview = 0 }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   const totalPages = Math.max(1, lastPage)
@@ -402,7 +402,7 @@ export function DocumentsTable({ docs, totalDocs, lastPage, page, perPage, onPag
                 {page} / {totalPages}
               </span>
               <button
-                onClick={() => onPageChange((p) => Math.min(totalPages, p + 1))}
+                onClick={() => onPageChange(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
                 className="flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-semibold"
                 style={{
