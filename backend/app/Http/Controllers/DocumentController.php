@@ -84,6 +84,7 @@ class DocumentController extends Controller
 
         $perPage  = min(500, max(1, (int) $request->get('per_page', 10)));
         $page     = max(1, (int) $request->get('page', 1));
+        $sortDir  = strtolower($request->get('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
         $inReview = (clone $query)->whereIn('status', ['parked', 'returned'])->count();
 
@@ -110,7 +111,11 @@ class DocumentController extends Controller
             ['income', 'expense']
         )->first();
 
-        $paginated = $query->with('transactionLines')->latest()->paginate($perPage, ['*'], 'page', $page);
+        $paginated = $query->with('transactionLines')
+            ->orderByRaw('document_date IS NULL')
+            ->orderBy('document_date', $sortDir)
+            ->orderBy('id', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
             'data'         => $paginated->getCollection()->map(fn ($d) => $this->toListItem($d)),

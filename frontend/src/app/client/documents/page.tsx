@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Breadcrumb } from '@/components/shared/Breadcrumb'
 import { SummaryCard } from '@/components/shared/SummaryCard'
-import { Download, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import type { Document } from '@/types/document'
 import { lastSevenDayRange } from './utils'
 
@@ -24,11 +24,12 @@ function DocumentsContent() {
   const { toast }     = useToast()
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
 
-  const status = searchParams.get('status') ?? ''
-  const type   = searchParams.get('type')   ?? ''
-  const start  = searchParams.get('start')  ?? ''
-  const end    = searchParams.get('end')    ?? ''
-  const page   = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
+  const status   = searchParams.get('status')   ?? ''
+  const type     = searchParams.get('type')     ?? ''
+  const start    = searchParams.get('start')    ?? ''
+  const end      = searchParams.get('end')      ?? ''
+  const page     = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
+  const sort_dir = (searchParams.get('sort_dir') ?? 'desc') as 'asc' | 'desc'
 
   const dateDefaultApplied = useRef(false)
   // Apply last-7-days defaults once on mount if no date params exist.
@@ -46,7 +47,7 @@ function DocumentsContent() {
   }, [searchParams, router])
 
   const { data: pagedDocs, isLoading } = useQuery({
-    queryKey: ['client-docs', status, type, start, end, page],
+    queryKey: ['client-docs', status, type, start, end, page, sort_dir],
     queryFn:  () => getDocuments({
       status:   status || undefined,
       type:     type   || undefined,
@@ -54,6 +55,7 @@ function DocumentsContent() {
       end:      end    || undefined,
       page,
       per_page: 10,
+      sort_dir,
     }),
   })
 
@@ -123,9 +125,6 @@ function DocumentsContent() {
           <p className="text-[14.5px] text-t-muted mt-[5px]">Your submitted documents</p>
         </div>
         <div className="flex gap-2.5 items-center mt-1">
-          <button className="hidden md:flex items-center gap-2 border border-t-line rounded-[12px] px-4 py-2.5 text-[13.5px] font-semibold text-t-ink bg-t-card cursor-pointer">
-            <Download className="h-4 w-4" /> Export
-          </button>
           <button
             onClick={() => router.push('/client/upload')}
             className="flex items-center gap-2 rounded-[12px] px-5 py-3 text-[14px] font-bold text-white cursor-pointer"
@@ -252,6 +251,8 @@ function DocumentsContent() {
           onPageChange={setPage}
           inReview={inReview}
           onRowClick={setSelectedDoc}
+          sortDir={sort_dir}
+          onSortToggle={() => setParam('sort_dir', sort_dir === 'desc' ? 'asc' : 'desc')}
         />
       )}
 

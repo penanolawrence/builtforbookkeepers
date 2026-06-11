@@ -54,6 +54,8 @@ interface Props {
   page?: number
   perPage?: number
   onPageChange?: (page: number) => void
+  sortDir?: 'asc' | 'desc'
+  onSortToggle?: () => void
   title?: string
   subtitle?: string
   inReview?: number
@@ -62,14 +64,14 @@ interface Props {
 const COL_HEADERS: { label: string; align: CSSProperties['textAlign']; color: string }[] = [
   { label: 'Reference', align: 'left',   color: 'var(--t-faint)' },
   { label: 'Source',    align: 'left',   color: 'var(--t-faint)' },
-  { label: 'Txn Date',  align: 'left',   color: 'var(--t-faint)' },
+  { label: 'Date',      align: 'left',   color: 'var(--t-faint)' },
   { label: 'Inflow',    align: 'right',  color: 'var(--t-tier-ready-fg)' },
   { label: 'Outflow',   align: 'right',  color: 'var(--t-tier-review-fg)' },
   { label: 'Status',    align: 'center', color: 'var(--t-faint)' },
   { label: 'Note',      align: 'left',   color: 'var(--t-faint)' },
 ]
 
-export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, page = 1, perPage = docs.length || 1, onPageChange = () => {}, onRowClick, title = 'Documents', subtitle, inReview = 0 }: Props) {
+export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, page = 1, perPage = docs.length || 1, onPageChange = () => {}, onRowClick, sortDir, onSortToggle, title = 'Documents', subtitle, inReview = 0 }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   const totalPages = Math.max(1, lastPage)
@@ -133,11 +135,27 @@ export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, pa
 
         {/* ── Column headers ── */}
         <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}>
-          {COL_HEADERS.map(({ label, align, color }) => (
-            <span key={label} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color, textAlign: align }}>
-              {label}
-            </span>
-          ))}
+          {COL_HEADERS.map(({ label, align, color }) =>
+            label === 'Date' ? (
+              <button
+                key={label}
+                onClick={onSortToggle}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em',
+                  color, textAlign: align as CSSProperties['textAlign'],
+                  background: 'none', border: 'none', padding: 0, cursor: onSortToggle ? 'pointer' : 'default',
+                }}
+              >
+                {label}
+                <span style={{ opacity: 0.7 }}>{sortDir === 'asc' ? '↑' : '↓'}</span>
+              </button>
+            ) : (
+              <span key={label} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color, textAlign: align }}>
+                {label}
+              </span>
+            )
+          )}
         </div>
 
         {/* ── Data rows ── */}

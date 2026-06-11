@@ -21,6 +21,7 @@ export async function getDocuments(params?: {
   end?: string
   page?: number
   per_page?: number
+  sort_dir?: 'asc' | 'desc'
 }): Promise<PagedDocs> {
   const { data } = await api.get<PagedDocs>('/documents', { params })
   return data
