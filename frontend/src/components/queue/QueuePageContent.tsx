@@ -48,7 +48,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
   })
   const { data: accountantClientsData } = useQuery({
     queryKey: ['accountant-clients'],
-    queryFn: () => getAccountantClients(),
+    queryFn: () => getAccountantClients({ per_page: 100 }),
     enabled: !showAccountant,
   })
   const clients: ClientProfile[] = showAccountant

@@ -29,7 +29,7 @@ export default function AccountantDashboard() {
 
   const { data: queue   = [] } = useQuery({ queryKey: ['accountant-queue'],           queryFn: () => getQueue() })
   const { data: pending = [] } = useQuery({ queryKey: ['accountant-pending-entries'], queryFn: () => getEntries({ status: 'PENDING' }) })
-  const { data: clientsPage, isLoading: cLoading } = useQuery({ queryKey: ['accountant-clients'], queryFn: () => getAccountantClients() })
+  const { data: clientsPage, isLoading: cLoading } = useQuery({ queryKey: ['accountant-clients'], queryFn: () => getAccountantClients({ per_page: 100 }) })
   const clients = clientsPage?.data ?? []
 
   const firstName = user?.name?.split(' ')[0] ?? 'there'

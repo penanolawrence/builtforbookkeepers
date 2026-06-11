@@ -44,7 +44,7 @@ export function NewEntryModal({ open, onClose, isAdmin, viewEntryId }: Props) {
 
   const { data: accountantClientsData } = useQuery({
     queryKey: ['accountant-clients'],
-    queryFn: () => getAccountantClients(),
+    queryFn: () => getAccountantClients({ per_page: 100 }),
     enabled: open && !isAdmin,
   })
 

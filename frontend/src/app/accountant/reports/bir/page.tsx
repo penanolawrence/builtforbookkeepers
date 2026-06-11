@@ -5,7 +5,7 @@ import { BIRBooksView } from '@/components/reports/BIRBooksView'
 import { getAccountantClients } from '@/lib/api/accountant/clients'
 
 async function fetchAccountantClients() {
-  const page = await getAccountantClients()
+  const page = await getAccountantClients({ per_page: 100 })
   return page.data
 }
 

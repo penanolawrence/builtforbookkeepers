@@ -28,7 +28,7 @@ export default function AccountantAdjustingEntriesPage() {
 
   const { data: clientsPage } = useQuery({
     queryKey: ['accountant-clients'],
-    queryFn: () => getAccountantClients(),
+    queryFn: () => getAccountantClients({ per_page: 100 }),
   })
   const clients = clientsPage?.data ?? []
 

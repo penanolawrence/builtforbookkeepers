@@ -120,7 +120,8 @@ class AccountantClientsIndexTest extends TestCase
             'company_id' => $company1->id, 'status' => 'parked', 'flag' => 'RED',
         ]);
 
-        // Request page 2 (where company2 lives) — company1 is on page 1 but summary still shows needAttention=1
+        // Sorted latest('id'), company2 (created last) is on page 1; company1 (with RED) is on page 2.
+        // Request page 2 — company1 with its RED doc is visible here, but summary must still reflect all clients.
         $response = $this->actingAs($this->accountant)
             ->getJson('/api/accountant/clients?per_page=1&page=2');
 

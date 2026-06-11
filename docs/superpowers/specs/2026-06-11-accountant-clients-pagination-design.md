@@ -28,7 +28,10 @@ Accepts query params:
 **Queries:**
 
 1. Base query: `Company::where('accountant_id', $user->id)`, optionally `->where('name', 'LIKE', "%{$search}%")`.
-2. **Summary aggregate** (runs on the full matching set before pagination): counts companies where any parked document has `flag = 'RED'` (needAttention), total parked RED + YELLOW items (pendingReview), companies with green docs and no red/yellow (allClear).
+2. **Summary aggregate** (runs on the full matching set before pagination):
+   - `needAttention` — count of *companies* that have at least one parked doc with `flag = 'RED'`
+   - `pendingReview` — sum of all parked RED + YELLOW *documents* across all matching companies
+   - `allClear` — count of *companies* with no RED and no YELLOW parked docs but at least one GREEN
 3. **Paginated fetch**: `->paginate($perPage)`.
 4. **Per-page queue counts**: one query — `Document::whereIn('company_id', $page->pluck('id'))->where('status', 'parked')->selectRaw('company_id, flag, COUNT(*) as cnt')->groupBy('company_id', 'flag')->get()` — then keyed by company ID for the map.
 
