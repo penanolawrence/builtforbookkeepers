@@ -4,12 +4,14 @@ import type { Document, DeclaredType, PagedDocs } from '@/types/document'
 export async function uploadDocument(
   file: File,
   declaredType: DeclaredType,
-  note?: string
+  note?: string,
+  clientId?: string
 ): Promise<{ documentId: string }> {
   const form = new FormData()
   form.append('file', file)
   form.append('declared_type', declaredType)
   if (note) form.append('note', note)
+  if (clientId) form.append('client_id', clientId)
   const { data } = await api.post<{ documentId: string }>('/documents', form)
   return data
 }
@@ -66,6 +68,7 @@ export async function createManualEntry(payload: {
   date: string
   paymentMethod: string
   lines: ManualEntryLine[]
+  clientId?: string
 }): Promise<{ documentId: string }> {
   const { data } = await api.post<{ documentId: string }>('/documents/manual', {
     declared_type:  payload.declaredType,
@@ -75,6 +78,7 @@ export async function createManualEntry(payload: {
       description: l.description,
       amount:      l.amount,
     })),
+    ...(payload.clientId ? { client_id: payload.clientId } : {}),
   })
   return data
 }
