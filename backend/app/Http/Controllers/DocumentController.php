@@ -249,8 +249,18 @@ class DocumentController extends Controller
 
     public function manualEntry(ManualEntryRequest $request): JsonResponse
     {
-        $user       = auth()->user();
-        $company    = Company::findOrFail($user->company_id);
+        $user = auth()->user();
+
+        if ($request->filled('client_id')) {
+            $company = Company::findOrFail($request->client_id);
+
+            if ($user->role === 'accountant' && $company->accountant_id !== $user->id) {
+                return response()->json(['message' => 'Forbidden.'], 403);
+            }
+        } else {
+            $company = Company::findOrFail($user->company_id);
+        }
+
         $refService = new RefSequenceService();
         $ref        = $refService->nextRef($company, 'MNL');
 

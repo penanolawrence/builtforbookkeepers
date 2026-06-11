@@ -100,4 +100,62 @@ class SubmitOnBehalfTest extends TestCase
         $response->assertStatus(201);
         $this->assertDatabaseHas('documents', ['company_id' => $company->id]);
     }
+
+    public function test_admin_can_create_manual_entry_for_any_client(): void
+    {
+        Queue::fake();
+
+        $accountant = $this->makeAccountant();
+        $company    = $this->makeClientCompany($accountant->id);
+        $admin      = $this->makeAdmin();
+
+        $response = $this->actingAs($admin)->postJson('/api/documents/manual', [
+            'declared_type'  => 'expense',
+            'date'           => '2026-06-11',
+            'payment_method' => 'Cash',
+            'lines'          => [['description' => 'Office supplies', 'amount' => 500]],
+            'client_id'      => $company->id,
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('documents', ['company_id' => $company->id, 'uploaded_by' => $admin->id]);
+    }
+
+    public function test_accountant_can_create_manual_entry_for_assigned_client(): void
+    {
+        Queue::fake();
+
+        $accountant = $this->makeAccountant();
+        $company    = $this->makeClientCompany($accountant->id);
+
+        $response = $this->actingAs($accountant)->postJson('/api/documents/manual', [
+            'declared_type'  => 'income',
+            'date'           => '2026-06-11',
+            'payment_method' => 'Cash',
+            'lines'          => [['description' => 'Service fee', 'amount' => 1000]],
+            'client_id'      => $company->id,
+        ]);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('documents', ['company_id' => $company->id, 'uploaded_by' => $accountant->id]);
+    }
+
+    public function test_accountant_cannot_create_manual_entry_for_unassigned_client(): void
+    {
+        Queue::fake();
+
+        $accountant      = $this->makeAccountant();
+        $otherAccountant = $this->makeAccountant();
+        $company         = $this->makeClientCompany($otherAccountant->id);
+
+        $response = $this->actingAs($accountant)->postJson('/api/documents/manual', [
+            'declared_type'  => 'income',
+            'date'           => '2026-06-11',
+            'payment_method' => 'Cash',
+            'lines'          => [['description' => 'Service fee', 'amount' => 1000]],
+            'client_id'      => $company->id,
+        ]);
+
+        $response->assertStatus(403);
+    }
 }

@@ -39,9 +39,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Document upload — available to clients, accountants, and admins
     Route::post('/documents', [DocumentController::class, 'upload'])->middleware(['throttle:30,1', 'client.active']);
 
+    // Manual entry — available to clients, accountants, and admins
+    Route::post('/documents/manual', [DocumentController::class, 'manualEntry'])->middleware(['throttle:30,1', 'client.active']);
+
     // Client routes
     Route::middleware(['role:client', 'client.active'])->group(function () {
-        Route::post('/documents/manual',        [DocumentController::class, 'manualEntry'])->middleware('throttle:30,1');
         Route::get('/documents',                [DocumentController::class, 'index']);
         Route::get('/documents/{id}',           [DocumentController::class, 'show']);
         Route::get('/documents/{id}/status',    [DocumentController::class, 'getStatus']);
