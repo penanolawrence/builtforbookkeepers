@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Link, ChevronDown } from 'lucide-react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import type { ClientProfile, Account } from '@/types/admin'
 import { useToast } from '@/hooks/use-toast'
 import { getAccountantClient, getAccountantClientDocuments } from '@/lib/api/accountant/clients'
 import { resetClientAccess, getChartOfAccounts, saveChartOfAccounts } from '@/lib/api/admin/clients'
-import { lastSevenDayRange } from '@/app/client/documents/utils'
 import { DocumentsTable } from '@/components/documents/DocumentsTable'
 import { SubmitTab } from '@/components/upload/SubmitTab'
 
@@ -135,16 +134,6 @@ function DocumentsTab({ clientId }: { clientId: string }) {
   const [start,        setStart]        = useState('')
   const [end,          setEnd]          = useState('')
   const [page,         setPage]         = useState(1)
-  const defaultsApplied = useRef(false)
-
-  useEffect(() => {
-    if (defaultsApplied.current) return
-    defaultsApplied.current = true
-    if (start || end) return
-    const range = lastSevenDayRange()
-    setStart(range.start)
-    setEnd(range.end)
-  }, [start, end])
 
   const { data: pagedDocs, isLoading } = useQuery({
     queryKey: ['client-modal-docs', clientId, statusFilter, typeFilter, start, end, page],
@@ -156,7 +145,7 @@ function DocumentsTab({ clientId }: { clientId: string }) {
       page,
       per_page: 10,
     }),
-    enabled: !!(start && end),
+    enabled: true,
   })
 
   const selectStyle: React.CSSProperties = {

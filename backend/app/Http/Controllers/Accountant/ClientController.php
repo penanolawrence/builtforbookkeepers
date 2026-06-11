@@ -182,7 +182,7 @@ class ClientController extends Controller
         $query = Document::where('company_id', $id);
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('status', strtolower($request->status));
         }
         if ($request->filled('type')) {
             $query->where('document_type', $request->type);
