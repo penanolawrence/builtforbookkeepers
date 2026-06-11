@@ -1,9 +1,13 @@
 import api from '../client'
-import type { ClientProfile } from '@/types/admin'
+import type { ClientProfile, PagedClients } from '@/types/admin'
 import type { PagedDocs } from '@/types/document'
 
-export async function getAccountantClients(): Promise<ClientProfile[]> {
-  const { data } = await api.get<ClientProfile[]>('/accountant/clients')
+export async function getAccountantClients(params?: {
+  page?: number
+  per_page?: number
+  search?: string
+}): Promise<PagedClients> {
+  const { data } = await api.get<PagedClients>('/accountant/clients', { params })
   return data
 }
 
