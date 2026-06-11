@@ -10,9 +10,10 @@ interface Props {
   onManualSuccess: (documentId: string) => void
   incomeCount?: number
   expenseCount?: number
+  clientId?: string
 }
 
-export function TwoAreaUpload({ onFilePicked, onManualSuccess, incomeCount, expenseCount }: Props) {
+export function TwoAreaUpload({ onFilePicked, onManualSuccess, incomeCount, expenseCount, clientId }: Props) {
   const [manualOpen, setManualOpen] = useState(false)
 
   return (
@@ -49,6 +50,7 @@ export function TwoAreaUpload({ onFilePicked, onManualSuccess, incomeCount, expe
           setManualOpen(false)
           onManualSuccess(id)
         }}
+        clientId={clientId}
       />
     </div>
   )
