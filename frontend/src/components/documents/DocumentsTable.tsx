@@ -26,7 +26,8 @@ function tierStyle(tier: Tier): CSSProperties {
   }
 }
 
-function fmtDate(iso: string) {
+function fmtDate(iso: string | null) {
+  if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })
 }
 
@@ -61,7 +62,7 @@ interface Props {
 const COL_HEADERS: { label: string; align: CSSProperties['textAlign']; color: string }[] = [
   { label: 'Reference', align: 'left',   color: 'var(--t-faint)' },
   { label: 'Source',    align: 'left',   color: 'var(--t-faint)' },
-  { label: 'Uploaded',  align: 'left',   color: 'var(--t-faint)' },
+  { label: 'Txn Date',  align: 'left',   color: 'var(--t-faint)' },
   { label: 'Inflow',    align: 'right',  color: 'var(--t-tier-ready-fg)' },
   { label: 'Outflow',   align: 'right',  color: 'var(--t-tier-review-fg)' },
   { label: 'Status',    align: 'center', color: 'var(--t-faint)' },
@@ -192,9 +193,9 @@ export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, pa
                 </span>
               </div>
 
-              {/* Uploaded date */}
+              {/* Transaction date */}
               <span style={{ fontSize: 13.5, color: 'var(--t-muted)', fontWeight: 500 }}>
-                {fmtDate(doc.createdAt)}
+                {fmtDate(doc.date)}
               </span>
 
               {/* Inflow */}
@@ -363,7 +364,7 @@ export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, pa
                   {ref}
                 </span>
                 <span className="text-[12px] text-t-muted">
-                  {fmtDate(doc.createdAt)}
+                  {fmtDate(doc.date)}
                   {doc.isNoReceipt ? ' · Manual' : ' · Upload'}
                   {amount && (
                     <span style={{ color: amountColor }}>{` · ${amount}`}</span>

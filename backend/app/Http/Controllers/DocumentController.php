@@ -70,7 +70,7 @@ class DocumentController extends Controller
         $query = Document::where('company_id', $user->company_id);
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('status', strtolower($request->status));
         }
         if ($request->filled('type')) {
             $query->where('document_type', $request->type);
@@ -92,7 +92,7 @@ class DocumentController extends Controller
             ->where('documents.company_id', $user->company_id);
 
         if ($request->filled('status')) {
-            $aggQuery->where('documents.status', $request->status);
+            $aggQuery->where('documents.status', strtolower($request->status));
         }
         if ($request->filled('type')) {
             $aggQuery->where('documents.document_type', $request->type);
