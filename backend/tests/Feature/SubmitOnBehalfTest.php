@@ -158,4 +158,43 @@ class SubmitOnBehalfTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_client_cannot_upload_for_another_company(): void
+    {
+        Queue::fake();
+        Storage::fake('s3');
+
+        $accountant   = $this->makeAccountant();
+        $otherCompany = $this->makeClientCompany($accountant->id);
+        $ownCompany   = Company::factory()->create();
+        $client       = User::factory()->create(['company_id' => $ownCompany->id, 'role' => 'client']);
+
+        $response = $this->actingAs($client)->postJson('/api/documents', [
+            'file'          => UploadedFile::fake()->image('receipt.jpg'),
+            'declared_type' => 'income',
+            'client_id'     => $otherCompany->id,
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_client_cannot_create_manual_entry_for_another_company(): void
+    {
+        Queue::fake();
+
+        $accountant   = $this->makeAccountant();
+        $otherCompany = $this->makeClientCompany($accountant->id);
+        $ownCompany   = Company::factory()->create();
+        $client       = User::factory()->create(['company_id' => $ownCompany->id, 'role' => 'client']);
+
+        $response = $this->actingAs($client)->postJson('/api/documents/manual', [
+            'declared_type'  => 'income',
+            'date'           => '2026-06-11',
+            'payment_method' => 'Cash',
+            'lines'          => [['description' => 'Service fee', 'amount' => 1000]],
+            'client_id'      => $otherCompany->id,
+        ]);
+
+        $response->assertStatus(403);
+    }
 }

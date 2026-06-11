@@ -24,6 +24,10 @@ class DocumentController extends Controller
         if ($request->filled('client_id')) {
             $company = Company::findOrFail($request->client_id);
 
+            if ($user->role === 'client' && $company->id !== $user->company_id) {
+                return response()->json(['message' => 'Forbidden.'], 403);
+            }
+
             if ($user->role === 'accountant' && $company->accountant_id !== $user->id) {
                 return response()->json(['message' => 'Forbidden.'], 403);
             }
@@ -253,6 +257,10 @@ class DocumentController extends Controller
 
         if ($request->filled('client_id')) {
             $company = Company::findOrFail($request->client_id);
+
+            if ($user->role === 'client' && $company->id !== $user->company_id) {
+                return response()->json(['message' => 'Forbidden.'], 403);
+            }
 
             if ($user->role === 'accountant' && $company->accountant_id !== $user->id) {
                 return response()->json(['message' => 'Forbidden.'], 403);
