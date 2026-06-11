@@ -273,11 +273,16 @@ class ClientController extends Controller
         if ($request->filled('type')) {
             $query->where('document_type', $request->type);
         }
-        if ($request->filled('start')) {
-            $query->whereDate('document_date', '>=', $request->start);
-        }
-        if ($request->filled('end')) {
-            $query->whereDate('document_date', '<=', $request->end);
+        if ($request->filled('start') || $request->filled('end')) {
+            $start = $request->input('start');
+            $end   = $request->input('end');
+            $query->where(function ($q) use ($start, $end) {
+                $q->whereNull('document_date');
+                $q->orWhere(function ($d) use ($start, $end) {
+                    if ($start) $d->whereDate('document_date', '>=', $start);
+                    if ($end)   $d->whereDate('document_date', '<=', $end);
+                });
+            });
         }
 
         $perPage  = min(500, max(1, (int) $request->get('per_page', 10)));
