@@ -6,8 +6,6 @@ import { useQuery } from '@tanstack/react-query'
 import { getAccountantClients } from '@/lib/api/accountant/clients'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import type { ClientProfile } from '@/types/admin'
-
 type ReportType = 'income-statement' | 'expense-breakdown'
 
 function defaultStart() {
@@ -30,10 +28,11 @@ export default function AccountantReportsPage() {
   const [start,    setStart]    = useState(defaultStart())
   const [end,      setEnd]      = useState(defaultEnd())
 
-  const { data: clients } = useQuery({
+  const { data: clientsPage } = useQuery({
     queryKey: ['accountant-clients'],
     queryFn:  () => getAccountantClients(),
   })
+  const clients = clientsPage?.data ?? []
 
   function openModal(report: ReportType) {
     setClientId('')
@@ -114,7 +113,7 @@ export default function AccountantReportsPage() {
                 className={inputCls}
               >
                 <option value="">Select client…</option>
-                {(clients ?? []).map((c: ClientProfile) => (
+                {clients.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>

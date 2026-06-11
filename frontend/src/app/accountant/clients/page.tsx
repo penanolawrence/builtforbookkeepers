@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, type CSSProperties } from 'react'
+import { useState, useEffect, type CSSProperties } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getAccountantClients } from '@/lib/api/accountant/clients'
 import type { ClientProfile } from '@/types/admin'
@@ -10,6 +10,20 @@ import { Search, Users } from 'lucide-react'
 import { ClientDetailModal } from '@/components/accountant/ClientDetailModal'
 
 const PER_PAGE = 15
+
+function CountBadge({ n, tier }: { n: number; tier: 'review' | 'check' | 'ready' }) {
+  if (n === 0) return <span style={{ color: 'var(--t-faint)', fontSize: 13 }}>—</span>
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      padding: '3px 10px', borderRadius: 8, fontSize: 12.5, fontWeight: 700,
+      background: `var(--t-tier-${tier}-bg)`,
+      color:      `var(--t-tier-${tier}-fg)`,
+      border:     `1px solid var(--t-tier-${tier}-ring)`,
+      minWidth:   28,
+    }}>{n}</span>
+  )
+}
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value)
@@ -28,13 +42,7 @@ export default function AccountantClientsPage() {
 
   const debouncedSearch = useDebounce(search, 300)
 
-  const prevSearch = useRef(debouncedSearch)
-  useEffect(() => {
-    if (prevSearch.current !== debouncedSearch) {
-      prevSearch.current = debouncedSearch
-      setPage(1)
-    }
-  }, [debouncedSearch])
+  useEffect(() => { setPage(1) }, [debouncedSearch])
 
   const { data, isLoading } = useQuery({
     queryKey: ['accountant-clients', debouncedSearch, page],
@@ -66,22 +74,6 @@ export default function AccountantClientsPage() {
     { label: 'YEL',           align: 'center', color: 'var(--t-tier-check-fg)'  },
     { label: 'GRN',           align: 'center', color: 'var(--t-tier-ready-fg)'  },
   ]
-
-  function CountBadge({ n, tier }: { n: number; tier: 'review' | 'check' | 'ready' }) {
-    if (n === 0) return <span style={{ color: 'var(--t-faint)', fontSize: 13 }}>—</span>
-    return (
-      <span style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        padding: '3px 10px', borderRadius: 8, fontSize: 12.5, fontWeight: 700,
-        background: `var(--t-tier-${tier}-bg)`,
-        color:      `var(--t-tier-${tier}-fg)`,
-        border:     `1px solid var(--t-tier-${tier}-ring)`,
-        minWidth:   28,
-      }}>{n}</span>
-    )
-  }
-
-  const needsAttentionOnPage = clients.filter((c) => (c.queueCounts?.red ?? 0) > 0).length
 
   return (
     <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
@@ -132,9 +124,9 @@ export default function AccountantClientsPage() {
           <span style={{ background: 'var(--t-primary-soft)', color: 'var(--t-primary)', border: '1px solid var(--t-line)', borderRadius: 999, padding: '2px 9px', fontSize: 11.5, fontWeight: 800 }}>
             {clients.length}
           </span>
-          {needsAttentionOnPage > 0 && (
+          {summary.needAttention > 0 && (
             <span style={{ background: 'var(--t-tier-review-bg)', color: 'var(--t-tier-review-fg)', border: '1px solid var(--t-tier-review-ring)', borderRadius: 999, padding: '2px 9px', fontSize: 11.5, fontWeight: 800 }}>
-              {needsAttentionOnPage} need attention
+              {summary.needAttention} need attention
             </span>
           )}
         </div>

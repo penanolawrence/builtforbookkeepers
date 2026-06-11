@@ -26,10 +26,11 @@ export default function AccountantAdjustingEntriesPage() {
     }),
   })
 
-  const { data: clients } = useQuery({
+  const { data: clientsPage } = useQuery({
     queryKey: ['accountant-clients'],
     queryFn: () => getAccountantClients(),
   })
+  const clients = clientsPage?.data ?? []
 
   const allEntries    = (entries ?? []) as AdjustingEntry[]
   const pendingCount  = allEntries.filter((e) => e.status === 'PENDING').length

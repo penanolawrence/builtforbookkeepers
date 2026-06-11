@@ -45,8 +45,8 @@ jest.mock('@tanstack/react-query', () => ({
 describe('AccountantClientsPage', () => {
   it('renders the client names', () => {
     render(<AccountantClientsPage />)
-    expect(screen.getAllByText('ABC Trading Corp.').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Northwind Logistics').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('ABC Trading Corp.')).toHaveLength(2)
+    expect(screen.getAllByText('Northwind Logistics')).toHaveLength(2)
   })
 
   it('shows correct total from summary', () => {

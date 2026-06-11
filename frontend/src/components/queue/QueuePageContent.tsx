@@ -53,7 +53,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
   })
   const clients: ClientProfile[] = showAccountant
     ? (adminClientsData?.data ?? [])
-    : (accountantClientsData ?? [])
+    : (accountantClientsData?.data ?? [])
 
   const { data: accountantsData } = useQuery({
     queryKey: ['admin-accountants'],

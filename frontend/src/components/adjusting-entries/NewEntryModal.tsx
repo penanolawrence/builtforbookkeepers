@@ -50,7 +50,7 @@ export function NewEntryModal({ open, onClose, isAdmin, viewEntryId }: Props) {
 
   const clients: { id: string; name: string }[] = isAdmin
     ? (adminClientsData?.data ?? []).map((c) => ({ id: c.id, name: c.name }))
-    : (accountantClientsData ?? []).map((c) => ({ id: c.id, name: c.name }))
+    : (accountantClientsData?.data ?? []).map((c) => ({ id: c.id, name: c.name }))
 
   const { data: accounts } = useQuery({
     queryKey: ['accounts', selectedClientId],
