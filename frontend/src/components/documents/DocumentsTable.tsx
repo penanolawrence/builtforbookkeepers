@@ -47,9 +47,15 @@ function getNoteText(doc: Document): { text: string; color: string } {
 
 interface Props {
   docs: Document[]
+  totalDocs: number
+  lastPage: number
+  page: number
+  perPage: number
+  onPageChange: (page: number) => void
   onRowClick: (doc: Document) => void
   title?: string
   subtitle?: string
+  inReview?: number
 }
 
 const COL_HEADERS: { label: string; align: CSSProperties['textAlign']; color: string }[] = [
@@ -62,14 +68,17 @@ const COL_HEADERS: { label: string; align: CSSProperties['textAlign']; color: st
   { label: 'Note',      align: 'left',   color: 'var(--t-faint)' },
 ]
 
-export function DocumentsTable({ docs, onRowClick, title = 'Documents', subtitle }: Props) {
+export function DocumentsTable({ docs, totalDocs, lastPage, page, perPage, onPageChange, onRowClick, title = 'Documents', subtitle, inReview = 0 }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
-  if (docs.length === 0) return null
+  const totalPages = Math.max(1, lastPage)
+  const pageStart  = (page - 1) * perPage
+  const pageDocs   = docs
 
-  const inReview    = docs.filter((d) => d.status === 'PARKED' || d.status === 'RETURNED').length
-  const totalInflow  = docs.reduce((s, d) => s + d.inflow,  0)
-  const totalOutflow = docs.reduce((s, d) => s + d.outflow, 0)
+  if (totalDocs === 0) return null
+
+  const totalInflow  = pageDocs.reduce((s, d) => s + d.inflow,  0)
+  const totalOutflow = pageDocs.reduce((s, d) => s + d.outflow, 0)
 
   return (
     <div style={{
@@ -101,7 +110,7 @@ export function DocumentsTable({ docs, onRowClick, title = 'Documents', subtitle
           fontSize:     11.5,
           fontWeight:   800,
         }}>
-          {docs.length}
+          {totalDocs}
         </span>
         {inReview > 0 && (
           <span style={{
@@ -131,7 +140,7 @@ export function DocumentsTable({ docs, onRowClick, title = 'Documents', subtitle
         </div>
 
         {/* ── Data rows ── */}
-        {docs.map((doc, i) => {
+        {pageDocs.map((doc, i) => {
           const { label: statusLabel, tier } = STATUS[doc.status]
           const { text: note, color: noteColor } = getNoteText(doc)
           const ref         = doc.refNumber ?? `#${doc.id.slice(0, 8)}`
@@ -238,7 +247,7 @@ export function DocumentsTable({ docs, onRowClick, title = 'Documents', subtitle
           background:          'var(--t-card-alt)',
         }}>
           <span style={{ gridColumn: '1 / 4', fontSize: 13, fontWeight: 700, color: 'var(--t-muted)' }}>
-            {docs.length} {docs.length === 1 ? 'entry' : 'entries'}
+            {pageDocs.length} {pageDocs.length === 1 ? 'entry' : 'entries'} on this page
           </span>
           <span style={{ textAlign: 'right', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 15, color: 'var(--t-tier-ready-fg)', fontVariantNumeric: 'tabular-nums' }}>
             {totalInflow > 0 ? formatCurrency(totalInflow) : '—'}
@@ -250,11 +259,82 @@ export function DocumentsTable({ docs, onRowClick, title = 'Documents', subtitle
           <span />
         </div>
 
+        {/* ── Pagination bar ── */}
+        {totalPages > 1 && (
+          <div style={{
+            display:        'flex',
+            alignItems:     'center',
+            justifyContent: 'space-between',
+            padding:        '12px 24px',
+            borderTop:      '1px solid var(--t-line)',
+            background:     'var(--t-card)',
+          }}>
+            <span style={{ fontSize: 12.5, color: 'var(--t-faint)', fontWeight: 500 }}>
+              Showing {pageStart + 1}–{Math.min(pageStart + perPage, totalDocs)} of {totalDocs}
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button
+                onClick={() => onPageChange(Math.max(1, page - 1))}
+                disabled={page === 1}
+                style={{
+                  width: 32, height: 32, borderRadius: 8, border: '1px solid var(--t-line)',
+                  background: 'var(--t-card)', color: 'var(--t-ink)', fontSize: 14,
+                  cursor: page === 1 ? 'not-allowed' : 'pointer',
+                  opacity: page === 1 ? 0.35 : 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                ‹
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .reduce<(number | '…')[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('…')
+                  acc.push(p)
+                  return acc
+                }, [])
+                .map((p, idx) =>
+                  p === '…' ? (
+                    <span key={`ellipsis-${idx}`} style={{ fontSize: 13, color: 'var(--t-faint)', padding: '0 4px' }}>…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => onPageChange(p as number)}
+                      style={{
+                        width: 32, height: 32, borderRadius: 8, fontSize: 13, fontWeight: p === page ? 700 : 500,
+                        border: p === page ? '1.5px solid var(--t-primary)' : '1px solid var(--t-line)',
+                        background: p === page ? 'var(--t-primary-soft)' : 'var(--t-card)',
+                        color: p === page ? 'var(--t-primary)' : 'var(--t-ink)',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              <button
+                onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+                disabled={page === totalPages}
+                style={{
+                  width: 32, height: 32, borderRadius: 8, border: '1px solid var(--t-line)',
+                  background: 'var(--t-card)', color: 'var(--t-ink)', fontSize: 14,
+                  cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                  opacity: page === totalPages ? 0.35 : 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                ›
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* ── Mobile card list — visible on mobile only ── */}
       <div className="block md:hidden">
-        {docs.map((doc, i) => {
+        {pageDocs.map((doc, i) => {
           const { label: statusLabel, tier } = STATUS[doc.status]
           const ref = doc.refNumber ?? `#${doc.id.slice(0, 8)}`
           const amount = doc.inflow > 0
@@ -299,6 +379,42 @@ export function DocumentsTable({ docs, onRowClick, title = 'Documents', subtitle
             </div>
           )
         })}
+
+        {/* Mobile pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t" style={{ borderColor: 'var(--t-line)' }}>
+            <span className="text-[12px]" style={{ color: 'var(--t-faint)' }}>
+              {pageStart + 1}–{Math.min(pageStart + perPage, totalDocs)} of {totalDocs}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onPageChange(Math.max(1, page - 1))}
+                disabled={page === 1}
+                className="flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-semibold"
+                style={{
+                  borderColor: 'var(--t-line)', background: 'var(--t-card)', color: 'var(--t-ink)',
+                  opacity: page === 1 ? 0.35 : 1, cursor: page === 1 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                ‹
+              </button>
+              <span className="text-[13px] font-semibold" style={{ color: 'var(--t-ink)' }}>
+                {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => onPageChange((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="flex items-center justify-center w-8 h-8 rounded-lg border text-sm font-semibold"
+                style={{
+                  borderColor: 'var(--t-line)', background: 'var(--t-card)', color: 'var(--t-ink)',
+                  opacity: page === totalPages ? 0.35 : 1, cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                }}
+              >
+                ›
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
     </div>

@@ -6,6 +6,7 @@ export function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname
 
   if (
+    path === '/' ||
     path.startsWith('/login') ||
     path.startsWith('/setup') ||
     path.startsWith('/blocked')

@@ -280,6 +280,7 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
   const [docType,   setDocType]   = useState('')
   const [docStart,  setDocStart]  = useState('')
   const [docEnd,    setDocEnd]    = useState('')
+  const [docPage,   setDocPage]   = useState(1)
 
   const [coaAccounts, setCoaAccounts] = useState<EditableAccount[]>([])
   const [coaSaving,   setCoaSaving]   = useState(false)
@@ -314,16 +315,21 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId, client?.name, client?.mobile, client?.email, client?.contactPerson, client?.tin, client?.plan, client?.birType])
 
-  const { data: documents, isLoading: docsLoading } = useQuery({
-    queryKey: ['admin-client-docs', clientId, docStatus, docType, docStart, docEnd],
+  const { data: pagedDocuments, isLoading: docsLoading } = useQuery({
+    queryKey: ['admin-client-docs', clientId, docStatus, docType, docStart, docEnd, docPage],
     queryFn:  () => getClientDocumentsAdmin(clientId, {
-      status: docStatus || undefined,
-      type:   docType   || undefined,
-      start:  docStart  || undefined,
-      end:    docEnd    || undefined,
+      status:   docStatus || undefined,
+      type:     docType   || undefined,
+      start:    docStart  || undefined,
+      end:      docEnd    || undefined,
+      page:     docPage,
+      per_page: 10,
     }),
     enabled: tab === 'documents',
   })
+  const documents     = pagedDocuments?.data ?? []
+  const docsTotal     = pagedDocuments?.total ?? 0
+  const docsLastPage  = pagedDocuments?.lastPage ?? 1
 
   const { data: coaData } = useQuery({
     queryKey: ['admin-coa', clientId],
@@ -708,7 +714,7 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
                   <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-t-line bg-t-surface">
                     <select
                       value={docStatus}
-                      onChange={(e) => setDocStatus(e.target.value)}
+                      onChange={(e) => { setDocStatus(e.target.value); setDocPage(1) }}
                       className="border border-t-line rounded-md px-2 py-1.5 text-xs text-t-ink bg-t-card cursor-pointer"
                     >
                       <option value="">All statuses</option>
@@ -720,7 +726,7 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
                     </select>
                     <select
                       value={docType}
-                      onChange={(e) => setDocType(e.target.value)}
+                      onChange={(e) => { setDocType(e.target.value); setDocPage(1) }}
                       className="border border-t-line rounded-md px-2 py-1.5 text-xs text-t-ink bg-t-card cursor-pointer"
                     >
                       <option value="">All types</option>
@@ -730,14 +736,14 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
                     <input
                       type="date"
                       value={docStart}
-                      onChange={(e) => setDocStart(e.target.value)}
+                      onChange={(e) => { setDocStart(e.target.value); setDocPage(1) }}
                       className="border border-t-line rounded-md px-2 py-1.5 text-xs text-t-ink bg-t-card w-32"
                     />
                     <span className="text-xs text-t-faint">–</span>
                     <input
                       type="date"
                       value={docEnd}
-                      onChange={(e) => setDocEnd(e.target.value)}
+                      onChange={(e) => { setDocEnd(e.target.value); setDocPage(1) }}
                       className="border border-t-line rounded-md px-2 py-1.5 text-xs text-t-ink bg-t-card w-32"
                     />
                   </div>
@@ -782,6 +788,31 @@ function DetailMode({ clientId, onClose }: { clientId: string; onClose: () => vo
                         })}
                       </tbody>
                     </table>
+                  )}
+                  {docsLastPage > 1 && (
+                    <div className="flex items-center justify-between px-3.5 py-2 border-t border-t-line bg-t-card">
+                      <span className="text-[11px] text-t-faint">
+                        Page {docPage} of {docsLastPage} · {docsTotal} total
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setDocPage((p) => Math.max(1, p - 1))}
+                          disabled={docPage === 1}
+                          className="w-7 h-7 flex items-center justify-center rounded border border-t-line bg-t-card text-xs text-t-ink"
+                          style={{ opacity: docPage === 1 ? 0.35 : 1, cursor: docPage === 1 ? 'not-allowed' : 'pointer' }}
+                        >
+                          ‹
+                        </button>
+                        <button
+                          onClick={() => setDocPage((p) => Math.min(docsLastPage, p + 1))}
+                          disabled={docPage === docsLastPage}
+                          className="w-7 h-7 flex items-center justify-center rounded border border-t-line bg-t-card text-xs text-t-ink"
+                          style={{ opacity: docPage === docsLastPage ? 0.35 : 1, cursor: docPage === docsLastPage ? 'not-allowed' : 'pointer' }}
+                        >
+                          ›
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

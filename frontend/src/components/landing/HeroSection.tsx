@@ -11,7 +11,7 @@ export function HeroSection() {
           <em>not more hours</em>
         </h1>
         <p className="ld-hero__sub">
-          Sofia Books organizes your clients&rsquo; receipts, sorts everything into
+          Built for Bookkeepers organizes your clients&rsquo; receipts, sorts everything into
           an AI-powered review queue, and generates your BIR books on demand — so
           you can grow without burning out.
         </p>

@@ -20,16 +20,27 @@ const jakarta = Plus_Jakarta_Sans({
   display: 'swap',
 })
 
+// TODO: update SITE_URL when domain is confirmed
+const SITE_URL = 'https://builtforbookkeepers.ph'
+
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_APP_NAME ?? 'Built for Bookkeepers',
-  description: 'Philippine SME bookkeeping SaaS',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Built for Bookkeepers',
+    template: '%s — Built for Bookkeepers',
+  },
+  description:
+    'AI-assisted bookkeeping software for Philippine accounting firms. Automates receipt classification, BIR book generation, and VAT auto-computation.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${jakarta.variable}`}>
+    <html lang="en-PH" className={`${bricolage.variable} ${jakarta.variable}`}>
       <body>
         <QueryProvider>
           <SocketProvider>

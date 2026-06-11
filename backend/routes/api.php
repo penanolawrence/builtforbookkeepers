@@ -9,6 +9,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SubtypeController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Accountant;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/login',         [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/auth/setup',         [AuthController::class, 'setupPassword']);
 Route::get('/auth/validate-token', [AuthController::class, 'validateToken']);
+Route::post('/leads',              [LeadController::class, 'store'])->middleware('throttle:10,1');
 
 // Authenticated — all roles
 Route::middleware('auth:sanctum')->group(function () {

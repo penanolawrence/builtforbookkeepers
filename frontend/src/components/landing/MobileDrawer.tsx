@@ -1,11 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useTheme } from '@/components/layout/ThemeProvider'
+import type { Role } from '@/types/auth'
 
 export function MobileDrawer() {
   const [open, setOpen] = useState(false)
+  const [dashboardPath, setDashboardPath] = useState<string | null>(null)
   const { theme, setTheme } = useTheme()
+
+  useEffect(() => {
+    const match = document.cookie.match(/(?:^|; )b4b_role=([^;]+)/)
+    const role  = match ? (decodeURIComponent(match[1]) as Role) : null
+    if (role) setDashboardPath(`/${role}/dashboard`)
+  }, [])
 
   return (
     <>
@@ -34,7 +43,10 @@ export function MobileDrawer() {
             {theme === 'yoda' ? '☀️' : '🌙'}
           </button>
         </div>
-        <a href="#cta" className="ld-drawer__link ld-drawer__link--cta" onClick={() => setOpen(false)}>Get Started →</a>
+        {dashboardPath
+          ? <Link href={dashboardPath} className="ld-drawer__link ld-drawer__link--cta" onClick={() => setOpen(false)}>Dashboard →</Link>
+          : <a href="#cta" className="ld-drawer__link ld-drawer__link--cta" onClick={() => setOpen(false)}>Get Started →</a>
+        }
       </div>
     </>
   )

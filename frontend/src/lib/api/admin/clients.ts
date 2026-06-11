@@ -1,6 +1,6 @@
 import api from '../client'
 import type { ClientProfile, Account } from '@/types/admin'
-import type { Document } from '@/types/document'
+import type { Document, PagedDocs } from '@/types/document'
 
 export async function getClients(params?: {
   search?: string
@@ -76,9 +76,9 @@ export async function reassignAccountant(
 
 export async function getClientDocumentsAdmin(
   id: string,
-  params?: { status?: string; type?: string; start?: string; end?: string }
-): Promise<Document[]> {
-  const { data } = await api.get<Document[]>(`/admin/clients/${id}/documents`, { params })
+  params?: { status?: string; type?: string; start?: string; end?: string; page?: number; per_page?: number }
+): Promise<PagedDocs> {
+  const { data } = await api.get<PagedDocs>(`/admin/clients/${id}/documents`, { params })
   return data
 }
 

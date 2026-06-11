@@ -35,6 +35,17 @@ export interface FieldOverrides {
   lines: LineOverrideEntry[]
 }
 
+export interface PagedDocs {
+  data: Document[]
+  total: number
+  perPage: number
+  currentPage: number
+  lastPage: number
+  inReview: number
+  totalInflow: number
+  totalOutflow: number
+}
+
 export interface Document {
   id: string
   companyId: string

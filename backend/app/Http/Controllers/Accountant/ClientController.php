@@ -128,9 +128,12 @@ class ClientController extends Controller
             $query->whereDate('document_date', '<=', $request->end);
         }
 
-        $documents = $query->latest()->get();
+        $perPage  = min(500, max(1, (int) $request->get('per_page', 10)));
+        $page     = max(1, (int) $request->get('page', 1));
+        $inReview = (clone $query)->whereIn('status', ['parked', 'returned'])->count();
+        $paginated = $query->with('transactionLines')->latest()->paginate($perPage, ['*'], 'page', $page);
 
-        return response()->json($documents->map(fn ($d) => [
+        $toItem = fn ($d) => [
             'id'              => $d->id,
             'companyId'       => $d->company_id,
             'declaredType'    => $d->document_type,
@@ -150,8 +153,21 @@ class ClientController extends Controller
             'rejectionReason' => $d->rejection_reason,
             'expiresAt'       => $d->expires_at?->toIso8601String(),
             'refNumber'       => $d->ref_number,
+            'inflow'          => (float) $d->transactionLines->where('type', 'income')->sum('amount'),
+            'outflow'         => (float) $d->transactionLines->where('type', 'expense')->sum('amount'),
             'createdAt'       => $d->created_at?->toIso8601String(),
             'updatedAt'       => $d->updated_at?->toIso8601String(),
-        ]));
+        ];
+
+        return response()->json([
+            'data'         => $paginated->getCollection()->map($toItem),
+            'total'        => $paginated->total(),
+            'perPage'      => $perPage,
+            'currentPage'  => $paginated->currentPage(),
+            'lastPage'     => $paginated->lastPage(),
+            'inReview'     => $inReview,
+            'totalInflow'  => 0,
+            'totalOutflow' => 0,
+        ]);
     }
 }

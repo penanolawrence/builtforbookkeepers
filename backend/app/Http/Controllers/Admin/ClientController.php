@@ -280,31 +280,43 @@ class ClientController extends Controller
             $query->whereDate('document_date', '<=', $request->end);
         }
 
-        $documents = $query->latest()->get();
+        $perPage  = min(500, max(1, (int) $request->get('per_page', 10)));
+        $page     = max(1, (int) $request->get('page', 1));
+        $inReview = (clone $query)->whereIn('status', ['parked', 'returned'])->count();
+        $paginated = $query->latest()->paginate($perPage, ['*'], 'page', $page);
 
-        return response()->json($documents->map(fn ($d) => [
-            'id'              => $d->id,
-            'companyId'       => $d->company_id,
-            'declaredType'    => $d->document_type,
-            'status'          => strtoupper($d->status),
-            'flag'            => $d->flag,
-            'anomalyReasons'  => $d->anomaly_reason ?? [],
-            'merchantName'    => $d->merchant_name,
-            'date'            => $d->document_date?->toDateString(),
-            'amount'          => $d->amount,
-            'vatAmount'       => $d->vat_amount,
-            'category'        => $d->category,
-            'paymentMethod'   => $d->payment_method,
-            'imageUrl'        => null,
-            'isNoReceipt'     => $d->is_no_receipt,
-            'isOcrFailed'     => $d->is_ocr_failed,
-            'returnNote'      => $d->return_note,
-            'rejectionReason' => $d->rejection_reason,
-            'expiresAt'       => $d->expires_at?->toIso8601String(),
-            'refNumber'       => $d->ref_number,
-            'createdAt'       => $d->created_at?->toIso8601String(),
-            'updatedAt'       => $d->updated_at?->toIso8601String(),
-        ]));
+        return response()->json([
+            'data'         => $paginated->getCollection()->map(fn ($d) => [
+                'id'              => $d->id,
+                'companyId'       => $d->company_id,
+                'declaredType'    => $d->document_type,
+                'status'          => strtoupper($d->status),
+                'flag'            => $d->flag,
+                'anomalyReasons'  => $d->anomaly_reason ?? [],
+                'merchantName'    => $d->merchant_name,
+                'date'            => $d->document_date?->toDateString(),
+                'amount'          => $d->amount,
+                'vatAmount'       => $d->vat_amount,
+                'category'        => $d->category,
+                'paymentMethod'   => $d->payment_method,
+                'imageUrl'        => null,
+                'isNoReceipt'     => $d->is_no_receipt,
+                'isOcrFailed'     => $d->is_ocr_failed,
+                'returnNote'      => $d->return_note,
+                'rejectionReason' => $d->rejection_reason,
+                'expiresAt'       => $d->expires_at?->toIso8601String(),
+                'refNumber'       => $d->ref_number,
+                'createdAt'       => $d->created_at?->toIso8601String(),
+                'updatedAt'       => $d->updated_at?->toIso8601String(),
+            ]),
+            'total'        => $paginated->total(),
+            'perPage'      => $perPage,
+            'currentPage'  => $paginated->currentPage(),
+            'lastPage'     => $paginated->lastPage(),
+            'inReview'     => $inReview,
+            'totalInflow'  => 0,
+            'totalOutflow' => 0,
+        ]);
     }
 
     private function toListItem(Company $c): array

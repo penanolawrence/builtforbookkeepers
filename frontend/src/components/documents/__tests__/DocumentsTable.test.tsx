@@ -37,7 +37,16 @@ function makeDoc(overrides: Partial<Document> = {}): Document {
 function wrap(docs: Document[], onRowClick = jest.fn(), title?: string) {
   return render(
     <div data-theme="sofia">
-      <DocumentsTable docs={docs} onRowClick={onRowClick} title={title} />
+      <DocumentsTable
+        docs={docs}
+        totalDocs={docs.length}
+        lastPage={1}
+        perPage={10}
+        page={1}
+        onPageChange={jest.fn()}
+        onRowClick={onRowClick}
+        title={title}
+      />
     </div>
   )
 }

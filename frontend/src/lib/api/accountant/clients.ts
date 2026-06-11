@@ -1,6 +1,6 @@
 import api from '../client'
 import type { ClientProfile } from '@/types/admin'
-import type { Document } from '@/types/document'
+import type { PagedDocs } from '@/types/document'
 
 export async function getAccountantClients(): Promise<ClientProfile[]> {
   const { data } = await api.get<ClientProfile[]>('/accountant/clients')
@@ -18,8 +18,8 @@ export async function getAccountantClient(id: string): Promise<ClientProfile & {
 
 export async function getAccountantClientDocuments(
   id: string,
-  params?: { status?: string; type?: string; start?: string; end?: string }
-): Promise<Document[]> {
-  const { data } = await api.get<Document[]>(`/accountant/clients/${id}/documents`, { params })
+  params?: { status?: string; type?: string; start?: string; end?: string; page?: number; per_page?: number }
+): Promise<PagedDocs> {
+  const { data } = await api.get<PagedDocs>(`/accountant/clients/${id}/documents`, { params })
   return data
 }

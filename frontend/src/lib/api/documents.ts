@@ -1,5 +1,5 @@
 import api from './client'
-import type { Document, DeclaredType } from '@/types/document'
+import type { Document, DeclaredType, PagedDocs } from '@/types/document'
 
 export async function uploadDocument(
   file: File,
@@ -19,8 +19,10 @@ export async function getDocuments(params?: {
   type?: string
   start?: string
   end?: string
-}): Promise<Document[]> {
-  const { data } = await api.get<Document[]>('/documents', { params })
+  page?: number
+  per_page?: number
+}): Promise<PagedDocs> {
+  const { data } = await api.get<PagedDocs>('/documents', { params })
   return data
 }
 

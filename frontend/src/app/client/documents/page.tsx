@@ -28,6 +28,7 @@ function DocumentsContent() {
   const type   = searchParams.get('type')   ?? ''
   const start  = searchParams.get('start')  ?? ''
   const end    = searchParams.get('end')    ?? ''
+  const page   = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
 
   const dateDefaultApplied = useRef(false)
   // Apply last-7-days defaults once on mount if no date params exist.
@@ -44,13 +45,15 @@ function DocumentsContent() {
     router.replace(`/client/documents?${params.toString()}`)
   }, [searchParams, router])
 
-  const { data: docs, isLoading } = useQuery({
-    queryKey: ['client-docs', status, type, start, end],
+  const { data: pagedDocs, isLoading } = useQuery({
+    queryKey: ['client-docs', status, type, start, end, page],
     queryFn:  () => getDocuments({
-      status: status || undefined,
-      type:   type   || undefined,
-      start:  start  || undefined,
-      end:    end    || undefined,
+      status:   status || undefined,
+      type:     type   || undefined,
+      start:    start  || undefined,
+      end:      end    || undefined,
+      page,
+      per_page: 10,
     }),
   })
 
@@ -58,6 +61,13 @@ function DocumentsContent() {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value)
     else params.delete(key)
+    if (key !== 'page') params.set('page', '1')
+    router.push(`/client/documents?${params.toString()}`)
+  }
+
+  function setPage(p: number) {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('page', String(p))
     router.push(`/client/documents?${params.toString()}`)
   }
 
@@ -67,7 +77,7 @@ function DocumentsContent() {
     setSelectedDoc(null)
     try {
       await reuploadDocument(docId, file)
-      queryClient.invalidateQueries({ queryKey: ['client-docs', status, type, start, end] })
+      queryClient.invalidateQueries({ queryKey: ['client-docs', status, type, start, end, page] })
       toast({ title: 'Re-uploaded — processing your document…' })
     } catch {
       toast({ title: 'Re-upload failed', description: 'Please try again.', variant: 'destructive' })
@@ -80,17 +90,18 @@ function DocumentsContent() {
     setSelectedDoc(null)
     try {
       await cancelDocument(docId)
-      queryClient.invalidateQueries({ queryKey: ['client-docs', status, type, start, end] })
+      queryClient.invalidateQueries({ queryKey: ['client-docs', status, type, start, end, page] })
       toast({ title: 'Document withdrawn.' })
     } catch {
       toast({ title: 'Could not withdraw document', description: 'Please try again.', variant: 'destructive' })
     }
   }
 
-  const totalInflow  = (docs ?? []).reduce((s, d) => s + (d.inflow  ?? 0), 0)
-  const totalOutflow = (docs ?? []).reduce((s, d) => s + (d.outflow ?? 0), 0)
+  const totalInflow  = pagedDocs?.totalInflow  ?? 0
+  const totalOutflow = pagedDocs?.totalOutflow ?? 0
   const netFlow      = totalInflow - totalOutflow
-  const inReview     = (docs ?? []).filter((d) => d.status === 'PARKED').length
+  const inReview     = pagedDocs?.inReview ?? 0
+  const totalEntries = pagedDocs?.total ?? 0
 
   function fmtCurrency(n: number) {
     return '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -133,7 +144,7 @@ function DocumentsContent() {
         <div className="grid grid-cols-2 gap-3 md:flex md:gap-[14px] mb-[22px]">
           <SummaryCard
             label="Total Entries"
-            value={String(docs?.length ?? 0)}
+            value={String(totalEntries)}
             subnote={inReview > 0 ? `${inReview} in review` : 'all entries'}
           />
           <SummaryCard
@@ -229,11 +240,17 @@ function DocumentsContent() {
 
       {isLoading ? (
         <div className="p-12 text-center text-t-faint text-sm">Loading…</div>
-      ) : (docs ?? []).length === 0 ? (
+      ) : totalEntries === 0 ? (
         <EmptyState message="No documents found." />
       ) : (
         <DocumentsTable
-          docs={docs ?? []}
+          docs={pagedDocs?.data ?? []}
+          totalDocs={totalEntries}
+          lastPage={pagedDocs?.lastPage ?? 1}
+          perPage={pagedDocs?.perPage ?? 10}
+          page={page}
+          onPageChange={setPage}
+          inReview={inReview}
           onRowClick={setSelectedDoc}
         />
       )}

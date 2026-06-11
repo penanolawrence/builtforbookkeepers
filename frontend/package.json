@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "env:local": "node -e \"require('fs').copyFileSync('.env.local-backend', '.env.local')\" && echo switched to local backend",
+    "env:railway": "node -e \"require('fs').copyFileSync('.env.railway', '.env.local')\" && echo switched to railway",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

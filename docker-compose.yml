@@ -4,7 +4,7 @@ x-backend-base: &backend-base
   build:
     context: ./backend
     dockerfile: Dockerfile
-  env_file: .env
+  env_file: ./backend/.env
   environment:
     APP_KEY: ${APP_KEY}
     DB_CONNECTION: pgsql
@@ -91,12 +91,7 @@ services:
       - ./frontend:/app        # bind mount — Next.js changes hot-reload instantly
       - /app/node_modules      # anonymous vol keeps node_modules inside container
       - /app/.next             # anonymous vol keeps build cache inside container
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api
-      NEXT_PUBLIC_REVERB_APP_KEY: ${REVERB_APP_KEY}
-      NEXT_PUBLIC_REVERB_HOST: localhost
-      NEXT_PUBLIC_REVERB_PORT: "6001"
-      NEXT_PUBLIC_APP_NAME: "Built for Bookkeepers"
+    env_file: ./frontend/.env.local
     networks:
       - b4b-net
 

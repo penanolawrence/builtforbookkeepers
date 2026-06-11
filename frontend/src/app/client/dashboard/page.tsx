@@ -104,9 +104,9 @@ function activityFromDoc(doc: Document): {
 export default function ClientDashboard() {
   const { user }    = useAuth()
   const { theme }   = useTheme()
-  const { data: docs, isLoading } = useQuery({
+  const { data: docsPage, isLoading } = useQuery({
     queryKey: ['client-docs-all'],
-    queryFn:  () => getDocuments(),
+    queryFn:  () => getDocuments({ per_page: 500 }),
   })
 
   const [greeting,   setGreeting]   = useState('')
@@ -125,7 +125,7 @@ export default function ClientDashboard() {
     setMonthLabel(now.toLocaleDateString('en-US', { month: 'long' }))
   }, [])
 
-  const allDocs        = docs ?? []
+  const allDocs        = docsPage?.data ?? []
   const returnedDocs   = allDocs.filter((d) => d.status === 'RETURNED')
   const parkedDocs     = allDocs.filter((d) => d.status === 'PARKED')
   const thisMonthDocs  = allDocs.filter((d) => d.createdAt.startsWith(thisMonth))

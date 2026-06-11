@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { useDocumentStatus } from '@/lib/hooks/useDocumentStatus'
 import { getSignedUrl, getDocument } from '@/lib/api/documents'
@@ -97,7 +98,7 @@ function DocMetaCard({ doc }: { doc: Document }) {
   )
 }
 
-function ReceiptImage({ doc }: { doc: Document }) {
+function ReceiptImage({ doc, onViewFull }: { doc: Document; onViewFull: (url: string) => void }) {
   const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -120,11 +121,27 @@ function ReceiptImage({ doc }: { doc: Document }) {
 
   if (url) {
     return (
-      <img
-        src={url}
-        alt="Receipt"
-        className="w-full rounded-lg border border-gray-200 object-contain"
-      />
+      <div
+        className="relative group cursor-pointer rounded-lg overflow-hidden border border-gray-200"
+        onClick={() => onViewFull(url)}
+      >
+        <img
+          src={url}
+          alt="Receipt"
+          className="w-full object-contain"
+        />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+          <svg
+            className="w-9 h-9 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </div>
+      </div>
     )
   }
 
@@ -318,6 +335,7 @@ interface Props {
 export function DocumentDetailModal({ doc, onClose, onReupload, onCancel }: Props) {
   const [detail, setDetail]             = useState<Document | null>(null)
   const [isCancelOpen, setIsCancelOpen] = useState(false)
+  const [lightboxUrl, setLightboxUrl]   = useState<string | null>(null)
 
   useEffect(() => {
     if (!doc) { setDetail(null); setIsCancelOpen(false); return }
@@ -364,7 +382,7 @@ export function DocumentDetailModal({ doc, onClose, onReupload, onCancel }: Prop
 
             {/* Left: receipt image + meta */}
             <div className="w-2/5 p-5 overflow-y-auto">
-              <ReceiptImage doc={fullDoc} />
+              <ReceiptImage doc={fullDoc} onViewFull={setLightboxUrl} />
               <DocMetaCard doc={fullDoc} />
             </div>
 
@@ -464,6 +482,29 @@ export function DocumentDetailModal({ doc, onClose, onReupload, onCancel }: Prop
           </div>
 
         </DialogContent>
+
+        {lightboxUrl && (
+          <DialogPrimitive.Root open onOpenChange={(open) => { if (!open) setLightboxUrl(null) }}>
+            <DialogPrimitive.Portal>
+              <DialogPrimitive.Overlay className="fixed inset-0 z-[400] bg-[rgba(10,8,18,0.82)] backdrop-blur-[8px]" />
+              <DialogPrimitive.Content className="fixed inset-0 z-[401] flex items-center justify-center outline-none">
+                <DialogPrimitive.Title className="sr-only">Receipt image</DialogPrimitive.Title>
+                <button
+                  className="absolute top-5 right-6 w-10 h-10 rounded-[11px] bg-white/[0.12] border border-white/[0.2] text-white flex items-center justify-center text-lg hover:bg-white/20 transition-colors cursor-pointer"
+                  onClick={() => setLightboxUrl(null)}
+                  aria-label="Close image viewer"
+                >
+                  ✕
+                </button>
+                <img
+                  src={lightboxUrl}
+                  alt="Receipt full view"
+                  className="max-w-[min(800px,92vw)] max-h-[90vh] object-contain rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+                />
+              </DialogPrimitive.Content>
+            </DialogPrimitive.Portal>
+          </DialogPrimitive.Root>
+        )}
       </Dialog>
 
       {/* Cancel confirmation dialog */}

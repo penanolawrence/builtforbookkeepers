@@ -1,18 +1,18 @@
 // src/components/landing/HowItWorksSection.tsx
 const STEPS = [
   {
-    title: 'Client uploads receipts',
-    desc: 'From any phone browser — no app needed. Income and expense areas are clearly separated. GCash screenshots and Viber photos accepted.',
+    title: 'Receipts come in — from client or accountant',
+    desc: 'Clients snap and send from any phone browser — no app needed. Or you upload on their behalf. GCash screenshots, Viber photos, and bank PDFs all accepted.',
     aiChip: false,
   },
   {
     title: 'Sofia classifies and flags',
-    desc: 'AI assigns categories, detects anomalies (duplicate receipts, VAT mismatches, spending spikes), and sorts items into a Red / Yellow / Green review queue.',
+    desc: 'AI assigns categories, detects anomalies — duplicates, VAT mismatches, spending spikes — and sorts everything into a Red / Yellow / Green queue.',
     aiChip: true,
   },
   {
-    title: 'You review, approve, and export',
-    desc: 'Batch-approve green items in one click. Red and yellow items get individual attention. Generate any BIR book instantly — formatted for loose-leaf submission.',
+    title: 'You review and export',
+    desc: 'Batch-approve green items in one click. Fix flagged items individually. Generate BIR books formatted for loose-leaf submission — instantly.',
     aiChip: false,
   },
 ]
@@ -27,18 +27,13 @@ export function HowItWorksSection() {
       </p>
       <ol className="ld-steps">
         {STEPS.map((s, i) => (
-          <li key={s.title} className="ld-step">
+          <li key={s.title} className={`ld-step${s.aiChip ? ' ld-step--ai' : ''}`}>
             <div className="ld-step__num" aria-hidden="true">
               {i + 1}
-              {i < STEPS.length - 1 && <div className="ld-step__line" />}
+              {s.aiChip && <span className="ld-step__ai-badge">• AI</span>}
             </div>
-            <div>
-              <p className="ld-step__title">
-                {s.title}
-                {s.aiChip && <span className="ld-step__ai-chip">• AI</span>}
-              </p>
-              <p className="ld-step__desc">{s.desc}</p>
-            </div>
+            <h3 className="ld-step__title">{s.title}</h3>
+            <p className="ld-step__desc">{s.desc}</p>
           </li>
         ))}
       </ol>

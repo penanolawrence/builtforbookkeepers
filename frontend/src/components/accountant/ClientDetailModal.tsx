@@ -133,6 +133,7 @@ function DocumentsTab({ clientId }: { clientId: string }) {
   const [typeFilter,   setTypeFilter]   = useState('')
   const [start,        setStart]        = useState('')
   const [end,          setEnd]          = useState('')
+  const [page,         setPage]         = useState(1)
   const defaultsApplied = useRef(false)
 
   useEffect(() => {
@@ -144,13 +145,15 @@ function DocumentsTab({ clientId }: { clientId: string }) {
     setEnd(range.end)
   }, [start, end])
 
-  const { data: docs = [], isLoading } = useQuery({
-    queryKey: ['client-modal-docs', clientId, statusFilter, typeFilter, start, end],
+  const { data: pagedDocs, isLoading } = useQuery({
+    queryKey: ['client-modal-docs', clientId, statusFilter, typeFilter, start, end, page],
     queryFn: () => getAccountantClientDocuments(clientId, {
-      status: statusFilter || undefined,
-      type:   typeFilter   || undefined,
-      start:  start        || undefined,
-      end:    end          || undefined,
+      status:   statusFilter || undefined,
+      type:     typeFilter   || undefined,
+      start:    start        || undefined,
+      end:      end          || undefined,
+      page,
+      per_page: 10,
     }),
     enabled: !!(start && end),
   })
@@ -173,7 +176,7 @@ function DocumentsTab({ clientId }: { clientId: string }) {
       {/* Row 1 — Status + Type */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
         <div style={{ position: 'relative' }}>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={selectStyle}>
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} style={selectStyle}>
             <option value="">All Statuses</option>
             <option value="PARKED">In Review</option>
             <option value="APPROVED">Approved</option>
@@ -181,19 +184,19 @@ function DocumentsTab({ clientId }: { clientId: string }) {
             <option value="PROCESSING">Processing</option>
           </select>
           {statusFilter && (
-            <button type="button" style={clearBtnStyle} onClick={() => setStatusFilter('')} aria-label="Clear status filter">
+            <button type="button" style={clearBtnStyle} onClick={() => { setStatusFilter(''); setPage(1) }} aria-label="Clear status filter">
               <X size={16} style={{ opacity: 0.5 }} />
             </button>
           )}
         </div>
         <div style={{ position: 'relative' }}>
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={selectStyle}>
+          <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1) }} style={selectStyle}>
             <option value="">All Types</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </select>
           {typeFilter && (
-            <button type="button" style={clearBtnStyle} onClick={() => setTypeFilter('')} aria-label="Clear type filter">
+            <button type="button" style={clearBtnStyle} onClick={() => { setTypeFilter(''); setPage(1) }} aria-label="Clear type filter">
               <X size={16} style={{ opacity: 0.5 }} />
             </button>
           )}
@@ -219,7 +222,16 @@ function DocumentsTab({ clientId }: { clientId: string }) {
       {isLoading ? (
         <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>Loading…</div>
       ) : (
-        <DocumentsTable docs={docs} onRowClick={() => {}} />
+        <DocumentsTable
+          docs={pagedDocs?.data ?? []}
+          totalDocs={pagedDocs?.total ?? 0}
+          lastPage={pagedDocs?.lastPage ?? 1}
+          perPage={pagedDocs?.perPage ?? 10}
+          page={page}
+          onPageChange={setPage}
+          inReview={pagedDocs?.inReview}
+          onRowClick={() => {}}
+        />
       )}
     </div>
   )

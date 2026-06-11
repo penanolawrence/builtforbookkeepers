@@ -15,11 +15,11 @@ export function PricingSection() {
     <section id="pricing" className="ld-section ld-section--alt" aria-labelledby="pricing-heading">
       <p className="ld-label">Pricing</p>
       <h2 id="pricing-heading" className="ld-title">One plan. Everything included.</h2>
-      <p className="ld-sub">No tiers. No add-ons. One flat monthly fee per firm.</p>
+      <p className="ld-sub">No tiers, no add-ons, no surprises. One flat monthly fee for your entire firm.</p>
 
       <div className="ld-pricing__card">
         <div className="ld-pricing__glow" aria-hidden="true" />
-        <p className="ld-pricing__pill">Sofia Books</p>
+        <p className="ld-pricing__pill">Built for Bookkeepers</p>
         <p aria-label="Price: 999 pesos per month">
           <span className="ld-pricing__currency" aria-hidden="true">₱</span>
           <span className="ld-pricing__amount">999</span>

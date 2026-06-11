@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { getQueueItem, approveItem, returnItem, rejectItem } from '@/lib/api/queue'
@@ -621,29 +622,33 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
           </div>
 
         </DialogContent>
-      </Dialog>
 
-      {lightboxOpen && imageUrl && (
-        <div
-          data-testid="receipt-lightbox"
-          className="fixed inset-0 z-[400] flex items-center justify-center bg-[rgba(10,8,18,0.82)] backdrop-blur-[8px]"
-          onClick={(e) => { if (e.target === e.currentTarget) setLightboxOpen(false) }}
-        >
-          <button
-            className="absolute top-5 right-6 w-10 h-10 rounded-[11px] bg-white/[0.12] border border-white/[0.2] text-white flex items-center justify-center text-lg"
-            onClick={() => setLightboxOpen(false)}
-            aria-label="Close lightbox"
-            autoFocus
-          >
-            ✕
-          </button>
-          <img
-            src={imageUrl}
-            alt="Receipt full view"
-            className="max-w-[min(800px,92vw)] max-h-[90vh] object-contain rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
-          />
-        </div>
-      )}
+        {lightboxOpen && imageUrl && (
+          <DialogPrimitive.Root open onOpenChange={(open) => { if (!open) setLightboxOpen(false) }}>
+            <DialogPrimitive.Portal>
+              <DialogPrimitive.Overlay className="fixed inset-0 z-[400] bg-[rgba(10,8,18,0.82)] backdrop-blur-[8px]" />
+              <DialogPrimitive.Content
+                data-testid="receipt-lightbox"
+                className="fixed inset-0 z-[401] flex items-center justify-center outline-none"
+              >
+                <DialogPrimitive.Title className="sr-only">Receipt image</DialogPrimitive.Title>
+                <button
+                  className="absolute top-5 right-6 w-10 h-10 rounded-[11px] bg-white/[0.12] border border-white/[0.2] text-white flex items-center justify-center text-lg hover:bg-white/20 transition-colors cursor-pointer"
+                  onClick={() => setLightboxOpen(false)}
+                  aria-label="Close lightbox"
+                >
+                  ✕
+                </button>
+                <img
+                  src={imageUrl}
+                  alt="Receipt full view"
+                  className="max-w-[min(800px,92vw)] max-h-[90vh] object-contain rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+                />
+              </DialogPrimitive.Content>
+            </DialogPrimitive.Portal>
+          </DialogPrimitive.Root>
+        )}
+      </Dialog>
     </>
   )
 }

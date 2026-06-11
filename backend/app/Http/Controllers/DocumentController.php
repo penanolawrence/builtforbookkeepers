@@ -82,9 +82,46 @@ class DocumentController extends Controller
             $query->whereDate('document_date', '<=', $request->end);
         }
 
-        $documents = $query->with('transactionLines')->latest()->get();
+        $perPage  = min(500, max(1, (int) $request->get('per_page', 10)));
+        $page     = max(1, (int) $request->get('page', 1));
 
-        return response()->json($documents->map(fn ($d) => $this->toListItem($d)));
+        $inReview = (clone $query)->whereIn('status', ['parked', 'returned'])->count();
+
+        $aggQuery = \Illuminate\Support\Facades\DB::table('documents')
+            ->leftJoin('transaction_lines', 'transaction_lines.document_id', '=', 'documents.id')
+            ->where('documents.company_id', $user->company_id);
+
+        if ($request->filled('status')) {
+            $aggQuery->where('documents.status', $request->status);
+        }
+        if ($request->filled('type')) {
+            $aggQuery->where('documents.document_type', $request->type);
+        }
+        if ($request->filled('start')) {
+            $aggQuery->whereDate('documents.document_date', '>=', $request->start);
+        }
+        if ($request->filled('end')) {
+            $aggQuery->whereDate('documents.document_date', '<=', $request->end);
+        }
+
+        $agg = $aggQuery->selectRaw(
+            'COALESCE(SUM(CASE WHEN transaction_lines.type = ? THEN transaction_lines.amount ELSE 0 END), 0) as total_inflow,
+             COALESCE(SUM(CASE WHEN transaction_lines.type = ? THEN transaction_lines.amount ELSE 0 END), 0) as total_outflow',
+            ['income', 'expense']
+        )->first();
+
+        $paginated = $query->with('transactionLines')->latest()->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data'         => $paginated->getCollection()->map(fn ($d) => $this->toListItem($d)),
+            'total'        => $paginated->total(),
+            'perPage'      => $perPage,
+            'currentPage'  => $paginated->currentPage(),
+            'lastPage'     => $paginated->lastPage(),
+            'inReview'     => $inReview,
+            'totalInflow'  => (float) ($agg->total_inflow ?? 0),
+            'totalOutflow' => (float) ($agg->total_outflow ?? 0),
+        ]);
     }
 
     public function show(string $id): JsonResponse
