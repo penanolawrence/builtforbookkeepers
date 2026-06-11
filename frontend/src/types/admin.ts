@@ -18,6 +18,7 @@ export interface ClientProfile extends Company {
   username: string
   accountantName: string
   lastPayment: { amount: number; dateReceived: string; referenceNumber: string } | null
+  queueCounts?: { red: number; yellow: number; green: number }
 }
 
 export interface Accountant {
@@ -51,4 +52,17 @@ export interface Account {
   chartOfAccountId?: string | null
   isSystemManaged: boolean
   isActive: boolean
+}
+
+export interface PagedClients {
+  data: ClientProfile[]
+  total: number
+  perPage: number
+  currentPage: number
+  lastPage: number
+  summary: {
+    needAttention: number
+    pendingReview: number
+    allClear: number
+  }
 }
