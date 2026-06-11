@@ -16,7 +16,7 @@ class ClientController extends Controller
     {
         $user    = auth()->user();
         $search  = $request->get('search', '');
-        $perPage = min(100, max(1, (int) $request->get('per_page', 15)));
+        $perPage = $request->filled('per_page') ? min(100, max(1, (int) $request->get('per_page'))) : 15;
         $page    = max(1, (int) $request->get('page', 1));
 
         $baseQuery = Company::where('accountant_id', $user->id)
