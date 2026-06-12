@@ -3,28 +3,12 @@
 import { useEffect, useState } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { useDocumentStatus } from '@/lib/hooks/useDocumentStatus'
 import { getSignedUrl, getDocument } from '@/lib/api/documents'
+import { MascotProcessingPanel } from '@/components/documents/MascotProcessingPanel'
 import { formatCurrency } from '@/lib/utils/formatCurrency'
 import { cn } from '@/lib/utils'
 import type { Document } from '@/types/document'
 
-const PIPELINE_STEPS = [
-  { key: 'uploading',     label: 'Uploaded' },
-  { key: 'preprocessing', label: 'Preparing image' },
-  { key: 'ai',            label: 'Categorizing' },
-  { key: 'anomaly_check', label: 'Checking for issues' },
-]
-const STEP_ORDER = PIPELINE_STEPS.map((s) => s.key)
-
-function stepStatus(stepKey: string, currentStage: string): 'done' | 'active' | 'pending' {
-  const si = STEP_ORDER.indexOf(stepKey)
-  const ci = STEP_ORDER.indexOf(currentStage)
-  if (ci === -1) return 'done'
-  if (si < ci) return 'done'
-  if (si === ci) return 'active'
-  return 'pending'
-}
 
 function MetaLine({ doc }: { doc: Document }) {
   const parts = [
@@ -238,36 +222,6 @@ function TransactionLinesTable({ doc, dimmed }: { doc: Document; dimmed?: boolea
   )
 }
 
-function PipelineSteps({ doc }: { doc: Document }) {
-  const { stage } = useDocumentStatus(doc.id)
-  return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      {PIPELINE_STEPS.map((step) => {
-        const s = stepStatus(step.key, stage)
-        return (
-          <div
-            key={step.key}
-            className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0"
-          >
-            {s === 'done'   && <span className="text-green-500 text-sm">✓</span>}
-            {s === 'active' && (
-              <div className="w-3.5 h-3.5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            )}
-            {s === 'pending' && <div className="w-3.5 h-3.5 border-2 border-gray-200 rounded-full" />}
-            <span className={cn(
-              'text-xs',
-              s === 'done'    ? 'text-gray-500' :
-              s === 'active'  ? 'text-indigo-600 font-semibold' :
-                                'text-gray-300'
-            )}>
-              {step.label}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 function ExpiryCountdown({ expiresAt }: { expiresAt: string }) {
   const days = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86_400_000)
@@ -390,7 +344,7 @@ export function DocumentDetailModal({ doc, onClose, onReupload, onCancel }: Prop
             <div className="flex-1 p-5 overflow-y-auto space-y-4">
 
               {doc.status === 'PROCESSING' && (
-                <PipelineSteps doc={doc} />
+                <MascotProcessingPanel docId={doc.id} />
               )}
 
               {doc.status === 'PARKED' && (
