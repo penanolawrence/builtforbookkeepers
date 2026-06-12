@@ -16,6 +16,17 @@ const STAGES = [
   { key: 'check',      msg: 'Running a quality check…', sub: 'Almost there!'                },
 ]
 
+interface SparkPos {
+  top?:   string
+  left?:  string
+  right?: string
+  anim:   string
+  dur:    number
+  delay:  number
+}
+
+const SUCCESS_GREEN = '#3C8E6C'
+
 const WORK_SPARKS: SparkPos[] = [
   { top: '9%',  left:  '9%',  anim: 'sparkA', dur: 2.4, delay: 0   },
   { top: '6%',  right: '11%', anim: 'sparkB', dur: 2.9, delay: 0.7 },
@@ -32,15 +43,6 @@ const DONE_SPARKS: SparkPos[] = [
   { top: '26%', left:  '3%',  anim: 'sparkC', dur: 2.6, delay: 1.1 },
   { top: '18%', right: '5%',  anim: 'sparkB', dur: 2.4, delay: 0.6 },
 ]
-
-interface SparkPos {
-  top?:   string
-  left?:  string
-  right?: string
-  anim:   string
-  dur:    number
-  delay:  number
-}
 
 function SparkStar({ pos, color }: { pos: SparkPos; color: string }) {
   return (
@@ -110,7 +112,7 @@ function MascotWorkingPanel({ stageIndex, accentColor, accentGlow }: {
       }}
     >
       {WORK_SPARKS.map((s, i) => (
-        <SparkStar key={i} pos={s} color={i % 2 === 0 ? accentColor : accentGlow} />
+        <SparkStar key={`${s.anim}-${s.delay}`} pos={s} color={i % 2 === 0 ? accentColor : accentGlow} />
       ))}
 
       <div
@@ -157,7 +159,6 @@ function MascotDonePanel({ accentColor, accentGlow }: {
   accentColor: string
   accentGlow:  string
 }) {
-  const green = '#3C8E6C'
   return (
     <div
       style={{
@@ -165,11 +166,11 @@ function MascotDonePanel({ accentColor, accentGlow }: {
         alignItems: 'center', justifyContent: 'center',
         height: '100%', padding: '28px 32px',
         position: 'relative',
-        background: `radial-gradient(circle at 50% 38%, ${green}12 0%, transparent 62%)`,
+        background: `radial-gradient(circle at 50% 38%, ${SUCCESS_GREEN}12 0%, transparent 62%)`,
       }}
     >
       {DONE_SPARKS.map((s, i) => (
-        <SparkStar key={i} pos={s} color={i % 2 === 0 ? green : '#6FD6A6'} />
+        <SparkStar key={`${s.anim}-${s.delay}`} pos={s} color={i % 2 === 0 ? SUCCESS_GREEN : '#6FD6A6'} />
       ))}
 
       <div
@@ -183,10 +184,10 @@ function MascotDonePanel({ accentColor, accentGlow }: {
           style={{
             position: 'absolute', top: 16, right: -8,
             width: 42, height: 42, borderRadius: '50%',
-            background: green, border: '3.5px solid #fff',
+            background: SUCCESS_GREEN, border: '3.5px solid #fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: 'checkPop .45s cubic-bezier(.34,1.55,.5,1) .28s both',
-            boxShadow: `0 5px 16px ${green}55`,
+            boxShadow: `0 5px 16px ${SUCCESS_GREEN}55`,
             zIndex: 2,
           }}
         >
@@ -198,7 +199,7 @@ function MascotDonePanel({ accentColor, accentGlow }: {
       </div>
 
       <div style={{ textAlign: 'center', animation: 'stageIn .42s ease .38s both', zIndex: 1, marginTop: 8 }}>
-        <p style={{ fontSize: 18, fontWeight: 800, color: green, margin: '0 0 5px' }}>
+        <p style={{ fontSize: 18, fontWeight: 800, color: SUCCESS_GREEN, margin: '0 0 5px' }}>
           All done!
         </p>
         <p style={{ fontSize: 13, color: '#8A8295', fontWeight: 500, margin: 0 }}>
@@ -212,6 +213,8 @@ function MascotDonePanel({ accentColor, accentGlow }: {
 export function MascotProcessingPanel({ docId }: { docId: string }) {
   const { stage }  = useDocumentStatus(docId)
   const stageIndex = STAGE_TO_INDEX[stage] ?? 0
+  // Any non-processing stage (parked, read_failed, etc.) triggers the done panel.
+  // The parent unmounts this component when doc.status leaves PROCESSING, so this is transient.
   const isDone     = !(stage in STAGE_TO_INDEX)
 
   const accentColor = 'var(--t-primary)'
