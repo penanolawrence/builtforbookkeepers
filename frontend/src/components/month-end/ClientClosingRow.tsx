@@ -44,7 +44,7 @@ export function ClientClosingRow({ client }: ClientClosingRowProps) {
   const [expanded, setExpanded]       = useState(false)
   const [activeMonth, setActiveMonth] = useState<MonthEntry | null>(null)
 
-  const { data: timeline } = useQuery({
+  const { data: timeline, isError: timelineError } = useQuery({
     queryKey: ['period-closing-timeline', client.companyId],
     queryFn:  () => getClientTimeline(client.companyId),
     enabled:  expanded,
@@ -111,7 +111,9 @@ export function ClientClosingRow({ client }: ClientClosingRowProps) {
           <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--t-muted)', marginRight: 8, whiteSpace: 'nowrap' }}>
             Timeline
           </span>
-          {timeline ? timeline.map((m, i) => (
+          {timelineError ? (
+            <span style={{ fontSize: 13, color: 'var(--t-tier-check-fg)' }}>Failed to load timeline.</span>
+          ) : timeline ? timeline.map((m, i) => (
             <div key={`${m.year}-${m.month}`} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {i > 0 && (
                 <div style={{ width: 20, height: 1, background: 'var(--t-line)', flexShrink: 0 }} />
