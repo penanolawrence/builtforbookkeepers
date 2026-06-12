@@ -176,7 +176,8 @@ class PeriodClosingService
             try {
                 $closing->save();
             } catch (QueryException $e) {
-                // SQLSTATE 23505 = PostgreSQL unique violation; 23000 = MySQL/generic
+                // Backstop for concurrent close requests that both pass the status guard above.
+                // SQLSTATE 23505 = PostgreSQL unique violation; 23000 = MySQL/generic.
                 if (in_array($e->getCode(), ['23505', '23000'])) {
                     throw new \RuntimeException('This period is already closed.');
                 }
@@ -233,6 +234,14 @@ class PeriodClosingService
                 'posted_by'         => $closedBy->id,
                 'posted_at'         => now(),
             ]);
+            foreach ($expenseGroup as $line) {
+                JournalEntryLine::create([
+                    'journal_entry_id' => $je2->id,
+                    'account_id'       => $line['accountId'],
+                    'debit'            => $line['side'] === 'debit'  ? $line['amount'] : null,
+                    'credit'           => $line['side'] === 'credit' ? $line['amount'] : null,
+                ]);
+            }
             $incomeSummaryDebit = collect($expenseGroup)
                 ->sum(fn($l) => $l['side'] === 'credit' ? $l['amount'] : -$l['amount']);
             if ($incomeSummaryDebit != 0) {
@@ -241,14 +250,6 @@ class PeriodClosingService
                     'account_id'       => $incomeSummary->id,
                     'debit'            => $incomeSummaryDebit > 0 ? $incomeSummaryDebit : null,
                     'credit'           => $incomeSummaryDebit < 0 ? abs($incomeSummaryDebit) : null,
-                ]);
-            }
-            foreach ($expenseGroup as $line) {
-                JournalEntryLine::create([
-                    'journal_entry_id' => $je2->id,
-                    'account_id'       => $line['accountId'],
-                    'debit'            => $line['side'] === 'debit'  ? $line['amount'] : null,
-                    'credit'           => $line['side'] === 'credit' ? $line['amount'] : null,
                 ]);
             }
 
