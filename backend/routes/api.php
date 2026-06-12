@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BIRController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PeriodClosingController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SubtypeController;
@@ -94,6 +95,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/clients/{id}/accounts',      [Admin\ChartOfAccountsController::class, 'index']);
         Route::put('/admin/clients/{id}/accounts',      [Admin\ChartOfAccountsController::class, 'update']);
         Route::post('/admin/clients/{id}/reset-access', [Admin\ClientController::class, 'resetAccess']);
+
+        // Period closing
+        Route::get('/period-closings',                                    [PeriodClosingController::class, 'index']);
+        Route::get('/period-closings/{companyId}',                        [PeriodClosingController::class, 'timeline']);
+        Route::get('/period-closings/{companyId}/{year}/{month}/preview', [PeriodClosingController::class, 'preview']);
+        Route::post('/period-closings/{companyId}/{year}/{month}',        [PeriodClosingController::class, 'store']);
     });
 
     // Admin routes

@@ -246,4 +246,70 @@ class PeriodClosingTest extends TestCase
         app(\App\Services\Accounting\JournalEntryService::class)
             ->postFromDocument($doc, $this->accountant);
     }
+
+    public function test_index_returns_client_list_for_accountant(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 1000);
+
+        $this->actingAs($this->accountant, 'sanctum')
+             ->getJson('/api/period-closings')
+             ->assertOk()
+             ->assertJsonStructure([
+                 'data' => [['companyId', 'companyName', 'lastClosed', 'nextPeriod', 'status']],
+             ]);
+    }
+
+    public function test_timeline_returns_months_for_client(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 1000);
+
+        $this->actingAs($this->accountant, 'sanctum')
+             ->getJson("/api/period-closings/{$this->company->id}")
+             ->assertOk()
+             ->assertJsonStructure(['months' => [['year', 'month', 'label', 'status']]]);
+    }
+
+    public function test_preview_returns_closing_entry_groups(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 48500);
+        $this->postJournalEntry(2025, 1, 'expense', 10000);
+
+        $this->actingAs($this->accountant, 'sanctum')
+             ->getJson("/api/period-closings/{$this->company->id}/2025/1/preview")
+             ->assertOk()
+             ->assertJsonStructure(['incomeGroup', 'expenseGroup', 'totalIncome', 'totalExpense']);
+    }
+
+    public function test_store_closes_period_and_returns_201(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 1000);
+
+        $this->actingAs($this->accountant, 'sanctum')
+             ->postJson("/api/period-closings/{$this->company->id}/2025/1")
+             ->assertCreated()
+             ->assertJsonStructure(['id', 'periodYear', 'periodMonth', 'closedAt']);
+
+        $this->assertDatabaseHas('period_closings', [
+            'company_id'   => $this->company->id,
+            'period_year'  => 2025,
+            'period_month' => 1,
+        ]);
+    }
+
+    public function test_store_returns_422_when_period_not_ready(): void
+    {
+        // No JEs at all → no first month → cannot close Jan 2025
+        $this->actingAs($this->accountant, 'sanctum')
+             ->postJson("/api/period-closings/{$this->company->id}/2025/1")
+             ->assertUnprocessable();
+    }
+
+    public function test_accountant_cannot_close_unassigned_client(): void
+    {
+        $other = User::factory()->create(['role' => 'accountant']);
+
+        $this->actingAs($other, 'sanctum')
+             ->postJson("/api/period-closings/{$this->company->id}/2025/1")
+             ->assertForbidden();
+    }
 }
