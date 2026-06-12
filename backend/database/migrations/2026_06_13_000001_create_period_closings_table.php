@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignUuid('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->smallInteger('period_year');
             $table->tinyInteger('period_month');
-            $table->foreignUuid('closed_by')->references('id')->on('users');
+            $table->foreignUuid('closed_by')->references('id')->on('users')->restrictOnDelete();
             $table->timestamp('closed_at');
             $table->timestamps();
 
