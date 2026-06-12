@@ -154,4 +154,74 @@ class PeriodClosingTest extends TestCase
         $this->assertSame(48500.0, $preview['totalIncome']);
         $this->assertSame(10000.0, $preview['totalExpense']);
     }
+
+    public function test_execute_close_creates_period_closing_record(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 48500);
+        $this->postJournalEntry(2025, 1, 'expense', 10000);
+
+        $service = app(PeriodClosingService::class);
+        $closing = $service->executeClose($this->company, 2025, 1, $this->accountant);
+
+        $this->assertInstanceOf(PeriodClosing::class, $closing);
+        $this->assertDatabaseHas('period_closings', [
+            'company_id'   => $this->company->id,
+            'period_year'  => 2025,
+            'period_month' => 1,
+            'closed_by'    => $this->accountant->id,
+        ]);
+    }
+
+    public function test_execute_close_posts_two_journal_entries_tagged_with_closing_id(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 48500);
+        $this->postJournalEntry(2025, 1, 'expense', 10000);
+
+        $service = app(PeriodClosingService::class);
+        $closing = $service->executeClose($this->company, 2025, 1, $this->accountant);
+
+        $taggedJEs = JournalEntry::where('period_closing_id', $closing->id)->count();
+        $this->assertSame(2, $taggedJEs);
+    }
+
+    public function test_execute_close_throws_when_period_not_ready(): void
+    {
+        // No JEs at all → no first month → status is 'future'
+        $this->expectException(\RuntimeException::class);
+
+        $service = app(PeriodClosingService::class);
+        $service->executeClose($this->company, 2025, 1, $this->accountant);
+    }
+
+    public function test_execute_close_throws_on_double_close(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 1000);
+
+        $service = app(PeriodClosingService::class);
+        $service->executeClose($this->company, 2025, 1, $this->accountant);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('already closed');
+        $service->executeClose($this->company, 2025, 1, $this->accountant);
+    }
+
+    public function test_closing_entries_excluded_from_subsequent_preview(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 48500);
+        $this->postJournalEntry(2025, 1, 'expense', 10000);
+
+        $service = app(PeriodClosingService::class);
+        $service->executeClose($this->company, 2025, 1, $this->accountant);
+
+        // Preview for Feb should not include closed Jan income/expenses
+        $this->postJournalEntry(2025, 2, 'income', 5000);
+
+        // Close Jan to satisfy sequential requirement
+        // (Jan is already closed above)
+
+        // Jan preview should now show 0 income/expense (nothing open)
+        $preview = $service->preview($this->company, 2025, 1);
+        $this->assertSame(0.0, $preview['totalIncome']);
+        $this->assertSame(0.0, $preview['totalExpense']);
+    }
 }

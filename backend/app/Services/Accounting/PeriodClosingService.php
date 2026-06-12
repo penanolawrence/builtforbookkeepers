@@ -11,12 +11,13 @@ use App\Models\JournalEntryLine;
 use App\Models\PeriodClosing;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 class PeriodClosingService
 {
     /** Returns 'closed' | 'ready' | 'blocked' | 'future' */
-    public function getMonthStatus(Company $company, int $year, int $month): string
+    public function getMonthStatus(Company $company, int $year, int $month, ?Carbon $firstMonth = null): string
     {
         if (PeriodClosing::where('company_id', $company->id)
             ->where('period_year', $year)
@@ -25,7 +26,7 @@ class PeriodClosingService
             return 'closed';
         }
 
-        $firstMonth = $this->getFirstCloseableMonth($company);
+        $firstMonth = $firstMonth ?? $this->getFirstCloseableMonth($company);
         if (!$firstMonth) {
             return 'future';
         }
@@ -111,7 +112,7 @@ class PeriodClosingService
                 'year'        => $year,
                 'month'       => $month,
                 'label'       => $cursor->format('M Y'),
-                'status'      => $this->getMonthStatus($company, $year, $month),
+                'status'      => $this->getMonthStatus($company, $year, $month, $firstMonth),
                 'pendingDocs' => $pendingDocs,
                 'pendingAJEs' => $pendingAJEs,
             ];
@@ -124,6 +125,21 @@ class PeriodClosingService
 
     public function preview(Company $company, int $year, int $month): array
     {
+        // If already closed, nothing open remains — return zeros
+        $alreadyClosed = PeriodClosing::where('company_id', $company->id)
+            ->where('period_year', $year)
+            ->where('period_month', $month)
+            ->exists();
+
+        if ($alreadyClosed) {
+            return [
+                'incomeGroup'  => [],
+                'expenseGroup' => [],
+                'totalIncome'  => 0.0,
+                'totalExpense' => 0.0,
+            ];
+        }
+
         $start = Carbon::create($year, $month, 1)->startOfMonth();
         $end   = Carbon::create($year, $month, 1)->endOfMonth();
 
@@ -157,7 +173,15 @@ class PeriodClosingService
             ]);
             $closing->closed_by = $closedBy->id;
             $closing->closed_at = now();
-            $closing->save();
+            try {
+                $closing->save();
+            } catch (QueryException $e) {
+                // SQLSTATE 23505 = PostgreSQL unique violation; 23000 = MySQL/generic
+                if (in_array($e->getCode(), ['23505', '23000'])) {
+                    throw new \RuntimeException('This period is already closed.');
+                }
+                throw $e;
+            }
 
             $start     = Carbon::create($year, $month, 1)->startOfMonth();
             $end       = Carbon::create($year, $month, 1)->endOfMonth();
@@ -166,12 +190,9 @@ class PeriodClosingService
             $incomeGroup  = $this->aggregateLines($company, $start, $end, 'income');
             $expenseGroup = $this->aggregateLines($company, $start, $end, 'expense');
 
-            $totalIncome  = collect($incomeGroup)->sum('amount');
-            $totalExpense = collect($expenseGroup)->sum('amount');
-
             $incomeSummary = $this->getOrCreateIncomeSummaryAccount($company);
 
-            // JE 1: Dr income accounts → Cr Income Summary
+            // JE 1: Close income accounts → Income Summary
             $je1 = JournalEntry::create([
                 'company_id'        => $company->id,
                 'period_closing_id' => $closing->id,
@@ -185,18 +206,24 @@ class PeriodClosingService
                 JournalEntryLine::create([
                     'journal_entry_id' => $je1->id,
                     'account_id'       => $line['accountId'],
-                    'debit'            => $line['amount'],
-                    'credit'           => null,
+                    'debit'            => $line['side'] === 'debit'  ? $line['amount'] : null,
+                    'credit'           => $line['side'] === 'credit' ? $line['amount'] : null,
                 ]);
             }
-            JournalEntryLine::create([
-                'journal_entry_id' => $je1->id,
-                'account_id'       => $incomeSummary->id,
-                'debit'            => null,
-                'credit'           => $totalIncome,
-            ]);
+            // Credit Income Summary for normal case (net income)
+            // Income Summary credit = sum of income where side=debit, minus sum where side=credit
+            $incomeSummaryCredit = collect($incomeGroup)
+                ->sum(fn($l) => $l['side'] === 'debit' ? $l['amount'] : -$l['amount']);
+            if ($incomeSummaryCredit != 0) {
+                JournalEntryLine::create([
+                    'journal_entry_id' => $je1->id,
+                    'account_id'       => $incomeSummary->id,
+                    'debit'            => $incomeSummaryCredit < 0 ? abs($incomeSummaryCredit) : null,
+                    'credit'           => $incomeSummaryCredit > 0 ? $incomeSummaryCredit : null,
+                ]);
+            }
 
-            // JE 2: Dr Income Summary → Cr expense accounts
+            // JE 2: Close expense accounts → Income Summary
             $je2 = JournalEntry::create([
                 'company_id'        => $company->id,
                 'period_closing_id' => $closing->id,
@@ -206,18 +233,22 @@ class PeriodClosingService
                 'posted_by'         => $closedBy->id,
                 'posted_at'         => now(),
             ]);
-            JournalEntryLine::create([
-                'journal_entry_id' => $je2->id,
-                'account_id'       => $incomeSummary->id,
-                'debit'            => $totalExpense,
-                'credit'           => null,
-            ]);
+            $incomeSummaryDebit = collect($expenseGroup)
+                ->sum(fn($l) => $l['side'] === 'credit' ? $l['amount'] : -$l['amount']);
+            if ($incomeSummaryDebit != 0) {
+                JournalEntryLine::create([
+                    'journal_entry_id' => $je2->id,
+                    'account_id'       => $incomeSummary->id,
+                    'debit'            => $incomeSummaryDebit > 0 ? $incomeSummaryDebit : null,
+                    'credit'           => $incomeSummaryDebit < 0 ? abs($incomeSummaryDebit) : null,
+                ]);
+            }
             foreach ($expenseGroup as $line) {
                 JournalEntryLine::create([
                     'journal_entry_id' => $je2->id,
                     'account_id'       => $line['accountId'],
-                    'debit'            => null,
-                    'credit'           => $line['amount'],
+                    'debit'            => $line['side'] === 'debit'  ? $line['amount'] : null,
+                    'credit'           => $line['side'] === 'credit' ? $line['amount'] : null,
                 ]);
             }
 
@@ -239,17 +270,34 @@ class PeriodClosingService
 
         return $lines->groupBy('account_id')->map(function ($group) use ($accountType) {
             $account = $group->first()->account;
-            $balance = $accountType === 'income'
-                ? $group->sum('credit') - $group->sum('debit')
-                : $group->sum('debit')  - $group->sum('credit');
+            // Net balance from the account's natural perspective
+            $netBalance = $accountType === 'income'
+                ? $group->sum('credit') - $group->sum('debit')   // income natural credit
+                : $group->sum('debit')  - $group->sum('credit');  // expense natural debit
+
+            if ($netBalance == 0) {
+                return null;
+            }
+
+            // The closing entry must zero this account.
+            // Income account with natural credit balance → Dr to close → side = 'debit'
+            // Income account with abnormal debit balance → Cr to close → side = 'credit'
+            // Expense account with natural debit balance → Cr to close → side = 'credit'
+            // Expense account with abnormal credit balance → Dr to close → side = 'debit'
+            if ($accountType === 'income') {
+                $side = $netBalance > 0 ? 'debit' : 'credit';
+            } else {
+                $side = $netBalance > 0 ? 'credit' : 'debit';
+            }
 
             return [
                 'accountId'   => $account->id,
                 'accountName' => $account->name,
                 'accountCode' => $account->code,
-                'amount'      => (float) $balance,
+                'amount'      => (float) abs($netBalance),
+                'side'        => $side,
             ];
-        })->values()->filter(fn($item) => $item['amount'] > 0)->values()->toArray();
+        })->filter()->values()->toArray();
     }
 
     private function getOrCreateIncomeSummaryAccount(Company $company): Account
