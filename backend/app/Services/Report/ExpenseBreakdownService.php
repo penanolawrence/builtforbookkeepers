@@ -12,6 +12,7 @@ class ExpenseBreakdownService
     public function getData(Company $co, Carbon $start, Carbon $end): array
     {
         $entryIds = JournalEntry::where('company_id', $co->id)
+            ->whereNull('period_closing_id')
             ->whereDate('entry_date', '>=', $start->toDateString())
             ->whereDate('entry_date', '<=', $end->toDateString())
             ->pluck('id');

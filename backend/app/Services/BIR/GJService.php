@@ -12,6 +12,7 @@ class GJService
     {
         $entries = JournalEntry::with(['document', 'adjustingEntry', 'lines.account', 'lines.transactionLine.subtype'])
             ->where('company_id', $co->id)
+            ->whereNull('period_closing_id')
             ->whereDate('entry_date', '>=', $start->toDateString())
             ->whereDate('entry_date', '<=', $end->toDateString())
             ->orderBy('entry_date')

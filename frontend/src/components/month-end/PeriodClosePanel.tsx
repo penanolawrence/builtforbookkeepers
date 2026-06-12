@@ -42,7 +42,7 @@ export function PeriodClosePanel({ client, month, onClose }: PeriodClosePanelPro
 
   const checklistItems = [
     {
-      pass: month.pendingDocs === 0 && month.pendingAJEs === 0,
+      pass: month.status !== 'future',
       text: 'Prior months closed',
       sub:  client.lastClosed ? `up to ${client.lastClosed}` : 'first period',
     },

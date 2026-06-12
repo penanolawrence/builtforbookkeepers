@@ -166,6 +166,13 @@ class PeriodClosingService
         }
 
         return DB::transaction(function () use ($company, $year, $month, $closedBy) {
+            // Re-verify inside the transaction so a document approved in the window between
+            // the outer status check and this point cannot silently enter a closing entry.
+            $innerStatus = $this->getMonthStatus($company, $year, $month);
+            if ($innerStatus !== 'ready') {
+                throw new \RuntimeException("Cannot close period: status is '{$innerStatus}'.");
+            }
+
             $closing = new PeriodClosing([
                 'company_id'   => $company->id,
                 'period_year'  => $year,
