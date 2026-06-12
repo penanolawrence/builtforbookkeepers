@@ -124,8 +124,8 @@ export default function PugMascot({
         <path d="M152 264 v8 M160 265 v9 M168 264 v8" stroke={P.furSh} strokeWidth="2" strokeLinecap="round" />
 
         {/* Collar — takes theme accent */}
-        <path d="M74 196 Q130 220 186 196" fill="none" stroke={accent} strokeWidth="12" strokeLinecap="round" />
-        <circle cx="130" cy="214" r="7" fill={accentGlow} stroke={WHITE} strokeWidth="1.5" />
+        <path d="M74 196 Q130 220 186 196" fill="none" style={{ stroke: accent }} strokeWidth="12" strokeLinecap="round" />
+        <circle cx="130" cy="214" r="7" style={{ fill: accentGlow }} stroke={WHITE} strokeWidth="1.5" />
 
         {/* Head */}
         <circle cx="130" cy="116" r="78" fill="url(#headG)" />
@@ -161,13 +161,13 @@ export default function PugMascot({
         )}
 
         {/* AI headset */}
-        <path d="M64 96 Q130 34 196 96" fill="none" stroke={accent} strokeWidth="8" strokeLinecap="round" />
+        <path d="M64 96 Q130 34 196 96" fill="none" style={{ stroke: accent }} strokeWidth="8" strokeLinecap="round" />
         <circle cx="130" cy="40" r="9" fill="url(#glowG)" />
-        <circle cx="130" cy="40" r="4.5" fill={accent} className="antenna" />
-        <circle cx="62" cy="104" r="13" fill={accent} />
-        <circle cx="62" cy="104" r="6" fill={accentGlow} />
-        <path d="M60 116 Q50 156 96 158" fill="none" stroke={accent} strokeWidth="5" strokeLinecap="round" />
-        <circle cx="98" cy="158" r="5" fill={accent} />
+        <circle cx="130" cy="40" r="4.5" style={{ fill: accent }} className="antenna" />
+        <circle cx="62" cy="104" r="13" style={{ fill: accent }} />
+        <circle cx="62" cy="104" r="6" style={{ fill: accentGlow }} />
+        <path d="M60 116 Q50 156 96 158" fill="none" style={{ stroke: accent }} strokeWidth="5" strokeLinecap="round" />
+        <circle cx="98" cy="158" r="5" style={{ fill: accent }} />
 
         {/* Paws — cover eyes when peeking */}
         <g
