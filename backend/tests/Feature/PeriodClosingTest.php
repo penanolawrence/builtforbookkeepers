@@ -224,4 +224,26 @@ class PeriodClosingTest extends TestCase
         $this->assertSame(0.0, $preview['totalIncome']);
         $this->assertSame(0.0, $preview['totalExpense']);
     }
+
+    public function test_posting_document_je_to_closed_period_throws(): void
+    {
+        $this->postJournalEntry(2025, 1, 'income', 1000);
+
+        // Close January
+        $service = app(\App\Services\Accounting\PeriodClosingService::class);
+        $service->executeClose($this->company, 2025, 1, $this->accountant);
+
+        // Try to post another JE dated in January
+        $doc = Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'status'        => 'approved',
+            'document_date' => Carbon::create(2025, 1, 20)->toDateString(),
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('locked');
+
+        app(\App\Services\Accounting\JournalEntryService::class)
+            ->postFromDocument($doc, $this->accountant);
+    }
 }

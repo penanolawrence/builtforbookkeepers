@@ -4,10 +4,13 @@ namespace App\Services\Accounting;
 
 use App\Models\Account;
 use App\Models\AdjustingEntry;
+use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\PeriodClosing;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class JournalEntryService
@@ -16,6 +19,11 @@ class JournalEntryService
     {
         return DB::transaction(function () use ($doc, $approvedBy) {
             $company = $doc->company;
+
+            if ($doc->document_date) {
+                $entryDate = Carbon::parse($doc->document_date);
+                $this->assertPeriodNotLocked($company, $entryDate->year, $entryDate->month);
+            }
 
             $cashName    = in_array($doc->payment_method, ['gcash', 'maya', 'bank'])
                 ? 'Cash in Bank'
@@ -161,6 +169,11 @@ class JournalEntryService
         return DB::transaction(function () use ($entry, $approvedBy) {
             $company = $entry->company;
 
+            if ($entry->entry_date) {
+                $entryDate = Carbon::parse($entry->entry_date);
+                $this->assertPeriodNotLocked($company, $entryDate->year, $entryDate->month);
+            }
+
             $journalEntry = JournalEntry::create([
                 'company_id'         => $company->id,
                 'adjusting_entry_id' => $entry->id,
@@ -183,6 +196,20 @@ class JournalEntryService
 
             return $journalEntry;
         });
+    }
+
+    private function assertPeriodNotLocked(Company $company, int $year, int $month): void
+    {
+        $locked = PeriodClosing::where('company_id', $company->id)
+            ->where('period_year', $year)
+            ->where('period_month', $month)
+            ->exists();
+
+        if ($locked) {
+            throw new \RuntimeException(
+                "Period {$year}-{$month} is locked for company {$company->id}."
+            );
+        }
     }
 
 }
