@@ -15,8 +15,6 @@ class PeriodClosing extends Model
         'company_id',
         'period_year',
         'period_month',
-        'closed_by',
-        'closed_at',
     ];
 
     protected $casts = [
