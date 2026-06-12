@@ -15,6 +15,7 @@ class JournalEntry extends Model
         'company_id',
         'document_id',
         'adjusting_entry_id',
+        'period_closing_id',
         'ref_number',
         'entry_date',
         'description',
@@ -41,6 +42,11 @@ class JournalEntry extends Model
     public function adjustingEntry(): BelongsTo
     {
         return $this->belongsTo(AdjustingEntry::class);
+    }
+
+    public function periodClosing(): BelongsTo
+    {
+        return $this->belongsTo(PeriodClosing::class);
     }
 
     public function poster(): BelongsTo
