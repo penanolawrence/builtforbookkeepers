@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getQueue } from '@/lib/api/queue'
 import { NotificationBell } from './NotificationBell'
 import { ThemeToggle } from './ThemeToggle'
+import { BFBLogo } from '@/components/shared/BFBLogo'
 
 const ADMIN_LINKS = [
   { href: '/admin/dashboard',         label: 'Dashboard'    },
@@ -15,6 +16,7 @@ const ADMIN_LINKS = [
   { href: '/admin/billing',           label: 'Billing'      },
   { href: '/admin/queue',             label: 'Queue'        },
   { href: '/admin/adjusting-entries', label: 'Adj. Entries' },
+  { href: '/admin/month-end',         label: 'Month-End'    },
   { href: '/admin/reports',           label: 'Reports'      },
 ]
 
@@ -22,6 +24,7 @@ const ACCOUNTANT_LINKS = [
   { href: '/accountant/dashboard',         label: 'Dashboard'    },
   { href: '/accountant/queue',             label: 'Queue',        badge: true },
   { href: '/accountant/adjusting-entries', label: 'Adj. Entries' },
+  { href: '/accountant/month-end',         label: 'Month-End'    },
   { href: '/accountant/clients',           label: 'My Clients'   },
   { href: '/accountant/reports',           label: 'Reports'      },
 ]
@@ -100,34 +103,9 @@ export function Topbar() {
       {/* Brand */}
       <Link
         href={user?.role ? `/${user.role}/dashboard` : '/login'}
-        style={{ display: 'flex', alignItems: 'center', gap: 11, textDecoration: 'none' }}
+        style={{ textDecoration: 'none' }}
       >
-        <span
-          style={{
-            width: 34, height: 34, borderRadius: 10,
-            display: 'grid', placeItems: 'center', flexShrink: 0,
-            background: 'linear-gradient(150deg, var(--t-primary), var(--t-primary-deep))',
-          }}
-        >
-          <svg viewBox="0 0 24 24" width={19} height={19} aria-hidden>
-            <circle cx="12"   cy="14.6" r="5.1"  fill="#fff" />
-            <circle cx="6.4"  cy="8.6"  r="2.25" fill="#fff" />
-            <circle cx="12"   cy="6.1"  r="2.25" fill="#fff" />
-            <circle cx="17.6" cy="8.6"  r="2.25" fill="#fff" />
-          </svg>
-        </span>
-        <span
-          className="hidden md:inline"
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            fontSize: 17,
-            letterSpacing: '-.01em',
-            color: 'var(--t-ink)',
-          }}
-        >
-          Built for Bookkeepers
-        </span>
+        <BFBLogo layout="horizontal" size={38} showTagline={true} className="bfb-logo--sm bfb-logo--nav" />
       </Link>
 
       {/* Nav */}
