@@ -31,7 +31,6 @@ export function SubmitTab({ clientId, docsQueryKey }: Props) {
 
   async function handleConfirmUpload(note: string) {
     const batch = pendingFiles
-    setPendingFiles([])
     setUploading(true)
     const failed: string[] = []
     for (const { file, declaredType } of batch) {
@@ -42,13 +41,23 @@ export function SubmitTab({ clientId, docsQueryKey }: Props) {
       }
     }
     setUploading(false)
-    qc.invalidateQueries({ queryKey: docsQueryKey })
-    if (failed.length > 0) {
-      const total = batch.length
+    setPendingFiles([])
+    const total = batch.length
+    if (failed.length < total) {
+      qc.invalidateQueries({ queryKey: docsQueryKey })
+    }
+    if (failed.length === 0) {
       toast({
-        title: failed.length === total
-          ? 'Upload failed — please try again.'
-          : `${failed.length} of ${total} uploads failed — please try again.`,
+        title: `${total} ${total === 1 ? 'file' : 'files'} submitted — processing…`,
+      })
+    } else if (failed.length === total) {
+      toast({
+        title: 'Upload failed — please try again.',
+        variant: 'destructive',
+      })
+    } else {
+      toast({
+        title: `${failed.length} of ${total} uploads failed — please try again.`,
         variant: 'destructive',
       })
     }
@@ -69,8 +78,9 @@ export function SubmitTab({ clientId, docsQueryKey }: Props) {
       <ConfirmUploadDialog
         open={pendingFiles.length > 0}
         files={pendingFiles}
+        uploading={uploading}
         onConfirm={handleConfirmUpload}
-        onCancel={() => setPendingFiles([])}
+        onCancel={() => { if (!uploading) setPendingFiles([]) }}
       />
     </div>
   )

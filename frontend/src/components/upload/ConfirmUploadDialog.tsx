@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import type { DeclaredType } from '@/types/document'
 
@@ -12,6 +12,7 @@ interface PendingFile {
 interface Props {
   open: boolean
   files: PendingFile[]
+  uploading?: boolean
   onConfirm: (note: string) => void
   onCancel: () => void
 }
@@ -21,12 +22,15 @@ function formatFileSize(bytes: number): string {
   return `~${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export function ConfirmUploadDialog({ open, files, onConfirm, onCancel }: Props) {
+export function ConfirmUploadDialog({ open, files, uploading = false, onConfirm, onCancel }: Props) {
   const [note, setNote] = useState('')
+
+  useEffect(() => {
+    if (!open) setNote('')
+  }, [open])
 
   function handleConfirm() {
     onConfirm(note.trim())
-    setNote('')
   }
 
   function handleCancel() {
@@ -41,7 +45,7 @@ export function ConfirmUploadDialog({ open, files, onConfirm, onCancel }: Props)
   const title = `Upload ${count} ${typeLabel} ${count === 1 ? 'Document' : 'Documents'}`
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) handleCancel() }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && !uploading) handleCancel() }}>
       <DialogContent className="sm:max-w-lg">
         <div className="space-y-5 p-1">
 
@@ -83,9 +87,10 @@ export function ConfirmUploadDialog({ open, files, onConfirm, onCancel }: Props)
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              disabled={uploading}
               placeholder="e.g. Monthly electricity bills from Meralco for May 2026, includes VAT"
               rows={4}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none disabled:opacity-50"
             />
             <p className="text-xs text-gray-400">
               <span className="font-semibold text-gray-500">Tips:</span>{' '}
@@ -99,16 +104,18 @@ export function ConfirmUploadDialog({ open, files, onConfirm, onCancel }: Props)
             <button
               type="button"
               onClick={handleCancel}
-              className="flex-1 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold py-2.5 rounded-lg transition-colors"
+              disabled={uploading}
+              className="flex-1 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirm}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+              disabled={uploading}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600"
             >
-              Upload {count} {count === 1 ? 'file' : 'files'}
+              {uploading ? 'Uploading…' : `Upload ${count} ${count === 1 ? 'file' : 'files'}`}
             </button>
           </div>
 

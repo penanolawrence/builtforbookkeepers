@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { createManualEntry } from '@/lib/api/documents'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
 import type { DeclaredType } from '@/types/document'
 
 interface Line {
@@ -29,6 +30,7 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
   const [lines, setLines]             = useState<Line[]>([emptyLine(1)])
   const nextIdRef                     = useRef(2)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
 
   const filledLines = lines.filter((l) => l.description.trim() !== '' && parseFloat(l.amount) > 0)
   const total = filledLines.reduce((sum, l) => sum + parseFloat(l.amount), 0)
@@ -68,7 +70,6 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
     setPaymentMethod('Cash')
     setLines([emptyLine(1)])
     nextIdRef.current = 2
-    setIsSubmitting(false)
     onClose()
   }
 
@@ -88,6 +89,11 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
       })
       handleClose()
       onSuccess(documentId)
+    } catch {
+      toast({
+        title: 'Submission failed — please try again.',
+        variant: 'destructive',
+      })
     } finally {
       setIsSubmitting(false)
     }
