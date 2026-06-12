@@ -68,9 +68,15 @@ class PeriodClosingService
 
     public function getFirstCloseableMonth(Company $company): ?Carbon
     {
+        // Only consider entries from the current calendar year — entries with
+        // dates before Jan 1 of this year are garbage data that should not
+        // force accountants to close thousands of phantom periods.
+        $cutoff = Carbon::now()->startOfYear()->toDateString();
+
         $first = JournalEntry::where('company_id', $company->id)
             ->where('status', 'posted')
             ->whereNull('period_closing_id')
+            ->where('entry_date', '>=', $cutoff)
             ->whereHas('lines', function ($q) {
                 $q->whereHas('account', fn($a) => $a->whereIn('type', ['income', 'expense']));
             })

@@ -24,7 +24,7 @@ export default function UploadPage() {
 
   const { data: pagedDocs } = useQuery({
     queryKey: ['client-documents-upload'],
-    queryFn: () => getDocuments(),
+    queryFn: () => getDocuments({ per_page: 100 }),
     refetchInterval: 8000,
   })
   const allDocs = pagedDocs?.data ?? []
@@ -51,11 +51,16 @@ export default function UploadPage() {
     setPendingFiles([])
     setUploading(true)
     const failed: string[] = []
+    let firstErrorMessage: string | undefined
     for (const { file, declaredType } of batch) {
       try {
         await uploadDocument(file, declaredType, note || undefined)
-      } catch {
+      } catch (err: unknown) {
         failed.push(file.name)
+        if (!firstErrorMessage) {
+          const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+          if (msg) firstErrorMessage = msg
+        }
       }
     }
     setUploading(false)
@@ -66,6 +71,7 @@ export default function UploadPage() {
         title: failed.length === total
           ? 'Upload failed — please try again.'
           : `${failed.length} of ${total} uploads failed — please try again.`,
+        ...(firstErrorMessage && { description: firstErrorMessage }),
         variant: 'destructive',
       })
     }

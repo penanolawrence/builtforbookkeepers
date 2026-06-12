@@ -91,13 +91,8 @@ class DocumentController extends Controller
         if ($request->filled('start') || $request->filled('end')) {
             $start = $request->input('start');
             $end   = $request->input('end');
-            $query->where(function ($q) use ($start, $end) {
-                $q->whereNull('document_date');
-                $q->orWhere(function ($d) use ($start, $end) {
-                    if ($start) $d->whereDate('document_date', '>=', $start);
-                    if ($end)   $d->whereDate('document_date', '<=', $end);
-                });
-            });
+            if ($start) $query->whereDate('document_date', '>=', $start);
+            if ($end)   $query->whereDate('document_date', '<=', $end);
         }
 
         $perPage  = min(500, max(1, (int) $request->get('per_page', 10)));
@@ -119,13 +114,8 @@ class DocumentController extends Controller
         if ($request->filled('start') || $request->filled('end')) {
             $start = $request->input('start');
             $end   = $request->input('end');
-            $aggQuery->where(function ($q) use ($start, $end) {
-                $q->whereNull('documents.document_date');
-                $q->orWhere(function ($d) use ($start, $end) {
-                    if ($start) $d->whereDate('documents.document_date', '>=', $start);
-                    if ($end)   $d->whereDate('documents.document_date', '<=', $end);
-                });
-            });
+            if ($start) $aggQuery->whereDate('documents.document_date', '>=', $start);
+            if ($end)   $aggQuery->whereDate('documents.document_date', '<=', $end);
         }
 
         $agg = $aggQuery->selectRaw(

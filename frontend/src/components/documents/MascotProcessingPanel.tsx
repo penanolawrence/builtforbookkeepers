@@ -121,8 +121,8 @@ function MascotWorkingPanel({ stageIndex, accentColor, accentGlow }: {
           animation: 'pugBob 3.5s ease-in-out infinite',
           position: 'relative', zIndex: 1,
         }}
-      >
-        <PugMascot variant="sofia" accent={accentColor} accentGlow={accentGlow} />
+      > 
+        <PugMascot variant="sofia" accent={accentColor} accentGlow={accentGlow} size={250} />
         <PaperProp accentColor={accentColor} />
       </div>
 

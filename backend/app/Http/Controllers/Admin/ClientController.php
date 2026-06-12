@@ -86,7 +86,7 @@ class ClientController extends Controller
             (new ChartOfAccountsService())->seedDefaultAccounts($company);
 
             $rawToken   = (new InviteTokenService())->generate($user);
-            $inviteLink = env('FRONTEND_URL', 'http://localhost:3000') . '/setup?token=' . $rawToken;
+            $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
 
             return [$company, $user, $inviteLink];
         });
@@ -235,7 +235,7 @@ class ClientController extends Controller
         }
         $user       = $company->users()->where('role', 'client')->firstOrFail();
         $rawToken   = (new InviteTokenService())->generate($user);
-        $inviteLink = env('FRONTEND_URL', 'http://localhost:3000') . '/setup?token=' . $rawToken;
+        $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
 
         return response()->json(['inviteLink' => $inviteLink]);
     }

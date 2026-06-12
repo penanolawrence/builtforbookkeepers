@@ -129,7 +129,7 @@ export function UploadZone({ declaredType, onFilesSelect, count }: UploadZonePro
           </button>
           <button
             type="button"
-            className="text-[11px] font-semibold px-3 py-1.5 rounded-[8px] bg-t-card border border-t-line text-t-ink hover:bg-t-surface transition-colors"
+            className="md:hidden text-[11px] font-semibold px-3 py-1.5 rounded-[8px] bg-t-card border border-t-line text-t-ink hover:bg-t-surface transition-colors"
             onClick={() => cameraInputRef.current?.click()}
           >
             Take photo

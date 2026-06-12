@@ -94,9 +94,9 @@ function fmtPeso(n?: number | null) {
 interface SuccessData { companyId: string; inviteLink: string; username: string; email?: string }
 
 function CreateMode({ onClose, onCreated }: { onClose: () => void; onCreated?: (clientId: string) => void }) {
-  const [success, setSuccess]           = useState<SuccessData | null>(null)
-  const [copied, setCopied]             = useState(false)
-  const [submitError, setSubmitError]   = useState<string | null>(null)
+  const [success, setSuccess]         = useState<SuccessData | null>(null)
+  const [copied, setCopied]           = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const { data: accountants } = useQuery({
     queryKey: ['accountants'],
@@ -129,135 +129,194 @@ function CreateMode({ onClose, onCreated }: { onClose: () => void; onCreated?: (
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35">
-      <div className="bg-t-card rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-t-line">
-          <span className="text-[15px] font-bold text-t-ink">New Client</span>
-          <button aria-label="Close modal" onClick={onClose} className="text-t-faint hover:text-t-muted text-xl leading-none">×</button>
-        </div>
+  const inputCls = (hasError = false) =>
+    `w-full border rounded-md px-2.5 py-1.5 text-xs text-t-ink bg-t-card outline-none focus:ring-2 focus:ring-t-primary/30 ${
+      hasError ? 'border-red-400' : 'border-t-line'
+    }`
 
-        <div className="p-5 overflow-y-auto max-h-[80vh]">
-          {success ? (
-            <div className="space-y-4">
-              <div className="text-center space-y-2">
-                <div className="text-4xl">✓</div>
-                <h2 className="text-lg font-semibold text-t-ink">Client created!</h2>
-                <p className="text-sm text-t-muted">
-                  Login username: <span className="font-mono font-semibold">{success.username}</span>
-                </p>
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40 bg-[rgba(42,28,60,0.45)]" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+        <div
+          className="pointer-events-auto flex flex-col"
+          style={{ width: 460, maxHeight: '90vh', background: 'var(--t-card)', borderRadius: 14, boxShadow: '0 8px 60px rgba(42,28,60,.22)', overflow: 'hidden' }}
+        >
+          {/* Header */}
+          <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--t-line)', flexShrink: 0, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 17, color: 'var(--t-ink)' }}>
+                New Client
               </div>
-              <div className="border border-t-line rounded-lg p-3 space-y-2">
-                <p className="text-sm font-medium text-t-ink">Invite Link</p>
-                <p className="text-xs text-t-muted break-all">{success.inviteLink}</p>
-                <button onClick={copyLink} className="text-xs font-semibold px-3 py-1.5 border border-t-line rounded-md text-t-muted hover:bg-t-surface">
-                  {copied ? 'Copied!' : 'Copy Link'}
-                </button>
-              </div>
-              <p className="text-sm text-t-muted">
-                {success.email ? 'Invite email sent automatically.' : 'No email provided — share this link manually.'}
-              </p>
-              <div className="flex gap-2 pt-1">
-                <button
-                  onClick={() => { setSuccess(null); reset() }}
-                  className="text-xs font-semibold px-3.5 py-2 border border-t-line rounded-md text-t-muted hover:bg-t-surface"
-                >
-                  Create Another Client
-                </button>
-                {onCreated && (
-                  <button
-                    onClick={() => onCreated(success.companyId)}
-                    className="text-xs font-semibold px-3.5 py-2 rounded-md text-white"
-                    style={{ background: 'linear-gradient(150deg, var(--t-primary), var(--t-primary-deep))' }}
-                  >
-                    View Client Profile
-                  </button>
-                )}
+              <div style={{ fontSize: 12, color: 'var(--t-muted)', marginTop: 3 }}>
+                Fill in the details below to register a new client.
               </div>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="space-y-1 sm:col-span-2">
-                  <label className="block text-xs font-semibold text-t-muted">Business Name *</label>
-                  <input {...register('businessName')} className="w-full border border-t-line rounded-md px-3 py-2 text-sm text-t-ink bg-t-card" />
-                  {errors.businessName && <p className="text-xs text-red-600">{errors.businessName.message}</p>}
+            <button
+              onClick={onClose}
+              style={{ width: 28, height: 28, borderRadius: 6, border: 'none', background: 'var(--t-surface)', cursor: 'pointer', color: 'var(--t-muted)', fontSize: 16, display: 'grid', placeItems: 'center', flexShrink: 0 }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Body */}
+          <div style={{ overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
+            {success ? (
+              /* ── Success screen ── */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '12px 0' }}>
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--t-tier-ready-bg)', border: '2px solid var(--t-tier-ready-ring)', display: 'grid', placeItems: 'center', fontSize: 24 }}>
+                  ✓
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-t-muted">Mobile *</label>
-                  <input {...register('mobile')} className="w-full border border-t-line rounded-md px-3 py-2 text-sm text-t-ink bg-t-card" />
-                  {errors.mobile && <p className="text-xs text-red-600">{errors.mobile.message}</p>}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--t-ink)' }}>Client created!</div>
+                  <div style={{ fontSize: 12, color: 'var(--t-muted)', marginTop: 4 }}>
+                    Login username: <strong style={{ color: 'var(--t-ink)' }}>{success.username}</strong>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-t-muted">TIN</label>
-                  <input {...register('tin')} className="w-full border border-t-line rounded-md px-3 py-2 text-sm text-t-ink bg-t-card" />
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-t-muted">Email</label>
-                  <input type="email" {...register('email')} className="w-full border border-t-line rounded-md px-3 py-2 text-sm text-t-ink bg-t-card" />
-                  {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-t-muted">Contact Person</label>
-                  <input {...register('contactPerson')} className="w-full border border-t-line rounded-md px-3 py-2 text-sm text-t-ink bg-t-card" />
-                </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-t-muted">Plan *</label>
-                  <select
-                    value={watch('planType')}
-                    onChange={(e) => setValue('planType', e.target.value as 'starter' | 'growth' | 'premium')}
-                    className="w-full border border-t-line rounded-md px-3 py-2 text-sm text-t-ink bg-t-card"
+
+                <div style={{ width: '100%', background: 'var(--t-surface)', border: '1px solid var(--t-line)', borderRadius: 10, padding: '12px 14px' }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--t-muted)', marginBottom: 8 }}>
+                    Invite Link
+                  </div>
+                  <div style={{ fontSize: 11.5, color: 'var(--t-ink)', wordBreak: 'break-all', marginBottom: 10 }}>
+                    {success.inviteLink}
+                  </div>
+                  <button
+                    onClick={copyLink}
+                    style={{ width: '100%', padding: '8px', borderRadius: 7, border: '1px solid var(--t-line)', background: copied ? 'var(--t-tier-ready-bg)' : 'var(--t-card)', color: copied ? 'var(--t-tier-ready-fg)' : 'var(--t-ink)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                   >
+                    {copied ? '✓ Copied!' : 'Copy Invite Link'}
+                  </button>
+                </div>
+
+                {success.email ? (
+                  <div style={{ fontSize: 11.5, color: 'var(--t-muted)' }}>
+                    Invite email sent to <strong>{success.email}</strong>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11.5, color: 'var(--t-muted)' }}>
+                    No email provided — share the link manually.
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Form ── */
+              <form id="create-client-form" onSubmit={handleSubmit(onSubmit)} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Business Name <span style={{ color: 'red' }}>*</span></label>
+                  <input {...register('businessName')} className={inputCls(!!errors.businessName)} placeholder="ABC Trading Corp." />
+                  {errors.businessName && <div style={{ fontSize: 10.5, color: 'red', marginTop: 2 }}>{errors.businessName.message}</div>}
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Mobile <span style={{ color: 'red' }}>*</span></label>
+                  <input {...register('mobile')} className={inputCls(!!errors.mobile)} placeholder="09XX XXX XXXX" />
+                  {errors.mobile && <div style={{ fontSize: 10.5, color: 'red', marginTop: 2 }}>{errors.mobile.message}</div>}
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>TIN</label>
+                  <input {...register('tin')} className={inputCls()} placeholder="000-000-000" />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Plan <span style={{ color: 'red' }}>*</span></label>
+                  <select value={watch('planType')} onChange={(e) => setValue('planType', e.target.value as 'starter' | 'growth' | 'premium')} className={inputCls()}>
                     <option value="starter">Starter</option>
                     <option value="growth">Growth</option>
                     <option value="premium">Premium</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="block text-xs font-semibold text-t-muted">VAT Type *</label>
-                  <select
-                    value={watch('birType')}
-                    onChange={(e) => setValue('birType', e.target.value as 'vat' | 'non_vat')}
-                    className="w-full border border-t-line rounded-md px-3 py-2 text-sm text-t-ink bg-t-card"
-                  >
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>VAT Type <span style={{ color: 'red' }}>*</span></label>
+                  <select value={watch('birType')} onChange={(e) => setValue('birType', e.target.value as 'vat' | 'non_vat')} className={inputCls()}>
                     <option value="non_vat">Non-VAT</option>
                     <option value="vat">VAT</option>
                   </select>
                 </div>
-                <div className="space-y-1 sm:col-span-2">
-                  <label className="block text-xs font-semibold text-t-muted">Accountant *</label>
-                  <select
-                    value={watch('accountantId') ?? ''}
-                    onChange={(e) => setValue('accountantId', e.target.value)}
-                    className="w-full border border-t-line rounded-md px-3 py-2 text-sm text-t-ink bg-t-card"
-                  >
+
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Email</label>
+                  <input type="email" {...register('email')} className={inputCls(!!errors.email)} placeholder="client@email.com" />
+                  {errors.email && <div style={{ fontSize: 10.5, color: 'red', marginTop: 2 }}>{errors.email.message}</div>}
+                  <div style={{ fontSize: 10.5, color: 'var(--t-faint)', marginTop: 3 }}>Invite email will be sent automatically if provided.</div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Contact Person</label>
+                  <input {...register('contactPerson')} className={inputCls()} placeholder="Juan dela Cruz" />
+                </div>
+
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Accountant <span style={{ color: 'red' }}>*</span></label>
+                  <select value={watch('accountantId') ?? ''} onChange={(e) => setValue('accountantId', e.target.value)} className={inputCls(!!errors.accountantId)}>
                     <option value="">Select accountant…</option>
                     {(accountants ?? []).map((a) => (
                       <option key={a.id} value={a.id}>{a.name}</option>
                     ))}
                   </select>
-                  {errors.accountantId && <p className="text-xs text-red-600">{errors.accountantId.message}</p>}
+                  {errors.accountantId && <div style={{ fontSize: 10.5, color: 'red', marginTop: 2 }}>{errors.accountantId.message}</div>}
                 </div>
-              </div>
-              {submitError && <p className="text-xs text-red-600">{submitError}</p>}
-              <div className="flex gap-2 justify-end pt-1">
-                <button type="button" onClick={onClose} className="text-xs font-semibold px-3.5 py-2 border border-t-line rounded-md text-t-muted hover:bg-t-surface">
+
+                {submitError && <div style={{ gridColumn: '1 / -1', fontSize: 10.5, color: 'red' }}>{submitError}</div>}
+              </form>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding: '14px 24px', borderTop: '1px solid var(--t-line)', display: 'flex', gap: 10, flexShrink: 0 }}>
+            {success ? (
+              <>
+                <button
+                  onClick={() => { setSuccess(null); setCopied(false); reset() }}
+                  style={{ flex: 1, padding: '9px 16px', borderRadius: 8, border: '1px solid var(--t-line)', background: 'var(--t-surface)', color: 'var(--t-muted)', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  New Client
+                </button>
+                {onCreated ? (
+                  <button
+                    onClick={() => onCreated(success.companyId)}
+                    style={{ flex: 2, padding: '9px 16px', borderRadius: 8, border: 'none', background: 'var(--t-primary)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    View Client Profile
+                  </button>
+                ) : (
+                  <button
+                    onClick={onClose}
+                    style={{ flex: 2, padding: '9px 16px', borderRadius: 8, border: 'none', background: 'var(--t-primary)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Done
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{ flex: 1, padding: '9px 16px', borderRadius: 8, border: '1px solid var(--t-line)', background: 'var(--t-surface)', color: 'var(--t-muted)', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  form="create-client-form"
                   disabled={isSubmitting}
-                  className="text-xs font-semibold px-3.5 py-2 rounded-md text-white disabled:opacity-50"
-                  style={{ background: 'linear-gradient(150deg, var(--t-primary), var(--t-primary-deep))' }}
+                  style={{ flex: 2, padding: '9px 16px', borderRadius: 8, border: 'none', background: 'var(--t-primary)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
                 >
                   {isSubmitting ? 'Creating…' : 'Create Client'}
                 </button>
-              </div>
-            </form>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

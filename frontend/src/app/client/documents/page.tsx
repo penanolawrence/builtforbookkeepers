@@ -181,8 +181,8 @@ function DocumentsContent() {
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="PARKED">In Review</SelectItem>
                 <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="PROCESSING">Processing</SelectItem>
                 <SelectItem value="RETURNED">Returned</SelectItem>
+                <SelectItem value="REJECTED">Rejected</SelectItem>
               </SelectContent>
             </Select>
             {status && (

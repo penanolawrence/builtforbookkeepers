@@ -62,14 +62,17 @@ export function PeriodClosePanel({ client, month, onClose }: PeriodClosePanelPro
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-[rgba(42,28,60,0.18)]"
+        className="fixed inset-0 z-40 bg-[rgba(42,28,60,0.45)]"
         onClick={onClose}
       />
 
-      {/* Panel */}
+      {/* Modal */}
       <div
-        className="fixed right-0 top-0 bottom-0 z-50 flex flex-col"
-        style={{ width: 420, background: 'var(--t-card)', boxShadow: '-4px 0 40px rgba(42,28,60,.15)' }}
+        className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+      >
+      <div
+        className="pointer-events-auto flex flex-col"
+        style={{ width: 480, maxHeight: '90vh', background: 'var(--t-card)', borderRadius: 14, boxShadow: '0 8px 60px rgba(42,28,60,.22)' }}
       >
         {/* Header */}
         <div style={{ padding: '22px 24px 18px', borderBottom: '1px solid var(--t-line)', flexShrink: 0 }}>
@@ -92,7 +95,7 @@ export function PeriodClosePanel({ client, month, onClose }: PeriodClosePanelPro
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           {/* Checklist */}
           <div>
@@ -198,6 +201,7 @@ export function PeriodClosePanel({ client, month, onClose }: PeriodClosePanelPro
             {mutation.isPending ? 'Closing…' : 'Confirm & Close Period →'}
           </button>
         </div>
+      </div>
       </div>
     </>
   )

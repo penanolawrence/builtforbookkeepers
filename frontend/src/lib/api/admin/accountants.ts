@@ -28,8 +28,8 @@ export async function createAccountant(data: {
   name: string
   email: string
   mobile?: string
-}): Promise<{ userId: string }> {
-  const { data: result } = await api.post<{ userId: string }>('/admin/accountants', data)
+}): Promise<{ userId: string; inviteLink: string; name: string; email: string }> {
+  const { data: result } = await api.post<{ userId: string; inviteLink: string; name: string; email: string }>('/admin/accountants', data)
   return result
 }
 

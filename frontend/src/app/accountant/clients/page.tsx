@@ -8,6 +8,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb'
 import { SummaryCard } from '@/components/shared/SummaryCard'
 import { Search, Users } from 'lucide-react'
 import { ClientDetailModal } from '@/components/accountant/ClientDetailModal'
+import { NewClientModal } from '@/components/accountant/NewClientModal'
 
 const PER_PAGE = 15
 
@@ -39,6 +40,7 @@ export default function AccountantClientsPage() {
   const [page,           setPage]           = useState(1)
   const [hoveredId,      setHoveredId]      = useState<string | null>(null)
   const [selectedClient, setSelectedClient] = useState<ClientProfile | null>(null)
+  const [showNewClient,  setShowNewClient]  = useState(false)
 
   const debouncedSearch = useDebounce(search, 300)
 
@@ -90,6 +92,12 @@ export default function AccountantClientsPage() {
             {isLoading ? '…' : `${total} assigned clients`}
           </p>
         </div>
+        <button
+          onClick={() => setShowNewClient(true)}
+          style={{ height: 38, padding: '0 18px', borderRadius: 10, border: 'none', background: 'var(--t-primary)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          + New Client
+        </button>
       </div>
 
       {!isLoading && (
@@ -275,6 +283,10 @@ export default function AccountantClientsPage() {
           client={selectedClient}
           onClose={() => setSelectedClient(null)}
         />
+      )}
+
+      {showNewClient && (
+        <NewClientModal onClose={() => setShowNewClient(false)} />
       )}
     </div>
   )

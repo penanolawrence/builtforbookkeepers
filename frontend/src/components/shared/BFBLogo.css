@@ -1,0 +1,97 @@
+/* BFBLogo.css — companion styles for BFBLogo.tsx */
+
+.bfb-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  user-select: none;
+}
+
+.bfb-logo--vertical {
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+.bfb-logo--vertical .bfb-logo__wordmark {
+  align-items: center;
+}
+
+.bfb-logo__wordmark {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.bfb-logo__sup {
+  font-family: var(--font-body), -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0.2px;
+  color: var(--t-ink);
+}
+
+.bfb-logo__name {
+  font-family: var(--font-serif), 'DM Serif Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+  color: var(--t-primary);
+}
+
+.bfb-logo__tagline {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.bfb-logo__rule {
+  display: block;
+  width: 15px;
+  height: 1px;
+  background: var(--t-primary);
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.bfb-logo__tagline-text {
+  font-family: var(--font-body), -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: 5px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--t-primary);
+  white-space: nowrap;
+}
+
+.bfb-logo__star {
+  font-size: 8px;
+  line-height: 1;
+  color: var(--t-primary);
+}
+
+/* Pink variant — for use on pink/coloured backgrounds */
+.bfb-logo--pink .bfb-logo__sup          { color: rgba(255, 255, 255, 0.85); }
+.bfb-logo--pink .bfb-logo__name         { color: #ffffff; }
+.bfb-logo--pink .bfb-logo__rule         { background: rgba(255, 255, 255, 0.6); }
+.bfb-logo--pink .bfb-logo__tagline-text { color: rgba(255, 255, 255, 0.8); }
+.bfb-logo--pink .bfb-logo__star         { color: rgba(255, 255, 255, 0.8); }
+
+/* Small — nav bar usage */
+.bfb-logo--sm .bfb-logo__sup     { font-size: 9px; }
+.bfb-logo--sm .bfb-logo__name    { font-size: 14px; }
+.bfb-logo--sm .bfb-logo__tagline { margin-top: 1px; }
+
+/* Large — hero / splash usage */
+.bfb-logo--lg .bfb-logo__sup  { font-size: 18px; }
+.bfb-logo--lg .bfb-logo__name { font-size: 52px; }
+
+/* Nav responsive — hide wordmark on mobile, show on md+ */
+.bfb-logo--nav .bfb-logo__wordmark { display: none; }
+@media (min-width: 768px) {
+  .bfb-logo--nav .bfb-logo__wordmark { display: flex; }
+}

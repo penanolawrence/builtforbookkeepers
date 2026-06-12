@@ -10,6 +10,7 @@ import { getAccounts } from '@/lib/api/accounts'
 import type { Account } from '@/types/admin'
 import type { LinePayload } from '@/lib/api/queue'
 import { SubtypeCombobox } from './SubtypeCombobox'
+import { useToast } from '@/hooks/use-toast'
 
 interface LineState {
   id?: string
@@ -140,6 +141,7 @@ function LineRow({
 }
 
 export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
+  const { toast } = useToast()
   const { data: item, isLoading } = useQuery({
     queryKey: ['queue-item', documentId],
     queryFn:  () => getQueueItem(documentId),
@@ -203,12 +205,6 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
   const [rejectReason, setRejectReason]   = useState('')
   const [returnNote, setReturnNote]       = useState('')
   const [submitting, setSubmitting]       = useState(false)
-  const [toast, setToast]                 = useState<string | null>(null)
-
-  const showToast = (msg: string) => {
-    setToast(msg)
-    setTimeout(() => setToast(null), 3000)
-  }
 
   function updateLine(index: number, patch: Partial<LineState>) {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
@@ -255,10 +251,10 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
         removedLineIds: removedLineIds,
       })
 
-      showToast('Document approved.')
+      toast({ title: 'Document approved.' })
       setTimeout(() => onRemoved ? onRemoved(documentId) : onClose(), 500)
     } catch {
-      showToast('Approval failed. Please try again.')
+      toast({ title: 'Approval failed. Please try again.', variant: 'destructive' })
     } finally {
       setSubmitting(false)
     }
@@ -269,10 +265,10 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     setSubmitting(true)
     try {
       await rejectItem(documentId, rejectReason)
-      showToast('Document rejected.')
+      toast({ title: 'Document rejected.' })
       setTimeout(() => onRemoved ? onRemoved(documentId) : onClose(), 500)
     } catch {
-      showToast('Rejection failed. Please try again.')
+      toast({ title: 'Rejection failed. Please try again.', variant: 'destructive' })
     } finally {
       setSubmitting(false)
     }
@@ -283,10 +279,10 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     setSubmitting(true)
     try {
       await returnItem(documentId, returnNote)
-      showToast('Document returned for re-upload.')
+      toast({ title: 'Document returned for re-upload.' })
       setTimeout(() => onRemoved ? onRemoved(documentId) : onClose(), 500)
     } catch {
-      showToast('Return failed. Please try again.')
+      toast({ title: 'Return failed. Please try again.', variant: 'destructive' })
     } finally {
       setSubmitting(false)
     }
@@ -311,12 +307,6 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
 
   return (
     <>
-      {toast && (
-        <div className="fixed top-4 right-4 z-[60] px-4 py-2.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg">
-          {toast}
-        </div>
-      )}
-
       <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
         <DialogContent className="sm:max-w-7xl p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh]">
 
@@ -406,7 +396,10 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                     <input
                       type="date"
                       value={date}
-                      onChange={(e) => setDate(e.target.value)}
+                      onChange={(e) => {
+                        setDate(e.target.value)
+                        setLines((prev) => prev.map((l) => ({ ...l, date: e.target.value })))
+                      }}
                       className="w-full border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink"
                     />
                     {aiHint(date, item?.date)}

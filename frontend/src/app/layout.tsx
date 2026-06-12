@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Bricolage_Grotesque, Plus_Jakarta_Sans } from 'next/font/google'
+import { Bricolage_Grotesque, DM_Serif_Display, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { QueryProvider } from '@/lib/providers/QueryProvider'
 import { SocketProvider } from '@/lib/socket/SocketProvider'
@@ -17,6 +17,14 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-body',
+  display: 'swap',
+})
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ['latin'],
+  style: ['italic'],
+  weight: '400',
+  variable: '--font-serif',
   display: 'swap',
 })
 
@@ -40,7 +48,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-PH" className={`${bricolage.variable} ${jakarta.variable}`}>
+    <html lang="en-PH" className={`${bricolage.variable} ${jakarta.variable} ${dmSerifDisplay.variable}`}>
       <body>
         <QueryProvider>
           <SocketProvider>

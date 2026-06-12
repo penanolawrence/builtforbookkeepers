@@ -3,12 +3,22 @@
 namespace App\Http\Controllers\Accountant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Accountant\CreateClientRequest;
+use App\Mail\ClientInviteMail;
 use App\Models\AdjustingEntry;
 use App\Models\Company;
 use App\Models\Document;
 use App\Models\Payment;
+use App\Models\User;
+use App\Services\Accounting\ChartOfAccountsService;
+use App\Services\Auth\InviteTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class ClientController extends Controller
 {
@@ -112,6 +122,70 @@ class ClientController extends Controller
                 'allClear'      => $allClear,
             ],
         ]);
+    }
+
+    public function store(CreateClientRequest $request): JsonResponse
+    {
+        $accountant = auth()->user();
+
+        $base = Str::lower(preg_replace('/[^a-zA-Z0-9]/', '', $request->businessName));
+
+        try {
+            [$company, $user, $inviteLink] = DB::transaction(function () use ($request, $base, $accountant) {
+                $username = $base;
+                if (User::where('username', $username)->exists()) {
+                    $username .= substr($request->mobile, -3);
+                }
+                if (User::where('username', $username)->exists()) {
+                    $username .= Str::padLeft((string) rand(0, 999), 3, '0');
+                }
+
+                $company = Company::create([
+                    'name'           => $request->businessName,
+                    'mobile'         => $request->mobile,
+                    'email'          => $request->email,
+                    'tin'            => $request->tin,
+                    'contact_person' => $request->contactPerson,
+                    'bir_type'       => $request->birType,
+                    'plan'           => $request->planType,
+                    'accountant_id'  => $accountant->id,
+                ]);
+
+                $user = User::create([
+                    'name'       => $request->businessName,
+                    'email'      => $request->email,
+                    'mobile'     => $request->mobile,
+                    'username'   => $username,
+                    'password'   => bcrypt(Str::random(32)),
+                    'role'       => 'client',
+                    'status'     => 'active',
+                    'company_id' => $company->id,
+                ]);
+
+                (new ChartOfAccountsService())->seedDefaultAccounts($company);
+
+                $rawToken   = (new InviteTokenService())->generate($user);
+                $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
+
+                return [$company, $user, $inviteLink];
+            });
+        } catch (UniqueConstraintViolationException) {
+            return response()->json(['message' => 'A client with a similar name already exists. Please try a more specific business name.'], 422);
+        }
+
+        if ($request->email) {
+            try {
+                Mail::to($request->email)->send(new ClientInviteMail($inviteLink));
+            } catch (\Throwable $e) {
+                Log::error('ClientInviteMail failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'companyId'  => $company->id,
+            'inviteLink' => $inviteLink,
+            'username'   => $user->username,
+        ], 201);
     }
 
     public function show(string $id): JsonResponse

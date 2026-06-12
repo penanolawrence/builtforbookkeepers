@@ -9,6 +9,7 @@ import { getAccountants } from '@/lib/api/admin/accountants'
 import { QueueReviewModal } from './QueueReviewModal'
 import { Breadcrumb } from '@/components/shared/Breadcrumb'
 import { SummaryCard } from '@/components/shared/SummaryCard'
+import { useToast } from '@/hooks/use-toast'
 import type { QueueItem } from '@/types/queue'
 import type { ClientProfile } from '@/types/admin'
 
@@ -30,13 +31,13 @@ function fmtDate(iso: string | null) {
 
 export function QueuePageContent({ showAccountant = false, reviewBasePath }: Props) {
   const { items, isLoading, batchApprove, removeItem } = useApprovalQueue()
+  const { toast } = useToast()
 
   const [clientFilter, setClientFilter]         = useState('')
   const [flagFilter, setFlagFilter]             = useState('')
   const [accountantFilter, setAccountantFilter] = useState('')
   const [selected, setSelected]                 = useState<Set<string>>(new Set())
   const [approving, setApproving]               = useState(false)
-  const [toast, setToast]                       = useState<string | null>(null)
   const [reviewingId, setReviewingId]           = useState<string | null>(null)
   const [hoveredId, setHoveredId]               = useState<string | null>(null)
   const initialized                             = useRef(false)
@@ -70,10 +71,6 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
     setSelected(new Set(greenIds))
   }, [items])
 
-  const showToast = (msg: string) => {
-    setToast(msg)
-    setTimeout(() => setToast(null), 3000)
-  }
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
@@ -114,22 +111,16 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
         result.approved.forEach((id) => next.delete(id))
         return next
       })
-      showToast(`Approved ${result.approved.length} item(s).`)
+      toast({ title: `Approved ${result.approved.length} item(s).` })
     } catch {
-      showToast('Batch approval failed. Please try again.')
+      toast({ title: 'Batch approval failed. Please try again.', variant: 'destructive' })
     } finally {
       setApproving(false)
     }
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7">
-      {toast && (
-        <div className="fixed top-4 right-4 z-50 px-4 py-2.5 bg-gray-900 text-white text-xs font-medium rounded-lg shadow-lg">
-          {toast}
-        </div>
-      )}
-
+    <div className={`max-w-[1280px] mx-auto px-4 py-5 md:px-9 md:py-7${selected.size > 0 ? ' pb-24' : ''}`}>
       <Breadcrumb crumbs={[{ label: 'Dashboard', href: showAccountant ? '/admin' : '/accountant' }, { label: 'Review Queue' }]} />
 
       <div className="flex items-start justify-between mb-[22px]">

@@ -292,6 +292,11 @@ html { scroll-behavior: smooth; }
   padding: 10px 16px; border-radius: 10px; text-align: center;
   white-space: nowrap;
 }
+@media (max-width: 480px) {
+  .ld-bir-callout { flex-direction: column; align-items: stretch; }
+  .ld-bir-callout__chips { grid-template-columns: 1fr; width: 100%; }
+  .ld-bir-callout__chip { white-space: normal; }
+}
 
 /* ── Review Queue Mockup ── */
 .ld-mockup {

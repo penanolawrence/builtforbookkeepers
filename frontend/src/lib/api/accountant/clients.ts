@@ -2,6 +2,27 @@ import api from '../client'
 import type { ClientProfile, PagedClients } from '@/types/admin'
 import type { PagedDocs } from '@/types/document'
 
+export interface CreateClientPayload {
+  businessName:  string
+  mobile:        string
+  planType:      'starter' | 'growth' | 'premium'
+  birType:       'vat' | 'non_vat'
+  tin?:          string
+  email?:        string
+  contactPerson?: string
+}
+
+export interface CreateClientResult {
+  companyId:  string
+  inviteLink: string
+  username:   string
+}
+
+export async function createAccountantClient(payload: CreateClientPayload): Promise<CreateClientResult> {
+  const { data } = await api.post<CreateClientResult>('/accountant/clients', payload)
+  return data
+}
+
 export async function getAccountantClients(params?: {
   page?: number
   per_page?: number

@@ -15,6 +15,7 @@ use App\Services\Auth\InviteTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -51,7 +52,7 @@ class AccountantController extends Controller
 
     public function store(CreateAccountantRequest $request): JsonResponse
     {
-        $user = DB::transaction(function () use ($request) {
+        [$user, $inviteLink] = DB::transaction(function () use ($request) {
             $user = User::create([
                 'name'     => $request->name,
                 'email'    => $request->email,
@@ -62,14 +63,23 @@ class AccountantController extends Controller
             ]);
 
             $rawToken   = (new InviteTokenService())->generate($user);
-            $inviteLink = env('FRONTEND_URL', 'http://localhost:3000') . '/setup?token=' . $rawToken;
+            $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
 
-            Mail::to($request->email)->send(new ClientInviteMail($inviteLink));
-
-            return $user;
+            return [$user, $inviteLink];
         });
 
-        return response()->json(['userId' => $user->id], 201);
+        try {
+            Mail::to($request->email)->send(new ClientInviteMail($inviteLink));
+        } catch (\Throwable $e) {
+            Log::error('AccountantInviteMail failed: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'userId'     => $user->id,
+            'inviteLink' => $inviteLink,
+            'name'       => $user->name,
+            'email'      => $user->email,
+        ], 201);
     }
 
     public function update(UpdateAccountantRequest $request, string $id): JsonResponse
@@ -141,7 +151,7 @@ class AccountantController extends Controller
     {
         $user     = User::where('role', 'accountant')->findOrFail($id);
         $rawToken = (new InviteTokenService())->generate($user);
-        $inviteLink = env('FRONTEND_URL', 'http://localhost:3000') . '/setup?token=' . $rawToken;
+        $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
 
         Mail::to($user->email)->send(new ClientInviteMail($inviteLink));
 
