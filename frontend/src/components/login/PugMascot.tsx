@@ -11,6 +11,9 @@ interface PugMascotProps {
   size?: number   // SVG width in px; height proportional (default 320 → 369)
 }
 
+const P     = { furHi: '#F4DCB8', fur: '#ECCBA1', furSh: '#D9B083', mask: '#3B3340', nose: '#2A242F' }
+const WHITE = '#fff'
+
 function sparkle(x: number, y: number, color: string) {
   return (
     <path
@@ -36,21 +39,27 @@ export default function PugMascot({
 
   // Idle blink loop
   useEffect(() => {
-    let t: ReturnType<typeof setTimeout>
+    const handles: ReturnType<typeof setTimeout>[] = []
+    const add = (fn: () => void, ms: number) => {
+      const h = setTimeout(fn, ms)
+      handles.push(h)
+      return h
+    }
+
     const loop = () => {
       const next = 2200 + Math.random() * 3600
-      t = setTimeout(() => {
+      add(() => {
         setBlinking(true)
-        setTimeout(() => setBlinking(false), 140)
+        add(() => setBlinking(false), 140)
         if (Math.random() < 0.3) {
-          setTimeout(() => setBlinking(true), 260)
-          setTimeout(() => setBlinking(false), 400)
+          add(() => setBlinking(true), 260)
+          add(() => setBlinking(false), 400)
         }
         loop()
       }, next)
     }
     loop()
-    return () => clearTimeout(t)
+    return () => handles.forEach(clearTimeout)
   }, [])
 
   // Cursor-follow pupils (disabled when peeking)
@@ -75,12 +84,6 @@ export default function PugMascot({
   const isSofia = variant === 'sofia'
   const eyesClosed = blinking
   const tongueOut = !isSofia || happy  // Yoda always shows tongue; Sofia only when happy
-
-  const P = {
-    furHi: '#F4DCB8', fur: '#ECCBA1', furSh: '#D9B083',
-    mask: '#3B3340', nose: '#2A242F',
-  }
-  const WHITE = '#fff'
 
   return (
     <svg
