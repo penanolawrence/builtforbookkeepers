@@ -17,6 +17,7 @@ class AdminNotificationMail extends Mailable
     public function build(): static
     {
         return $this->subject('Built for Bookkeepers — Admin Alert')
+                    ->view('emails.admin-notification')
                     ->text('emails.admin-notification-plain');
     }
 }

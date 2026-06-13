@@ -20,6 +20,7 @@ class ClientInviteMail extends Mailable
     public function build(): static
     {
         return $this->subject("You're invited to Built for Bookkeepers")
+                    ->view('emails.client-invite')
                     ->text('emails.client-invite-plain');
     }
 }
