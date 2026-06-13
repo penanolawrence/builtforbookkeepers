@@ -302,7 +302,7 @@ class PeriodClosingService
 
         $draftCount = JournalEntry::where('company_id', $company->id)
             ->whereBetween('entry_date', [$start, $end])
-            ->whereIn('status', ['draft', 'pending'])
+            ->where('status', 'draft')
             ->count();
 
         if ($draftCount > 0) {

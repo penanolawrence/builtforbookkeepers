@@ -358,7 +358,7 @@ class PeriodClosingTest extends TestCase
         ]);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('journal');
+        $this->expectExceptionMessage('still in draft');
 
         app(PeriodClosingService::class)->executeClose($this->company, 2026, 1, $this->accountant);
     }
