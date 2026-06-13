@@ -237,7 +237,17 @@ class ClientController extends Controller
         $rawToken   = (new InviteTokenService())->generate($user);
         $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
 
-        return response()->json(['inviteLink' => $inviteLink]);
+        $emailSent = false;
+        if ($user->email) {
+            try {
+                Mail::to($user->email)->send(new ClientInviteMail($inviteLink));
+                $emailSent = true;
+            } catch (\Throwable $e) {
+                Log::error('ClientInviteMail (reset) failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json(['inviteLink' => $inviteLink, 'emailSent' => $emailSent]);
     }
 
     public function reassignAccountant(Request $request, string $id): JsonResponse

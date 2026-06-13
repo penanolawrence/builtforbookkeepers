@@ -149,13 +149,23 @@ class AccountantController extends Controller
 
     public function resetPassword(string $id): JsonResponse
     {
-        $user     = User::where('role', 'accountant')->findOrFail($id);
-        $rawToken = (new InviteTokenService())->generate($user);
+        $user       = User::where('role', 'accountant')->findOrFail($id);
+        $rawToken   = (new InviteTokenService())->generate($user);
         $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
 
-        Mail::to($user->email)->send(new ClientInviteMail($inviteLink));
+        $emailSent = false;
+        try {
+            Mail::to($user->email)->send(new ClientInviteMail($inviteLink));
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            Log::error('AccountantInviteMail (reset) failed: ' . $e->getMessage());
+        }
 
-        return response()->json(['message' => 'Password reset email sent.']);
+        return response()->json([
+            'message'    => $emailSent ? 'Invitation email sent.' : 'Link generated but email failed to send.',
+            'inviteLink' => $inviteLink,
+            'emailSent'  => $emailSent,
+        ]);
     }
 
     public function deactivate(Request $request, string $id): JsonResponse
