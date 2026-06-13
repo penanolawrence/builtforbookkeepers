@@ -6,6 +6,7 @@ import { ArrowRight, Sparkles } from 'lucide-react'
 import { getQueue } from '@/lib/api/queue'
 import { getEntries } from '@/lib/api/adjusting-entries'
 import { getAccountantClients } from '@/lib/api/accountant/clients'
+import { getWeeklyStats } from '@/lib/api/accountant/dashboard'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useTheme } from '@/components/layout/ThemeProvider'
 import { TierCard, Tier } from '@/components/dashboard/TierCard'
@@ -30,6 +31,7 @@ export default function AccountantDashboard() {
   const { data: queue   = [] } = useQuery({ queryKey: ['accountant-queue'],           queryFn: () => getQueue() })
   const { data: pending = [] } = useQuery({ queryKey: ['accountant-pending-entries'], queryFn: () => getEntries({ status: 'PENDING' }) })
   const { data: clientsPage, isLoading: cLoading } = useQuery({ queryKey: ['accountant-clients'], queryFn: () => getAccountantClients({ per_page: 100 }) })
+  const { data: weekStats } = useQuery({ queryKey: ['accountant-week-stats'], queryFn: getWeeklyStats })
   const clients = clientsPage?.data ?? []
 
   const firstName = user?.name?.split(' ')[0] ?? 'there'
@@ -52,6 +54,15 @@ export default function AccountantDashboard() {
     ready:      (queue as QueueItem[]).filter((i) => i.clientId === c.id && i.flag === 'GREEN').length,
     pending:    (pending as AdjustingEntry[]).filter((e) => e.companyId === c.id).length,
   }))
+
+  const redCount = tiers[0].count
+  const mascotBrief = redCount > 0
+    ? (theme === 'sofia'
+        ? `${redCount} ${redCount === 1 ? 'entry needs' : 'entries need'} your eyes — I've sorted the rest into batches.`
+        : `${redCount} ${redCount === 1 ? 'item' : 'items'} flagged for review. Yoda sees all.`)
+    : (theme === 'sofia'
+        ? 'All clear — your queue is sorted and ready!'
+        : 'Nothing flagged. Yoda is pleased.')
 
   return (
     <div
@@ -89,7 +100,7 @@ export default function AccountantDashboard() {
           </p>
         </div>
         <div className="acct-dash-mascot" style={{ width: 430, flexShrink: 0 }}>
-          <MascotCompanion theme={theme} />
+          <MascotCompanion theme={theme} brief={mascotBrief} />
         </div>
       </div>
 
@@ -197,10 +208,9 @@ export default function AccountantDashboard() {
               </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              {/* TODO: wire to real weekly stats API */}
-              <WeekStat value="312" label="Entries processed" sub="across 5 clients" accent />
-              <WeekStat value="96%"  label="Auto-categorized"  sub="accepted as suggested" />
-              <WeekStat value="4.2h" label="Time saved"        sub="vs. manual entry" />
+              <WeekStat value={weekStats ? String(weekStats.entriesProcessed) : '—'} label="Entries processed" sub="approved this week" accent />
+              <WeekStat value={weekStats ? `${weekStats.autoCategorizedPct}%` : '—'} label="Auto-categorized"  sub="accepted as suggested" />
+              <WeekStat value={weekStats ? `${weekStats.timeSavedHours}h` : '—'}     label="Time saved"        sub="vs. manual entry" />
             </div>
           </div>
 

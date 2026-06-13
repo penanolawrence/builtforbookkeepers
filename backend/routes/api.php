@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Accountant-only routes
     Route::middleware('role:accountant')->group(function () {
+        Route::get('/accountant/dashboard/weekly-stats', [Accountant\DashboardController::class, 'weeklyStats']);
         Route::get('/accountant/clients',                [Accountant\ClientController::class, 'index']);
         Route::post('/accountant/clients',               [Accountant\ClientController::class, 'store']);
         Route::get('/accountant/clients/{id}',           [Accountant\ClientController::class, 'show']);

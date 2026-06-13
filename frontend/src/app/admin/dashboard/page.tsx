@@ -61,6 +61,14 @@ export default function AdminDashboardPage() {
     .sort((a, b) => b.dateReceived.localeCompare(a.dateReceived))
     .slice(0, 5)
 
+  const mascotBrief = openRedItems > 0
+    ? (theme === 'sofia'
+        ? `${openRedItems} RED ${openRedItems === 1 ? 'item needs' : 'items need'} attention — I've flagged them for review.`
+        : `${openRedItems} ${openRedItems === 1 ? 'item' : 'items'} flagged. Yoda is watching.`)
+    : (theme === 'sofia'
+        ? 'All RED items cleared — the team is on track!'
+        : 'No RED items. The force is balanced.')
+
   const STAT_CARDS = [
     { label: 'Total Clients',        value: isLoading ? '—' : String(totalClients),      sub: 'across all accountants',   color: 'var(--t-ink)'            },
     { label: 'RED Items (Open)',       value: isLoading ? '—' : String(openRedItems),       sub: 'need immediate review',    color: 'var(--t-tier-review-fg)' },
@@ -91,7 +99,7 @@ export default function AdminDashboardPage() {
           </p>
         </div>
         <div style={{ width: 430, flexShrink: 0 }}>
-          <MascotCompanion theme={theme} />
+          <MascotCompanion theme={theme} brief={mascotBrief} />
         </div>
       </div>
 

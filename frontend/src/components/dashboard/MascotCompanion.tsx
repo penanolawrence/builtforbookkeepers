@@ -13,7 +13,7 @@ const ACCENT: Record<'sofia' | 'yoda', { accent: string; accentGlow: string }> =
 export function MascotCompanion({ theme, brief }: MascotCompanionProps) {
   const { accent, accentGlow } = ACCENT[theme]
   const name = theme === 'sofia' ? 'Sofia' : 'Yoda'
-  const line = brief ?? "2 entries need your eyes — I've sorted the rest into batches."
+  const line = brief ?? 'Your queue is up to date.'
 
   return (
     <div
