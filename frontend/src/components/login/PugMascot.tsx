@@ -6,8 +6,8 @@ interface PugMascotProps {
   variant: 'sofia' | 'yoda'
   accent: string
   accentGlow: string
-  peeking: boolean
-  happy: boolean
+  peeking?: boolean
+  happy?: boolean
   size?: number   // SVG width in px; height proportional (default 320 → 369)
 }
 

@@ -4,7 +4,6 @@ const FEATURES = [
   'AI-assisted transaction classification',
   'Red / Yellow / Green approval queue',
   '4 BIR books generated on demand',
-  'VAT auto-computation (12% for VAT clients)',
   'Multi-client dashboard',
   'Adjusting entries + full audit trail',
   'Mobile-first client upload page',
