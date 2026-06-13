@@ -1,15 +1,15 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { Topbar } from '../Topbar'
 
 jest.mock('next/navigation', () => ({
-  usePathname: () => '/admin/dashboard',
-  useRouter: () => ({ push: jest.fn() }),
+  usePathname: jest.fn(() => '/admin/dashboard'),
+  useRouter: jest.fn(() => ({ push: jest.fn() })),
 }))
 jest.mock('@/lib/hooks/useAuth', () => ({
-  useAuth: () => ({
+  useAuth: jest.fn(() => ({
     user: { name: 'Admin User', role: 'admin', email: 'admin@builtforbookkeepers.ph' },
     logout: jest.fn(),
-  }),
+  })),
 }))
 jest.mock('@/lib/api/queue', () => ({ getQueue: jest.fn().mockResolvedValue([]) }))
 jest.mock('../NotificationBell', () => ({ NotificationBell: () => null }))
@@ -40,5 +40,40 @@ describe('Topbar', () => {
     const btn = screen.getByRole('button', { name: 'Account menu' })
     expect(btn).toBeInTheDocument()
     expect(btn).toHaveTextContent('AU')
+  })
+})
+
+describe('Topbar — accountant role', () => {
+  const mockUseAuth = jest.requireMock('@/lib/hooks/useAuth').useAuth as jest.Mock
+  const mockUsePathname = jest.requireMock('next/navigation').usePathname as jest.Mock
+
+  afterEach(() => {
+    mockUseAuth.mockReset()
+    mockUsePathname.mockReset()
+  })
+
+  it('shows Help link in dropdown for accountant users', () => {
+    mockUseAuth.mockReturnValue({
+      user: { name: 'Maria Santos', role: 'accountant', email: 'maria@test.ph' },
+      logout: jest.fn(),
+    })
+    mockUsePathname.mockReturnValue('/accountant/dashboard')
+
+    render(<Topbar />)
+    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+    expect(screen.getByRole('link', { name: /Help/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Help/ })).toHaveAttribute('href', '/accountant/help')
+  })
+
+  it('does not show Help link for admin users', () => {
+    mockUseAuth.mockReturnValue({
+      user: { name: 'Admin User', role: 'admin', email: 'admin@test.ph' },
+      logout: jest.fn(),
+    })
+    mockUsePathname.mockReturnValue('/admin/dashboard')
+
+    render(<Topbar />)
+    fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+    expect(screen.queryByRole('link', { name: /Help/ })).toBeNull()
   })
 })

@@ -190,6 +190,19 @@ export function Topbar() {
             >
               ⚙ Settings
             </Link>
+            {user?.role === 'accountant' && (
+              <Link
+                href="/accountant/help"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 14px', fontSize: 13,
+                  color: 'var(--t-ink)', textDecoration: 'none',
+                }}
+              >
+                ? Help
+              </Link>
+            )}
             <div style={{ height: 1, background: 'var(--t-line)' }} />
             <button
               onClick={handleLogout}
