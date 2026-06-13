@@ -63,8 +63,9 @@ class AdjustingEntryController extends Controller
             return response()->json(['message' => 'Forbidden.'], 403);
         }
 
-        $year  = Carbon::parse($request->date)->year;
-        $month = Carbon::parse($request->date)->month;
+        $date  = Carbon::parse($request->date);
+        $year  = $date->year;
+        $month = $date->month;
         if (PeriodClosing::where('company_id', $company->id)
             ->where('period_year', $year)
             ->where('period_month', $month)
@@ -147,6 +148,10 @@ class AdjustingEntryController extends Controller
 
         if ($entry->created_by !== $user->id) {
             return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        if ($entry->status !== 'draft') {
+            return response()->json(['message' => 'Only draft entries can be submitted.'], 422);
         }
 
         $debitTotal  = $entry->lines->sum('debit');
