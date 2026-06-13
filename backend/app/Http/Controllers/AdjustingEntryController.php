@@ -269,6 +269,19 @@ class AdjustingEntryController extends Controller
             return response()->json(['message' => 'Entry must be pending to approve.'], 422);
         }
 
+        $year  = $entry->entry_date->year;
+        $month = $entry->entry_date->month;
+        if (PeriodClosing::where('company_id', $entry->company_id)
+            ->where('period_year', $year)
+            ->where('period_month', $month)
+            ->exists()
+        ) {
+            $label = Carbon::create($year, $month, 1)->format('M Y');
+            return response()->json([
+                'message' => "The period {$label} is locked. Adjusting entries cannot be posted to a closed period.",
+            ], 422);
+        }
+
         DB::transaction(function () use ($entry, $user) {
             (new JournalEntryService())->postFromAdjustingEntry($entry, $user);
             $entry->update([
