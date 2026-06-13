@@ -268,6 +268,15 @@ class PeriodClosingService
                 ]);
             }
 
+            // Tag all original posted JEs in the period with this closing's ID
+            JournalEntry::where('company_id', $company->id)
+                ->whereBetween('entry_date', [$start, $end])
+                ->where('status', 'posted')
+                ->whereNull('period_closing_id')
+                ->update(['period_closing_id' => $closing->id]);
+
+            $this->assertPostCloseIntegrity($je1, $je2, $company, $year, $month);
+
             return $closing;
         });
     }
@@ -309,6 +318,40 @@ class PeriodClosingService
             $label = $draftCount === 1 ? 'entry' : 'entries';
             throw new \RuntimeException(
                 "{$draftCount} journal {$label} in this period are still in draft and will be permanently locked. Post or delete them before closing."
+            );
+        }
+    }
+
+    private function assertPostCloseIntegrity(
+        JournalEntry $je1,
+        JournalEntry $je2,
+        Company $company,
+        int $year,
+        int $month
+    ): void {
+        $start = Carbon::create($year, $month, 1)->startOfMonth();
+        $end   = Carbon::create($year, $month, 1)->endOfMonth();
+
+        foreach ([$je1->id, $je2->id] as $jeId) {
+            $totalDebit  = (float) JournalEntryLine::where('journal_entry_id', $jeId)->sum('debit');
+            $totalCredit = (float) JournalEntryLine::where('journal_entry_id', $jeId)->sum('credit');
+            if (abs($totalDebit - $totalCredit) > 0.01) {
+                throw new \RuntimeException(
+                    "Closing entry {$jeId} is unbalanced (Dr {$totalDebit} ≠ Cr {$totalCredit}) — this is a system error."
+                );
+            }
+        }
+
+        $orphanCount = JournalEntry::where('company_id', $company->id)
+            ->whereBetween('entry_date', [$start, $end])
+            ->where('status', 'posted')
+            ->whereNull('period_closing_id')
+            ->count();
+
+        if ($orphanCount > 0) {
+            $label = $orphanCount === 1 ? 'entry' : 'entries';
+            throw new \RuntimeException(
+                "{$orphanCount} posted journal {$label} in this period were not captured by the closing — data integrity error."
             );
         }
     }

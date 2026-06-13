@@ -362,4 +362,15 @@ class PeriodClosingTest extends TestCase
 
         app(PeriodClosingService::class)->executeClose($this->company, 2026, 1, $this->accountant);
     }
+
+    public function test_original_jes_are_tagged_with_closing_id_after_close(): void
+    {
+        $je = $this->postJournalEntry(2026, 1, 'income', 48500);
+        $this->postJournalEntry(2026, 1, 'expense', 10000);
+
+        $closing = app(PeriodClosingService::class)->executeClose($this->company, 2026, 1, $this->accountant);
+
+        $je->refresh();
+        $this->assertSame($closing->id, $je->period_closing_id);
+    }
 }
