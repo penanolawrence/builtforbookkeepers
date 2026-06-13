@@ -28,16 +28,7 @@
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="vertical-align:middle;">
-                    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="display:block;">
-                      <defs>
-                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stop-color="#E2568C"/>
-                          <stop offset="100%" stop-color="#C53C76"/>
-                        </linearGradient>
-                      </defs>
-                      <rect width="32" height="32" rx="7" fill="url(#logo-grad)"/>
-                      <text x="16" y="22" text-anchor="middle" fill="#fff" font-size="18" font-weight="bold" font-family="Arial,sans-serif">&#8369;</text>
-                    </svg>
+                    <img src="{{ config('app.url') }}/images/logo-mark.svg" width="32" height="32" alt="Built for Bookkeepers" style="display:block;border:0;">
                   </td>
                   <td style="padding-left:12px;vertical-align:middle;">
                     <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:700;color:#2A2433;letter-spacing:-0.2px;">Built for Bookkeepers</span>
