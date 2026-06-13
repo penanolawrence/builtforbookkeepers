@@ -223,11 +223,11 @@
 .state-title {
   font-size: 16px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text);
 }
 .state-body {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--muted-fg);
   line-height: 1.6;
   max-width: 300px;
 }
