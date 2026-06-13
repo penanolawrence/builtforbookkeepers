@@ -1,0 +1,31 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bfb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F07AAB" />
+      <stop offset="100%" stop-color="#C03A72" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100" height="100" rx="22" fill="url(#bfb-grad)" />
+
+  <!-- Document with folded corner -->
+  <path d="M20,12 L58,12 L72,26 L72,86 Q72,92 66,92 L20,92 Q14,92 14,86 L14,18 Q14,12 20,12 Z" fill="rgba(255,255,255,0.94)" />
+
+  <!-- Fold triangle -->
+  <path d="M58,12 L72,26 L58,26 Z" fill="rgba(180,40,90,0.2)" />
+
+  <!-- Philippine Peso symbol -->
+  <text x="43" y="47" font-family="system-ui, sans-serif" font-weight="800" font-size="20" fill="#E2568C" opacity="0.75" text-anchor="middle">₱</text>
+
+  <!-- Data rows -->
+  <rect x="21" y="55" width="36" height="3"   rx="1.5" fill="#E2568C" opacity="0.22" />
+  <rect x="21" y="61" width="28" height="3"   rx="1.5" fill="#E2568C" opacity="0.18" />
+
+  <!-- Double rule -->
+  <rect x="21" y="69"   width="36" height="4.5" rx="2.25" fill="#E2568C" opacity="0.55" />
+  <rect x="21" y="75.5" width="36" height="3"   rx="1.5"  fill="#E2568C" opacity="0.28" />
+
+  <!-- Sparkle star -->
+  <path d="M82,16 L83.4,20.6 L88,22 L83.4,23.4 L82,28 L80.6,23.4 L76,22 L80.6,20.6 Z" fill="white" />
+</svg>
