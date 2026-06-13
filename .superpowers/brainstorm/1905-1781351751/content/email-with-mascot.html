@@ -1,0 +1,184 @@
+<h2>Email Design — With Your Pug Mascot</h2>
+<p class="subtitle">Same three directions, now with Sofia the pug as a static inline SVG. Pick the one that feels right.</p>
+
+<style>
+  .email-preview {
+    background: #fff;
+    border: 1px solid #ECE4D8;
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    width: 340px;
+    margin: 0 auto;
+    box-shadow: 0 2px 12px rgba(42,28,60,.10);
+  }
+  .card-image { padding: 12px 12px 0; }
+</style>
+
+<!-- Shared pug SVG macro (static, Sofia variant, happy) -->
+<svg id="pug-def" style="display:none">
+  <symbol id="pug-sofia" viewBox="0 0 260 300">
+    <defs>
+      <radialGradient id="bellyG2" cx="50%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="#F4DCB8"/>
+        <stop offset="100%" stop-color="#ECCBA1"/>
+      </radialGradient>
+      <radialGradient id="headG2" cx="42%" cy="34%" r="75%">
+        <stop offset="0%" stop-color="#F4DCB8"/>
+        <stop offset="100%" stop-color="#ECCBA1"/>
+      </radialGradient>
+      <radialGradient id="glowG2" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#FFADD2" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#FFADD2" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="130" cy="288" rx="62" ry="11" fill="#000" opacity="0.13"/>
+    <!-- Ears -->
+    <ellipse cx="58" cy="104" rx="21" ry="46" fill="#3B3340" transform="rotate(-12 58 104)"/>
+    <ellipse cx="202" cy="104" rx="21" ry="46" fill="#3B3340" transform="rotate(12 202 104)"/>
+    <!-- Body -->
+    <ellipse cx="130" cy="234" rx="64" ry="46" fill="url(#bellyG2)"/>
+    <ellipse cx="100" cy="264" rx="19" ry="13" fill="#ECCBA1"/>
+    <ellipse cx="160" cy="264" rx="19" ry="13" fill="#ECCBA1"/>
+    <path d="M92 264 v8 M100 265 v9 M108 264 v8" stroke="#D9B083" stroke-width="2" stroke-linecap="round"/>
+    <path d="M152 264 v8 M160 265 v9 M168 264 v8" stroke="#D9B083" stroke-width="2" stroke-linecap="round"/>
+    <!-- Collar -->
+    <path d="M74 196 Q130 220 186 196" fill="none" stroke="#E2568C" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="130" cy="214" r="7" fill="#FFADD2" stroke="#fff" stroke-width="1.5"/>
+    <!-- Head -->
+    <circle cx="130" cy="116" r="78" fill="url(#headG2)"/>
+    <path d="M104 70 Q130 60 156 70" fill="none" stroke="#D9B083" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+    <path d="M110 82 Q130 73 150 82" fill="none" stroke="#D9B083" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+    <!-- Muzzle -->
+    <ellipse cx="130" cy="152" rx="50" ry="42" fill="#3B3340"/>
+    <!-- Eyes open -->
+    <ellipse cx="99" cy="112" rx="21" ry="23" fill="#fff"/>
+    <ellipse cx="161" cy="112" rx="21" ry="23" fill="#fff"/>
+    <circle cx="99" cy="114" r="11.5" fill="#2A242F"/>
+    <circle cx="161" cy="114" r="11.5" fill="#2A242F"/>
+    <circle cx="94" cy="108" r="4" fill="#fff"/>
+    <circle cx="156" cy="108" r="4" fill="#fff"/>
+    <!-- Nose + mouth + tongue (happy) -->
+    <path d="M130 130 q14 4 11 15 q-3 8 -11 9 q-8 -1 -11 -9 q-3 -11 11 -15 Z" fill="#2A242F"/>
+    <path d="M130 155 v9" stroke="#2A242F" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M130 164 q-12 9 -22 3 M130 164 q12 9 22 3" fill="none" stroke="#2A242F" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="130" cy="178" rx="9" ry="12" fill="#F2748A"/>
+    <line x1="130" y1="170" x2="130" y2="184" stroke="#D85A72" stroke-width="1.6" opacity="0.6"/>
+    <!-- AI headset -->
+    <path d="M64 96 Q130 34 196 96" fill="none" stroke="#E2568C" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="130" cy="40" r="9" fill="url(#glowG2)"/>
+    <circle cx="130" cy="40" r="4.5" fill="#E2568C"/>
+    <circle cx="62" cy="104" r="13" fill="#E2568C"/>
+    <circle cx="62" cy="104" r="6" fill="#FFADD2"/>
+    <path d="M60 116 Q50 156 96 158" fill="none" stroke="#E2568C" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="98" cy="158" r="5" fill="#E2568C"/>
+  </symbol>
+</svg>
+
+<div class="cards">
+
+  <!-- A: Minimal & Clean + pug in footer -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="email-preview">
+        <div style="height:4px;background:linear-gradient(90deg,#E2568C,#C53C76);"></div>
+        <div style="padding:20px 24px 14px;border-bottom:1px solid #ECE4D8;display:flex;align-items:center;gap:10px;">
+          <div style="width:26px;height:26px;background:linear-gradient(135deg,#F07AAB,#C03A72);border-radius:6px;display:flex;align-items:center;justify-content:center;">
+            <span style="color:white;font-size:12px;font-weight:800;">₱</span>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:#2A2433;">Built for Bookkeepers</span>
+        </div>
+        <div style="padding:20px 24px 16px;">
+          <p style="font-size:12px;color:#2A2433;line-height:1.6;margin:0 0 14px;">Hello,<br><br>You've been invited to join <strong>Built for Bookkeepers</strong> — an AI-assisted bookkeeping system.</p>
+          <div style="background:#E2568C;border-radius:6px;padding:9px 16px;display:inline-block;">
+            <span style="color:white;font-size:11px;font-weight:600;">Set Up My Account →</span>
+          </div>
+        </div>
+        <!-- Footer with small pug -->
+        <div style="padding:12px 24px;border-top:1px solid #ECE4D8;background:#FBF7F1;display:flex;align-items:center;gap:12px;">
+          <svg viewBox="0 0 260 300" width="38" height="44" style="flex-shrink:0;"><use href="#pug-sofia"/></svg>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#2A2433;">Sofia, your AI bookkeeper</div>
+            <div style="font-size:9.5px;color:#8A8295;">Link expires in 30 days</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Clean · Pug in Footer</h3>
+      <p>Minimal white body, thin pink bar header. Sofia signs off warmly from the footer.</p>
+    </div>
+  </div>
+
+  <!-- B: Branded & Warm + pug in header -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="email-preview">
+        <!-- Pink header with pug -->
+        <div style="background:linear-gradient(135deg,#E2568C,#C53C76);padding:20px 24px 14px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+              <div style="width:26px;height:26px;background:rgba(255,255,255,0.22);border-radius:6px;display:flex;align-items:center;justify-content:center;">
+                <span style="color:white;font-size:12px;font-weight:800;">₱</span>
+              </div>
+              <span style="color:white;font-size:12px;font-weight:700;">Built for Bookkeepers</span>
+            </div>
+          </div>
+          <svg viewBox="0 0 260 300" width="52" height="60" style="margin-bottom:-10px;"><use href="#pug-sofia"/></svg>
+        </div>
+        <!-- Body -->
+        <div style="padding:20px 24px 16px;background:#fff;">
+          <p style="font-size:12px;color:#2A2433;line-height:1.6;margin:0 0 14px;">Hello,<br><br>You've been invited to join <strong>Built for Bookkeepers</strong> — an AI-assisted bookkeeping system.</p>
+          <div style="background:#E2568C;border-radius:6px;padding:9px 16px;display:inline-block;">
+            <span style="color:white;font-size:11px;font-weight:600;">Set Up My Account →</span>
+          </div>
+        </div>
+        <!-- Beige footer -->
+        <div style="padding:10px 24px;background:#F6F1E9;border-top:1px solid #ECE4D8;">
+          <span style="font-size:9.5px;color:#8A8295;">Built for Bookkeepers Team · Link expires in 30 days</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Warm · Pug Peeks from Header</h3>
+      <p>Pink gradient header, pug peeks out from top-right. Most playful and on-brand.</p>
+    </div>
+  </div>
+
+  <!-- C: Dark header + pug centered below header -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="email-preview">
+        <!-- Dark header -->
+        <div style="background:#2A2433;padding:16px 24px 10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:26px;height:26px;background:linear-gradient(135deg,#F07AAB,#C03A72);border-radius:6px;display:flex;align-items:center;justify-content:center;">
+              <span style="color:white;font-size:12px;font-weight:800;">₱</span>
+            </div>
+            <span style="color:white;font-size:12px;font-weight:700;">Built for Bookkeepers</span>
+          </div>
+          <div style="height:2px;background:linear-gradient(90deg,#E2568C,transparent);margin-top:10px;"></div>
+        </div>
+        <!-- Pug centered below header -->
+        <div style="background:#FBF7F1;padding:14px 0 4px;text-align:center;">
+          <svg viewBox="0 0 260 300" width="60" height="70"><use href="#pug-sofia"/></svg>
+        </div>
+        <!-- Body -->
+        <div style="padding:12px 24px 16px;background:#fff;">
+          <p style="font-size:12px;color:#2A2433;line-height:1.6;margin:0 0 14px;">Hello,<br><br>You've been invited to join <strong>Built for Bookkeepers</strong> — an AI-assisted bookkeeping system.</p>
+          <div style="background:#E2568C;border-radius:6px;padding:9px 16px;display:inline-block;">
+            <span style="color:white;font-size:11px;font-weight:600;">Set Up My Account →</span>
+          </div>
+        </div>
+        <div style="padding:10px 24px;border-top:1px solid #ECE4D8;">
+          <span style="font-size:9.5px;color:#8A8295;">Built for Bookkeepers Team · Link expires in 30 days</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Bold · Pug as Hero</h3>
+      <p>Dark header, pug front-and-center as a hero moment between header and content.</p>
+    </div>
+  </div>
+
+</div>

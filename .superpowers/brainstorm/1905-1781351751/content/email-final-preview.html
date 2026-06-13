@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Email Preview — Design A</title>
+<style>
+  body { margin: 0; padding: 32px 24px; background: #F0EBE3; font-family: -apple-system,'Segoe UI',sans-serif; }
+  h1 { font-size: 15px; font-weight: 600; color: #2A2433; margin: 0 0 6px; }
+  .label { font-size: 11px; color: #8A8295; text-transform: uppercase; letter-spacing: .8px; font-weight: 600; margin-bottom: 10px; }
+  .pair { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* ── The email shell ── */
+  .email {
+    width: 520px;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(42,28,60,.06), 0 18px 40px -14px rgba(42,28,60,.14);
+    font-family: -apple-system,'Segoe UI',Arial,sans-serif;
+  }
+  .email-top-bar { height: 4px; background: linear-gradient(90deg,#E2568C,#C53C76); }
+  .email-header  { padding: 22px 32px 16px; border-bottom: 1px solid #ECE4D8; display: flex; align-items: center; gap: 12px; }
+  .email-logo    { width: 32px; height: 32px; background: linear-gradient(135deg,#F07AAB,#C03A72); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .email-logo span { color: white; font-size: 16px; font-weight: 800; }
+  .email-brand   { font-size: 13px; font-weight: 700; color: #2A2433; letter-spacing: .2px; }
+  .email-body    { padding: 28px 32px 24px; }
+  .email-body p  { font-size: 14px; color: #2A2433; line-height: 1.7; margin: 0 0 20px; }
+  .email-body strong { color: #2A2433; }
+  .email-btn     { display: inline-block; background: #E2568C; color: white; text-decoration: none; font-size: 13px; font-weight: 600; padding: 12px 24px; border-radius: 7px; letter-spacing: .2px; }
+  .email-divider { height: 1px; background: #ECE4D8; margin: 24px 0 0; }
+  .email-footer  { padding: 16px 32px; background: #FBF7F1; display: flex; align-items: center; gap: 16px; }
+  .email-footer-text { flex: 1; }
+  .email-footer-name { font-size: 12px; font-weight: 600; color: #2A2433; margin-bottom: 2px; }
+  .email-footer-sub  { font-size: 11px; color: #8A8295; line-height: 1.5; }
+
+  /* admin variant has no button, just a message block */
+  .email-alert { background: #FBE6EF; border-left: 3px solid #E2568C; border-radius: 4px; padding: 12px 16px; margin-bottom: 0; }
+  .email-alert p { margin: 0; font-size: 13px; color: #2A2433; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="pair">
+
+  <!-- ── CLIENT INVITE ── -->
+  <div class="col">
+    <div class="label">Client Invite Email</div>
+    <div class="email">
+      <div class="email-top-bar"></div>
+      <div class="email-header">
+        <div class="email-logo"><span>₱</span></div>
+        <div class="email-brand">Built for Bookkeepers</div>
+      </div>
+      <div class="email-body">
+        <p>Hello,</p>
+        <p>You've been added to <strong>Built for Bookkeepers</strong> — an AI-assisted bookkeeping system designed for Philippine businesses.</p>
+        <p>Click below to set up your account and get started:</p>
+        <a class="email-btn" href="#">Set Up My Account →</a>
+        <div class="email-divider"></div>
+      </div>
+      <div class="email-footer">
+        <!-- Static pug SVG -->
+        <svg viewBox="0 0 260 300" width="48" height="56" style="flex-shrink:0" aria-hidden="true">
+          <defs>
+            <radialGradient id="bG" cx="50%" cy="35%" r="70%"><stop offset="0%" stop-color="#F4DCB8"/><stop offset="100%" stop-color="#ECCBA1"/></radialGradient>
+            <radialGradient id="hG" cx="42%" cy="34%" r="75%"><stop offset="0%" stop-color="#F4DCB8"/><stop offset="100%" stop-color="#ECCBA1"/></radialGradient>
+            <radialGradient id="gG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFADD2" stop-opacity=".9"/><stop offset="100%" stop-color="#FFADD2" stop-opacity="0"/></radialGradient>
+          </defs>
+          <ellipse cx="130" cy="288" rx="62" ry="11" fill="#000" opacity=".13"/>
+          <ellipse cx="58" cy="104" rx="21" ry="46" fill="#3B3340" transform="rotate(-12 58 104)"/>
+          <ellipse cx="202" cy="104" rx="21" ry="46" fill="#3B3340" transform="rotate(12 202 104)"/>
+          <ellipse cx="130" cy="234" rx="64" ry="46" fill="url(#bG)"/>
+          <ellipse cx="100" cy="264" rx="19" ry="13" fill="#ECCBA1"/>
+          <ellipse cx="160" cy="264" rx="19" ry="13" fill="#ECCBA1"/>
+          <path d="M92 264 v8 M100 265 v9 M108 264 v8" stroke="#D9B083" stroke-width="2" stroke-linecap="round"/>
+          <path d="M152 264 v8 M160 265 v9 M168 264 v8" stroke="#D9B083" stroke-width="2" stroke-linecap="round"/>
+          <path d="M74 196 Q130 220 186 196" fill="none" stroke="#E2568C" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="130" cy="214" r="7" fill="#FFADD2" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="130" cy="116" r="78" fill="url(#hG)"/>
+          <path d="M104 70 Q130 60 156 70" fill="none" stroke="#D9B083" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+          <path d="M110 82 Q130 73 150 82" fill="none" stroke="#D9B083" stroke-width="2.5" stroke-linecap="round" opacity=".55"/>
+          <ellipse cx="130" cy="152" rx="50" ry="42" fill="#3B3340"/>
+          <ellipse cx="99" cy="112" rx="21" ry="23" fill="#fff"/>
+          <ellipse cx="161" cy="112" rx="21" ry="23" fill="#fff"/>
+          <circle cx="99" cy="114" r="11.5" fill="#2A242F"/>
+          <circle cx="161" cy="114" r="11.5" fill="#2A242F"/>
+          <circle cx="94" cy="108" r="4" fill="#fff"/>
+          <circle cx="156" cy="108" r="4" fill="#fff"/>
+          <path d="M130 130 q14 4 11 15 q-3 8 -11 9 q-8 -1 -11 -9 q-3 -11 11 -15 Z" fill="#2A242F"/>
+          <path d="M130 155 v9" stroke="#2A242F" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M130 164 q-12 9 -22 3 M130 164 q12 9 22 3" fill="none" stroke="#2A242F" stroke-width="2.5" stroke-linecap="round"/>
+          <ellipse cx="130" cy="178" rx="9" ry="12" fill="#F2748A"/>
+          <line x1="130" y1="170" x2="130" y2="184" stroke="#D85A72" stroke-width="1.6" opacity=".6"/>
+          <path d="M64 96 Q130 34 196 96" fill="none" stroke="#E2568C" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="130" cy="40" r="9" fill="url(#gG)"/>
+          <circle cx="130" cy="40" r="4.5" fill="#E2568C"/>
+          <circle cx="62" cy="104" r="13" fill="#E2568C"/>
+          <circle cx="62" cy="104" r="6" fill="#FFADD2"/>
+          <path d="M60 116 Q50 156 96 158" fill="none" stroke="#E2568C" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="98" cy="158" r="5" fill="#E2568C"/>
+        </svg>
+        <div class="email-footer-text">
+          <div class="email-footer-name">Sofia, your AI bookkeeper</div>
+          <div class="email-footer-sub">Built for Bookkeepers Team<br>This link expires in 30 days.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADMIN NOTIFICATION ── -->
+  <div class="col">
+    <div class="label">Admin Notification Email</div>
+    <div class="email">
+      <div class="email-top-bar"></div>
+      <div class="email-header">
+        <div class="email-logo"><span>₱</span></div>
+        <div class="email-brand">Built for Bookkeepers</div>
+      </div>
+      <div class="email-body">
+        <p>Hi Team,</p>
+        <div class="email-alert">
+          <p>A new client has completed onboarding. <strong>Juan dela Cruz</strong> set up their account and uploaded their first document at 2:14 PM today.</p>
+        </div>
+        <div class="email-divider"></div>
+      </div>
+      <div class="email-footer">
+        <svg viewBox="0 0 260 300" width="48" height="56" style="flex-shrink:0" aria-hidden="true">
+          <defs>
+            <radialGradient id="bG2" cx="50%" cy="35%" r="70%"><stop offset="0%" stop-color="#F4DCB8"/><stop offset="100%" stop-color="#ECCBA1"/></radialGradient>
+            <radialGradient id="hG2" cx="42%" cy="34%" r="75%"><stop offset="0%" stop-color="#F4DCB8"/><stop offset="100%" stop-color="#ECCBA1"/></radialGradient>
+            <radialGradient id="gG2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFADD2" stop-opacity=".9"/><stop offset="100%" stop-color="#FFADD2" stop-opacity="0"/></radialGradient>
+          </defs>
+          <ellipse cx="130" cy="288" rx="62" ry="11" fill="#000" opacity=".13"/>
+          <ellipse cx="58" cy="104" rx="21" ry="46" fill="#3B3340" transform="rotate(-12 58 104)"/>
+          <ellipse cx="202" cy="104" rx="21" ry="46" fill="#3B3340" transform="rotate(12 202 104)"/>
+          <ellipse cx="130" cy="234" rx="64" ry="46" fill="url(#bG2)"/>
+          <ellipse cx="100" cy="264" rx="19" ry="13" fill="#ECCBA1"/>
+          <ellipse cx="160" cy="264" rx="19" ry="13" fill="#ECCBA1"/>
+          <path d="M92 264 v8 M100 265 v9 M108 264 v8" stroke="#D9B083" stroke-width="2" stroke-linecap="round"/>
+          <path d="M152 264 v8 M160 265 v9 M168 264 v8" stroke="#D9B083" stroke-width="2" stroke-linecap="round"/>
+          <path d="M74 196 Q130 220 186 196" fill="none" stroke="#E2568C" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="130" cy="214" r="7" fill="#FFADD2" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="130" cy="116" r="78" fill="url(#hG2)"/>
+          <path d="M104 70 Q130 60 156 70" fill="none" stroke="#D9B083" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+          <path d="M110 82 Q130 73 150 82" fill="none" stroke="#D9B083" stroke-width="2.5" stroke-linecap="round" opacity=".55"/>
+          <ellipse cx="130" cy="152" rx="50" ry="42" fill="#3B3340"/>
+          <ellipse cx="99" cy="112" rx="21" ry="23" fill="#fff"/>
+          <ellipse cx="161" cy="112" rx="21" ry="23" fill="#fff"/>
+          <circle cx="99" cy="114" r="11.5" fill="#2A242F"/>
+          <circle cx="161" cy="114" r="11.5" fill="#2A242F"/>
+          <circle cx="94" cy="108" r="4" fill="#fff"/>
+          <circle cx="156" cy="108" r="4" fill="#fff"/>
+          <path d="M130 130 q14 4 11 15 q-3 8 -11 9 q-8 -1 -11 -9 q-3 -11 11 -15 Z" fill="#2A242F"/>
+          <path d="M130 155 v9" stroke="#2A242F" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M130 164 q-12 9 -22 3 M130 164 q12 9 22 3" fill="none" stroke="#2A242F" stroke-width="2.5" stroke-linecap="round"/>
+          <ellipse cx="130" cy="178" rx="9" ry="12" fill="#F2748A"/>
+          <line x1="130" y1="170" x2="130" y2="184" stroke="#D85A72" stroke-width="1.6" opacity=".6"/>
+          <path d="M64 96 Q130 34 196 96" fill="none" stroke="#E2568C" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="130" cy="40" r="9" fill="url(#gG2)"/>
+          <circle cx="130" cy="40" r="4.5" fill="#E2568C"/>
+          <circle cx="62" cy="104" r="13" fill="#E2568C"/>
+          <circle cx="62" cy="104" r="6" fill="#FFADD2"/>
+          <path d="M60 116 Q50 156 96 158" fill="none" stroke="#E2568C" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="98" cy="158" r="5" fill="#E2568C"/>
+        </svg>
+        <div class="email-footer-text">
+          <div class="email-footer-name">Sofia, your AI bookkeeper</div>
+          <div class="email-footer-sub">Built for Bookkeepers · Admin Alert<br>This is an automated notification.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
