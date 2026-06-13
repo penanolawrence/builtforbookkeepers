@@ -79,6 +79,9 @@ function SetupForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
+  const { onBlur: pwBlur,      ...pwReg      } = register('password')
+  const { onBlur: confirmBlur, ...confirmReg } = register('confirmPassword')
+
   const pwValue  = watch('password', '')
   const strength = getStrength(pwValue)
   const peeking  = (focus === 'password' && !showPw) || (focus === 'confirm' && !showConfirm)
@@ -237,8 +240,8 @@ function SetupForm() {
                 placeholder="Min. 8 characters"
                 disabled={isSubmitting || submitStatus === 'success'}
                 onFocus={() => setFocus('password')}
-                onBlur={() => setFocus(null)}
-                {...register('password')}
+                onBlur={(e) => { setFocus(null); pwBlur(e) }}
+                {...pwReg}
               />
               <button
                 type="button"
@@ -279,8 +282,8 @@ function SetupForm() {
                 placeholder="Re-enter your password"
                 disabled={isSubmitting || submitStatus === 'success'}
                 onFocus={() => setFocus('confirm')}
-                onBlur={() => setFocus(null)}
-                {...register('confirmPassword')}
+                onBlur={(e) => { setFocus(null); confirmBlur(e) }}
+                {...confirmReg}
               />
               <button
                 type="button"
