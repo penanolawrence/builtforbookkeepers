@@ -13,8 +13,8 @@ export function createEcho(token: string): Echo<any> {
     wsHost: process.env.NEXT_PUBLIC_REVERB_HOST!,
     wsPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT ?? 6001),
     wssPort: Number(process.env.NEXT_PUBLIC_REVERB_PORT ?? 6001),
-    forceTLS: false,
-    enabledTransports: ['ws'],
+    forceTLS: true,
+    enabledTransports: ['ws', 'wss'],
     auth: {
       headers: { Authorization: `Bearer ${token}` },
     },
