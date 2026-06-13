@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -70,6 +70,8 @@ function SetupForm() {
   const [showConfirm,  setShowConfirm]  = useState(false)
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>('idle')
 
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const {
     register,
     handleSubmit,
@@ -111,13 +113,18 @@ function SetupForm() {
       .catch(() => setTokenState('invalid'))
   }, [token, router])
 
+  // Cancel redirect timer on unmount
+  useEffect(() => {
+    return () => { if (redirectTimer.current) clearTimeout(redirectTimer.current) }
+  }, [])
+
   const onSubmit = async (values: FormValues) => {
     if (!token) return
     setApiError(null)
     try {
       const { user } = await setupPassword(token, values.name, values.password)
       setSubmitStatus('success')
-      setTimeout(() => router.push(`/${user.role}/dashboard`), 1500)
+      redirectTimer.current = setTimeout(() => router.push(`/${user.role}/dashboard`), 1500)
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 422) {
         setApiError(err.response.data?.message ?? 'Invalid data.')

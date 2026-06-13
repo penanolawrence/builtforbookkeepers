@@ -120,6 +120,16 @@ describe('SetupPage', () => {
     expect(pwInput).toHaveAttribute('type', 'text')
   })
 
+  it('toggles Confirm Password field visibility', async () => {
+    mockValidToken()
+    render(<SetupPage />)
+    await waitFor(() => expect(screen.getByPlaceholderText('Re-enter your password')).toBeInTheDocument())
+    const confirmInput = screen.getByPlaceholderText('Re-enter your password')
+    expect(confirmInput).toHaveAttribute('type', 'password')
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle confirm password visibility' }))
+    expect(confirmInput).toHaveAttribute('type', 'text')
+  })
+
   it('shows API error when setup fails', async () => {
     mockValidToken()
     mockSetupPassword.mockRejectedValueOnce({
