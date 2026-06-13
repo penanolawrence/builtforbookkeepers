@@ -312,4 +312,54 @@ class PeriodClosingTest extends TestCase
              ->postJson("/api/period-closings/{$this->company->id}/2025/1")
              ->assertForbidden();
     }
+
+    public function test_execute_close_throws_when_income_summary_has_preexisting_balance(): void
+    {
+        $this->postJournalEntry(2026, 1, 'income', 10000);
+
+        $incomeSummary = Account::factory()->create([
+            'company_id' => $this->company->id,
+            'name'       => 'Income Summary',
+            'type'       => 'equity',
+            'code'       => '3900',
+        ]);
+
+        $je = JournalEntry::create([
+            'company_id'  => $this->company->id,
+            'entry_date'  => '2026-01-31',
+            'description' => 'Manual IS entry',
+            'status'      => 'posted',
+            'posted_by'   => $this->accountant->id,
+            'posted_at'   => now(),
+        ]);
+        JournalEntryLine::create([
+            'journal_entry_id' => $je->id,
+            'account_id'       => $incomeSummary->id,
+            'credit'           => 5000,
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Income Summary account has a pre-existing balance');
+
+        app(PeriodClosingService::class)->executeClose($this->company, 2026, 1, $this->accountant);
+    }
+
+    public function test_execute_close_throws_when_draft_je_exists_in_period(): void
+    {
+        $this->postJournalEntry(2026, 1, 'income', 10000);
+
+        JournalEntry::create([
+            'company_id'  => $this->company->id,
+            'entry_date'  => '2026-01-20',
+            'description' => 'Orphaned draft',
+            'status'      => 'draft',
+            'posted_by'   => $this->accountant->id,
+            'posted_at'   => now(),
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('journal');
+
+        app(PeriodClosingService::class)->executeClose($this->company, 2026, 1, $this->accountant);
+    }
 }

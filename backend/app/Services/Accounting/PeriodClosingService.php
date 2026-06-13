@@ -179,6 +179,8 @@ class PeriodClosingService
                 throw new \RuntimeException("Cannot close period: status is '{$innerStatus}'.");
             }
 
+            $this->assertPreCloseConditions($company, $year, $month);
+
             $closing = new PeriodClosing([
                 'company_id'   => $company->id,
                 'period_year'  => $year,
@@ -268,6 +270,47 @@ class PeriodClosingService
 
             return $closing;
         });
+    }
+
+    private function assertPreCloseConditions(Company $company, int $year, int $month): void
+    {
+        $start = Carbon::create($year, $month, 1)->startOfMonth();
+        $end   = Carbon::create($year, $month, 1)->endOfMonth();
+
+        $incomeSummary = Account::where('company_id', $company->id)
+            ->where('name', 'Income Summary')
+            ->first();
+
+        if ($incomeSummary) {
+            $baseQuery = JournalEntryLine::whereHas('journalEntry', function ($q) use ($company, $start, $end) {
+                    $q->where('company_id', $company->id)
+                      ->whereBetween('entry_date', [$start, $end])
+                      ->whereNull('period_closing_id');
+                })
+                ->where('account_id', $incomeSummary->id);
+
+            $totalCredit = (float) (clone $baseQuery)->sum('credit');
+            $totalDebit  = (float) (clone $baseQuery)->sum('debit');
+            $netBalance  = $totalCredit - $totalDebit;
+
+            if (abs($netBalance) > 0.01) {
+                throw new \RuntimeException(
+                    "Income Summary account has a pre-existing balance of {$netBalance} — manual entries must be reversed before closing."
+                );
+            }
+        }
+
+        $draftCount = JournalEntry::where('company_id', $company->id)
+            ->whereBetween('entry_date', [$start, $end])
+            ->whereIn('status', ['draft', 'pending'])
+            ->count();
+
+        if ($draftCount > 0) {
+            $label = $draftCount === 1 ? 'entry' : 'entries';
+            throw new \RuntimeException(
+                "{$draftCount} journal {$label} in this period are still in draft and will be permanently locked. Post or delete them before closing."
+            );
+        }
     }
 
     private function aggregateLines(Company $company, Carbon $start, Carbon $end, string $accountType): array
