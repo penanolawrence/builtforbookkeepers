@@ -335,6 +335,11 @@ class PeriodClosingService
         foreach ([$je1->id, $je2->id] as $jeId) {
             $totalDebit  = (float) JournalEntryLine::where('journal_entry_id', $jeId)->sum('debit');
             $totalCredit = (float) JournalEntryLine::where('journal_entry_id', $jeId)->sum('credit');
+            if ($totalDebit === 0.0 && $totalCredit === 0.0) {
+                throw new \RuntimeException(
+                    "Closing entry {$jeId} has no lines — this is a system error."
+                );
+            }
             if (abs($totalDebit - $totalCredit) > 0.01) {
                 throw new \RuntimeException(
                     "Closing entry {$jeId} is unbalanced (Dr {$totalDebit} ≠ Cr {$totalCredit}) — this is a system error."

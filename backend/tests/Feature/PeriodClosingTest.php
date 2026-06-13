@@ -372,5 +372,8 @@ class PeriodClosingTest extends TestCase
 
         $je->refresh();
         $this->assertSame($closing->id, $je->period_closing_id);
+
+        // 2 original JEs + 2 closing JEs = 4 total tagged with this closing
+        $this->assertSame(4, JournalEntry::where('period_closing_id', $closing->id)->count());
     }
 }
