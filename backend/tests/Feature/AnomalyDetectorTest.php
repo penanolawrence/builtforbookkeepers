@@ -96,6 +96,28 @@ class AnomalyDetectorTest extends TestCase
         $this->assertContains('Duplicate OR number', $result['reasons']);
     }
 
+    public function test_locked_period_and_duplicate_or_number_both_appear_in_reasons(): void
+    {
+        $closing            = new PeriodClosing(['company_id' => $this->company->id, 'period_year' => 2025, 'period_month' => 1]);
+        $closing->closed_by = $this->user->id;
+        $closing->closed_at = now();
+        $closing->save();
+
+        Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'ref_number'    => 'OR-2025-001',
+            'document_date' => '2025-01-05',
+            'status'        => 'approved',
+        ]);
+
+        $doc    = $this->makeDoc(['ref_number' => 'OR-2025-001', 'document_date' => '2025-01-20']);
+        $result = (new AnomalyDetector())->detect($doc);
+
+        $this->assertSame('RED', $result['flag']);
+        $this->assertContains('Duplicate OR number', $result['reasons']);
+        $this->assertContains('Transaction date is in a locked period — an adjusting entry is required', $result['reasons']);
+    }
+
     public function test_same_amount_and_merchant_within_7_days_is_red(): void
     {
         Document::factory()->create([

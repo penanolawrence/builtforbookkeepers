@@ -53,13 +53,13 @@ class AnomalyDetector
         }
 
         // RULE 3 — Closed or Past-Period Date
-        $txDate            = Carbon::parse($doc->document_date);
+        $docDate           = Carbon::parse($doc->document_date);
         $currentMonthStart = Carbon::now()->startOfMonth();
 
-        if ($txDate->lt($currentMonthStart)) {
+        if ($docDate->lt($currentMonthStart)) {
             $isClosed = PeriodClosing::where('company_id', $company->id)
-                ->where('period_year', $txDate->year)
-                ->where('period_month', $txDate->month)
+                ->where('period_year', $docDate->year)
+                ->where('period_month', $docDate->month)
                 ->exists();
 
             if ($isClosed) {
