@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { getQueueItem, approveItem, returnItem, rejectItem } from '@/lib/api/queue'
 import { getSignedUrl } from '@/lib/api/documents'
 import { getAccounts } from '@/lib/api/accounts'
@@ -309,6 +309,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     <>
       <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
         <DialogContent className="sm:max-w-7xl p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh]">
+          <DialogTitle className="sr-only">Review Document</DialogTitle>
 
           {/* Header */}
           <div className="px-6 pt-5 pb-4 pr-10 border-b border-t-line shrink-0 flex items-center justify-between">

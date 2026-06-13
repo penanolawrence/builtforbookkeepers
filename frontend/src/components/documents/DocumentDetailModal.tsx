@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { getSignedUrl, getDocument } from '@/lib/api/documents'
 import { MascotProcessingPanel } from '@/components/documents/MascotProcessingPanel'
 import { formatCurrency } from '@/lib/utils/formatCurrency'
@@ -324,6 +324,7 @@ export function DocumentDetailModal({ doc, onClose, onReupload, onCancel }: Prop
     <>
       <Dialog open={!!doc} onOpenChange={(open) => { if (!open) onClose() }}>
         <DialogContent className="sm:max-w-4xl p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh]">
+          <DialogTitle className="sr-only">Document Details</DialogTitle>
 
           {/* Header */}
           <div className="px-6 pt-5 pb-4 pr-10 border-b border-gray-100 shrink-0">
@@ -466,7 +467,7 @@ export function DocumentDetailModal({ doc, onClose, onReupload, onCancel }: Prop
         <Dialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
           <DialogContent className="sm:max-w-sm">
             <div className="space-y-4 p-2">
-              <div className="text-[15px] font-bold text-gray-900">Withdraw this document?</div>
+              <DialogTitle className="text-[15px] font-bold text-gray-900">Withdraw this document?</DialogTitle>
               <div className="text-sm text-gray-500">This cannot be undone.</div>
               <div className="flex gap-3 pt-1">
                 <button

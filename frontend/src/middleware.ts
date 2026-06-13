@@ -26,6 +26,10 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/blocked', req.url))
   }
 
+  if (path === '/admin' || path === '/accountant' || path === '/client') {
+    return NextResponse.redirect(new URL(`${path}/dashboard`, req.url))
+  }
+
   if (path.startsWith('/admin') && role !== 'admin') {
     return NextResponse.redirect(new URL(`/${role}/dashboard`, req.url))
   }

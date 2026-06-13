@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import type { DeclaredType } from '@/types/document'
 
 interface PendingFile {
@@ -49,7 +49,7 @@ export function ConfirmUploadDialog({ open, files, uploading = false, onConfirm,
       <DialogContent className="sm:max-w-lg">
         <div className="space-y-5 p-1">
 
-          <div className="text-[15px] font-bold text-gray-900">{title}</div>
+          <DialogTitle className="text-[15px] font-bold text-gray-900">{title}</DialogTitle>
 
           {/* File list */}
           <div className="space-y-2 overflow-y-auto" style={{ maxHeight: 220 }}>
