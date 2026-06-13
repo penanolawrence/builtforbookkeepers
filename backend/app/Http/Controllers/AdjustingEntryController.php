@@ -7,11 +7,13 @@ use App\Http\Requests\AdjustingEntry\RejectEntryRequest;
 use App\Models\AdjustingEntry;
 use App\Models\AdjustingEntryLine;
 use App\Models\Company;
+use App\Models\PeriodClosing;
 use App\Services\Accounting\JournalEntryService;
 use App\Services\Notification\NotificationService;
 use App\Services\Ref\RefSequenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AdjustingEntryController extends Controller
@@ -59,6 +61,19 @@ class AdjustingEntryController extends Controller
 
         if ($user->role === 'accountant' && $company->accountant_id !== $user->id) {
             return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $year  = Carbon::parse($request->date)->year;
+        $month = Carbon::parse($request->date)->month;
+        if (PeriodClosing::where('company_id', $company->id)
+            ->where('period_year', $year)
+            ->where('period_month', $month)
+            ->exists()
+        ) {
+            $label = Carbon::create($year, $month, 1)->format('M Y');
+            return response()->json([
+                'message' => "The period {$label} is locked. Adjusting entries cannot be posted to a closed period.",
+            ], 422);
         }
 
         $ref = (new RefSequenceService())->nextRef($company, 'ADJ');
@@ -142,6 +157,19 @@ class AdjustingEntryController extends Controller
                 'message'     => 'Entry is unbalanced.',
                 'debitTotal'  => $debitTotal,
                 'creditTotal' => $creditTotal,
+            ], 422);
+        }
+
+        $year  = $entry->entry_date->year;
+        $month = $entry->entry_date->month;
+        if (PeriodClosing::where('company_id', $entry->company_id)
+            ->where('period_year', $year)
+            ->where('period_month', $month)
+            ->exists()
+        ) {
+            $label = Carbon::create($year, $month, 1)->format('M Y');
+            return response()->json([
+                'message' => "The period {$label} is locked. Adjusting entries cannot be posted to a closed period.",
             ], 422);
         }
 

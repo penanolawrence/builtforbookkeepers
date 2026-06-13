@@ -7,6 +7,7 @@ use App\Models\AdjustingEntry;
 use App\Models\AdjustingEntryLine;
 use App\Models\ChartOfAccountSubtype;
 use App\Models\Company;
+use App\Models\PeriodClosing;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -127,6 +128,48 @@ class AdjustingEntryTest extends TestCase
         $response->assertJsonPath('lines.0.description', 'Flight to Cebu');
         $response->assertJsonPath('lines.1.subtypeId', null);
         $response->assertJsonPath('lines.1.description', null);
+    }
+
+    public function test_create_returns_422_when_period_is_closed(): void
+    {
+        $closing            = new PeriodClosing(['company_id' => $this->company->id, 'period_year' => 2025, 'period_month' => 1]);
+        $closing->closed_by = $this->accountant->id;
+        $closing->closed_at = now();
+        $closing->save();
+
+        $this->actingAs($this->accountant, 'sanctum')
+             ->postJson('/api/adjusting-entries', [
+                 'companyId' => $this->company->id,
+                 'type'      => 'Reclassification',
+                 'date'      => '2025-01-31',
+                 'memo'      => 'Test',
+                 'lines'     => [
+                     ['accountId' => $this->debitAccount->id,  'debit' => 1000, 'credit' => null, 'description' => null],
+                     ['accountId' => $this->creditAccount->id, 'debit' => null, 'credit' => 1000, 'description' => null],
+                 ],
+             ])
+             ->assertUnprocessable()
+             ->assertJsonFragment(['message' => 'The period Jan 2025 is locked. Adjusting entries cannot be posted to a closed period.']);
+    }
+
+    public function test_submit_returns_422_when_period_is_closed(): void
+    {
+        $entry = AdjustingEntry::factory()->create([
+            'company_id' => $this->company->id,
+            'created_by' => $this->accountant->id,
+            'status'     => 'draft',
+            'entry_date' => '2025-01-31',
+        ]);
+
+        $closing            = new PeriodClosing(['company_id' => $this->company->id, 'period_year' => 2025, 'period_month' => 1]);
+        $closing->closed_by = $this->accountant->id;
+        $closing->closed_at = now();
+        $closing->save();
+
+        $this->actingAs($this->accountant, 'sanctum')
+             ->postJson("/api/adjusting-entries/{$entry->id}/submit")
+             ->assertUnprocessable()
+             ->assertJsonFragment(['message' => 'The period Jan 2025 is locked. Adjusting entries cannot be posted to a closed period.']);
     }
 
     public function test_update_stores_subtype_and_description_per_line(): void
