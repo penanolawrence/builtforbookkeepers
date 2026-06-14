@@ -113,13 +113,7 @@ class VatReportController extends Controller
         $year  = (int) $request->input('year',  now()->year);
         $data  = (new VatReportService())->monthly($company, $month, $year);
 
-        return response()->json(array_merge($data, [
-            'company' => [
-                'name'    => $company->name,
-                'tin'     => $company->tin ?? null,
-                'address' => $company->address ?? null,
-            ],
-        ]));
+        return response()->json(array_merge($data, ['company' => $this->companyData($company)]));
     }
 
     public function quarterly2550q(Request $request): JsonResponse
@@ -131,13 +125,7 @@ class VatReportController extends Controller
         $year    = (int) $request->input('year', now()->year);
         $data    = (new VatReportService())->quarterly($company, $quarter, $year);
 
-        return response()->json(array_merge($data, [
-            'company' => [
-                'name'    => $company->name,
-                'tin'     => $company->tin ?? null,
-                'address' => $company->address ?? null,
-            ],
-        ]));
+        return response()->json(array_merge($data, ['company' => $this->companyData($company)]));
     }
 
     public function salesList(Request $request): JsonResponse
@@ -149,13 +137,7 @@ class VatReportController extends Controller
         $year    = (int) $request->input('year', now()->year);
         $data    = (new VatReportService())->salesList($company, $quarter, $year);
 
-        return response()->json(array_merge($data, [
-            'company' => [
-                'name'    => $company->name,
-                'tin'     => $company->tin ?? null,
-                'address' => $company->address ?? null,
-            ],
-        ]));
+        return response()->json(array_merge($data, ['company' => $this->companyData($company)]));
     }
 
     public function purchasesList(Request $request): JsonResponse
@@ -167,12 +149,15 @@ class VatReportController extends Controller
         $year    = (int) $request->input('year', now()->year);
         $data    = (new VatReportService())->purchasesList($company, $quarter, $year);
 
-        return response()->json(array_merge($data, [
-            'company' => [
-                'name'    => $company->name,
-                'tin'     => $company->tin ?? null,
-                'address' => $company->address ?? null,
-            ],
-        ]));
+        return response()->json(array_merge($data, ['company' => $this->companyData($company)]));
+    }
+
+    private function companyData(Company $company): array
+    {
+        return [
+            'name'    => $company->name,
+            'tin'     => $company->tin ?? null,
+            'address' => $company->address ?? null,
+        ];
     }
 }
