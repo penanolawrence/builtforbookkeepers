@@ -54,3 +54,12 @@ export interface GLBook {
   parkedCount: number
   rows: GLRow[]
 }
+
+export type VatReportType = '2550m' | '2550q' | 'sls' | 'slp'
+
+export interface VatPdfParams {
+  clientId?: string
+  month?: number
+  year: number
+  quarter?: number
+}
