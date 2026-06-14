@@ -7,7 +7,7 @@ import { getClients } from '@/lib/api/admin/clients'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 
-type ReportType = 'income-statement' | 'expense-breakdown'
+type ReportType = 'income-statement' | 'expense-breakdown' | 'vat'
 
 function defaultStart() {
   const d = new Date()
@@ -20,6 +20,7 @@ function defaultEnd() {
 const REPORT_LABELS: Record<ReportType, string> = {
   'income-statement':  'Income Statement',
   'expense-breakdown': 'Expense Breakdown',
+  'vat':               'VAT Report',
 }
 
 export default function AdminReportsPage() {
@@ -42,9 +43,13 @@ export default function AdminReportsPage() {
 
   function handleView() {
     if (!clientId || !pending) return
-    const base = `/admin/reports/${clientId}`
-    const qs   = `?start=${start}&end=${end}`
-    router.push(`${base}/${pending}${qs}`)
+    if (pending === 'vat') {
+      router.push(`/admin/reports/${clientId}/vat`)
+    } else {
+      const base = `/admin/reports/${clientId}`
+      const qs   = `?start=${start}&end=${end}`
+      router.push(`${base}/${pending}${qs}`)
+    }
     setPending(null)
   }
 
@@ -86,6 +91,15 @@ export default function AdminReportsPage() {
           </div>
           <div className="mt-3.5 text-xs font-bold text-t-primary">View Book →</div>
         </Link>
+
+        <div onClick={() => openModal('vat')} className={cardCls}>
+          <div className="text-[28px] mb-3">📑</div>
+          <div className="text-sm font-bold text-t-ink mb-1">VAT Report</div>
+          <div className="text-xs text-t-muted leading-relaxed flex-1">
+            BIR-compliant VAT returns (2550M, 2550Q) and summary lists of sales and purchases.
+          </div>
+          <div className="mt-3.5 text-xs font-bold text-t-primary">Download PDF →</div>
+        </div>
       </div>
 
       <Dialog open={!!pending} onOpenChange={(o) => { if (!o) setPending(null) }}>

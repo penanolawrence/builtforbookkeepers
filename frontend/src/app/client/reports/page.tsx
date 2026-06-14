@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
@@ -102,6 +103,17 @@ export default function ClientReportsPage() {
           </div>
           <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Open Books →</div>
         </div>
+
+        <Link href="/client/reports/vat" className={cardCls}>
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📑</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">VAT Report</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              BIR-compliant VAT returns (2550M, 2550Q) and summary lists of sales and purchases.
+            </div>
+          </div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Download PDF →</div>
+        </Link>
       </div>
 
       <Dialog open={!!pending} onOpenChange={(o) => { if (!o) setPending(null) }}>

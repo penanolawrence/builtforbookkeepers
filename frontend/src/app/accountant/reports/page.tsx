@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getAccountantClients } from '@/lib/api/accountant/clients'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-type ReportType = 'income-statement' | 'expense-breakdown'
+type ReportType = 'income-statement' | 'expense-breakdown' | 'vat'
 
 function defaultStart() {
   const d = new Date()
@@ -19,6 +19,7 @@ function defaultEnd() {
 const REPORT_LABELS: Record<ReportType, string> = {
   'income-statement':  'Income Statement',
   'expense-breakdown': 'Expense Breakdown',
+  'vat':               'VAT Report',
 }
 
 export default function AccountantReportsPage() {
@@ -41,9 +42,13 @@ export default function AccountantReportsPage() {
 
   function handleView() {
     if (!clientId || !pending) return
-    const base = `/accountant/reports/${clientId}`
-    const qs   = `?start=${start}&end=${end}`
-    router.push(`${base}/${pending}${qs}`)
+    if (pending === 'vat') {
+      router.push(`/accountant/reports/${clientId}/vat`)
+    } else {
+      const base = `/accountant/reports/${clientId}`
+      const qs   = `?start=${start}&end=${end}`
+      router.push(`${base}/${pending}${qs}`)
+    }
     setPending(null)
   }
 
@@ -96,6 +101,17 @@ export default function AccountantReportsPage() {
           </div>
           <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">View Book →</div>
         </Link>
+
+        <div onClick={() => openModal('vat')} className={cardCls}>
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📑</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">VAT Report</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              BIR-compliant VAT returns (2550M, 2550Q) and summary lists of sales and purchases.
+            </div>
+          </div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Download PDF →</div>
+        </div>
       </div>
 
       <Dialog open={!!pending} onOpenChange={(o) => { if (!o) setPending(null) }}>
