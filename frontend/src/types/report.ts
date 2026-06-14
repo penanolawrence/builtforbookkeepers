@@ -63,3 +63,76 @@ export interface VatPdfParams {
   year: number
   quarter?: number
 }
+
+export interface VatCompany {
+  name: string
+  tin: string | null
+  address: string | null
+}
+
+export interface Vat2550mData {
+  month: number
+  year: number
+  period_label: string
+  taxable_sales: number
+  output_vat: number
+  taxable_purchases: number
+  input_vat: number
+  net_vat_payable: number
+  company: VatCompany
+}
+
+export interface Vat2550qMonthRow {
+  month: number
+  label: string
+  taxable_sales: number
+  output_vat: number
+  taxable_purchases: number
+  input_vat: number
+  net_vat_payable: number
+}
+
+export interface Vat2550qTotals {
+  taxable_sales: number
+  output_vat: number
+  taxable_purchases: number
+  input_vat: number
+  net_vat_payable: number
+}
+
+export interface Vat2550qData {
+  quarter: number
+  year: number
+  months: Vat2550qMonthRow[]
+  totals: Vat2550qTotals
+  company: VatCompany
+}
+
+export interface VatDocRow {
+  date: string
+  ref_number: string | null
+  buyer_name?: string | null
+  buyer_tin?: string | null
+  supplier_name?: string | null
+  supplier_tin?: string | null
+  taxable_amount: number
+  vat_amount?: number
+  input_vat?: number
+  total_amount: number
+}
+
+export interface VatSlsData {
+  quarter: number
+  year: number
+  rows: VatDocRow[]
+  totals: { taxable_amount: number; vat_amount: number; total_amount: number }
+  company: VatCompany
+}
+
+export interface VatSlpData {
+  quarter: number
+  year: number
+  rows: VatDocRow[]
+  totals: { taxable_amount: number; input_vat: number; total_amount: number }
+  company: VatCompany
+}

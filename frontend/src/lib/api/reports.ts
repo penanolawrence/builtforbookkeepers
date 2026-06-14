@@ -1,5 +1,5 @@
 import api from './client'
-import type { IncomeStatement, ExpenseBreakdown, VatReportType, VatPdfParams } from '@/types/report'
+import type { IncomeStatement, ExpenseBreakdown, VatReportType, VatPdfParams, Vat2550mData, Vat2550qData, VatSlsData, VatSlpData } from '@/types/report'
 
 export async function getIncomeStatement(params: {
   clientId?: string
@@ -56,4 +56,40 @@ function buildVatFilename(type: VatReportType, params: VatPdfParams): string {
   const year = params.year
   if (type === '2550m') return `2550m-${year}-${String(params.month).padStart(2, '0')}.pdf`
   return `${type}-${year}-Q${params.quarter}.pdf`
+}
+
+export async function fetchVat2550m(params: {
+  clientId?: string
+  month: number
+  year: number
+}): Promise<Vat2550mData> {
+  const { data } = await api.get('/reports/vat/2550m', { params })
+  return data
+}
+
+export async function fetchVat2550q(params: {
+  clientId?: string
+  quarter: number
+  year: number
+}): Promise<Vat2550qData> {
+  const { data } = await api.get('/reports/vat/2550q', { params })
+  return data
+}
+
+export async function fetchVatSls(params: {
+  clientId?: string
+  quarter: number
+  year: number
+}): Promise<VatSlsData> {
+  const { data } = await api.get('/reports/vat/sls', { params })
+  return data
+}
+
+export async function fetchVatSlp(params: {
+  clientId?: string
+  quarter: number
+  year: number
+}): Promise<VatSlpData> {
+  const { data } = await api.get('/reports/vat/slp', { params })
+  return data
 }
