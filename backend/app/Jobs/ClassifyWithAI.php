@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\ChartOfAccountSubtype;
 use App\Models\Document;
 use App\Services\AI\TransactionClassifier;
+use App\Services\Merchant\MerchantResolverService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -126,6 +127,15 @@ class ClassifyWithAI implements ShouldQueue
             }
             if (!empty($doc['total_amount'])) {
                 $this->document->amount = $doc['total_amount'];
+            }
+
+            $merchant = (new MerchantResolverService())->resolve(
+                $this->document->company_id,
+                $this->document->merchant_name,
+                $doc['merchant_tin'] ?? null,
+            );
+            if ($merchant) {
+                $this->document->merchant_id = $merchant->id;
             }
         }
 

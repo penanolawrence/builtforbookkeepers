@@ -258,6 +258,8 @@ class TransactionClassifier
                         'properties' => [
                             'merchant'       => ['type' => ['string', 'null'],
                                                 'description' => 'Business or store name, or null'],
+                            'merchant_tin'   => ['type' => ['string', 'null'],
+                                                'description' => 'TIN number of the merchant/seller visible on the receipt (e.g. 123-456-789-000), or null if not shown'],
                             'date'           => ['type' => ['string', 'null'],
                                                 'description' => 'YYYY-MM-DD or null'],
                             'total_amount'   => ['type' => 'number',  'minimum' => 0.01,
