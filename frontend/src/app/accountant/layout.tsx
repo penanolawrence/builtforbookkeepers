@@ -9,7 +9,7 @@ export default function AccountantLayout({ children }: { children: React.ReactNo
     <ThemeProvider>
       <div
         style={{
-          minHeight: '100vh',
+          height: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           background: 'var(--t-surface)',

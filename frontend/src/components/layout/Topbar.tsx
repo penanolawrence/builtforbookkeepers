@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useEffect, useRef, useState } from 'react'
+import { CircleHelp } from 'lucide-react'
 import { getQueue } from '@/lib/api/queue'
 import { NotificationBell } from './NotificationBell'
 import { ThemeToggle } from './ThemeToggle'
@@ -190,9 +191,9 @@ export function Topbar() {
             >
               ⚙ Settings
             </Link>
-            {user?.role === 'accountant' && (
+            {user && (
               <Link
-                href="/accountant/help"
+                href={`/${user.role}/help`}
                 onClick={() => setMenuOpen(false)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
@@ -200,7 +201,8 @@ export function Topbar() {
                   color: 'var(--t-ink)', textDecoration: 'none',
                 }}
               >
-                ? Help
+                <CircleHelp size={14} style={{ flexShrink: 0 }} />
+                Help
               </Link>
             )}
             <div style={{ height: 1, background: 'var(--t-line)' }} />

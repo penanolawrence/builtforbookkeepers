@@ -43,7 +43,7 @@ describe('Topbar', () => {
   })
 })
 
-describe('Topbar — accountant role', () => {
+describe('Topbar — Help link (all roles)', () => {
   const mockUseAuth = jest.requireMock('@/lib/hooks/useAuth').useAuth as jest.Mock
   const mockUsePathname = jest.requireMock('next/navigation').usePathname as jest.Mock
 
@@ -52,7 +52,7 @@ describe('Topbar — accountant role', () => {
     mockUsePathname.mockReset()
   })
 
-  it('shows Help link in dropdown for accountant users', () => {
+  it('shows Help link in dropdown for accountant, links to /accountant/help', () => {
     mockUseAuth.mockReturnValue({
       user: { name: 'Maria Santos', role: 'accountant', email: 'maria@test.ph' },
       logout: jest.fn(),
@@ -65,7 +65,7 @@ describe('Topbar — accountant role', () => {
     expect(screen.getByRole('link', { name: /Help/ })).toHaveAttribute('href', '/accountant/help')
   })
 
-  it('does not show Help link for admin users', () => {
+  it('shows Help link in dropdown for admin, links to /admin/help', () => {
     mockUseAuth.mockReturnValue({
       user: { name: 'Admin User', role: 'admin', email: 'admin@test.ph' },
       logout: jest.fn(),
@@ -74,6 +74,7 @@ describe('Topbar — accountant role', () => {
 
     render(<Topbar />)
     fireEvent.click(screen.getByRole('button', { name: 'Account menu' }))
-    expect(screen.queryByRole('link', { name: /Help/ })).toBeNull()
+    expect(screen.getByRole('link', { name: /Help/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Help/ })).toHaveAttribute('href', '/admin/help')
   })
 })
