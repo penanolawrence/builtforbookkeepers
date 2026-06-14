@@ -46,6 +46,8 @@ class TransactionClassifierNoteTest extends TestCase
                 // skip parent constructor — no real API client needed
             }
 
+            protected function fetchSubtypes(): string { return 'Miscellaneous'; }
+
             protected function callApi(array $params): mixed
             {
                 $this->capture = $params['messages'];

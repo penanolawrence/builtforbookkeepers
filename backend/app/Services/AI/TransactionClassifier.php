@@ -29,7 +29,7 @@ class TransactionClassifier
             ->map(fn($a) => "{$a->code}: {$a->name} ({$a->type})")
             ->join("\n");
 
-        $subtypes = ChartOfAccountSubtype::orderBy('name')->pluck('name')->join("\n");
+        $subtypes = $this->fetchSubtypes();
 
         $vatStatus = $company->bir_type === 'vat' ? 'VAT-Registered' : 'Non-VAT';
 
@@ -59,6 +59,20 @@ class TransactionClassifier
                 "create income line(s) for the sales revenue; " .
                 "AND create separate expense line(s) for each expense category listed. " .
                 "Do NOT collapse everything into one income line.\n";
+        }
+
+        if ($company->bir_type === 'vat') {
+            $systemPrompt .=
+                "- VAT line rule (client is VAT-Registered): when a VAT amount is present on the document " .
+                "(either explicitly printed, or because the total is VAT-inclusive):\n" .
+                "  * Create a SEPARATE line for the VAT amount.\n" .
+                "  * For expense documents: assign the VAT line to account code 1101 (Input VAT).\n" .
+                "  * For income documents: assign the VAT line to account code 2101 (Output VAT).\n" .
+                "  * All other expense/income lines must use NET amounts (total minus VAT).\n" .
+                "  * sum(lines[].amount) must still equal document.total_amount (the gross total).\n";
+        } else {
+            $systemPrompt .=
+                "- Non-VAT client: include any VAT in the relevant expense or income account — do not create a separate VAT line.\n";
         }
 
         $systemPrompt .=
@@ -240,6 +254,11 @@ class TransactionClassifier
                "For document.merchant, document.date, document.or_number — return null " .
                "(those fields are already set on the document)." .
                $noteBlock;
+    }
+
+    protected function fetchSubtypes(): string
+    {
+        return ChartOfAccountSubtype::orderBy('name')->pluck('name')->join("\n");
     }
 
     protected function buildTool(): array
