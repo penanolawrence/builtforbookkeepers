@@ -242,7 +242,7 @@ class TransactionClassifier
                $noteBlock;
     }
 
-    private function buildTool(): array
+    protected function buildTool(): array
     {
         return [
             'name'         => 'classify_transaction',
@@ -264,7 +264,11 @@ class TransactionClassifier
                                                 'description' => 'YYYY-MM-DD or null'],
                             'total_amount'   => ['type' => 'number',  'minimum' => 0.01,
                                                 'description' => 'Final total amount on the document'],
-                            'vat_amount'     => ['type' => ['number', 'null'], 'minimum' => 0],
+                            'vat_amount'     => [
+                                'type'        => ['number', 'null'],
+                                'minimum'     => 0,
+                                'description' => 'VAT amount for this document. If a VAT figure is explicitly printed on the document, use that value. If the user note says the amount is VAT-inclusive (e.g. "inclusive of VAT", "VAT inclusive", "inc. VAT"), calculate as total_amount × 12/112 (Philippine VAT rate is 12%, so VAT = total × 0.107143). Return null if no VAT applies.',
+                            ],
                             'or_number'      => ['type' => ['string', 'null'],
                                                 'description' => 'Official Receipt or invoice number'],
                             'payment_method' => [
