@@ -27,6 +27,7 @@ class Document extends Model
         'document_type',
         'document_date',
         'ref_number',
+        'merchant_id',
         'amount',
         'merchant_name',
         'vat_amount',
@@ -78,6 +79,11 @@ class Document extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function merchant(): BelongsTo
+    {
+        return $this->belongsTo(Merchant::class);
     }
 
     public function transactionLines(): HasMany
