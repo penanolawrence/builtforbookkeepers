@@ -81,7 +81,7 @@ class QueueMerchantTinTest extends TestCase
     {
         $merchant = Merchant::factory()->create([
             'company_id' => $this->company->id,
-            'name'       => 'Acme Corp',
+            'name'       => 'Different Supplier Name',
             'tin'        => '999-888-777-000',
         ]);
 

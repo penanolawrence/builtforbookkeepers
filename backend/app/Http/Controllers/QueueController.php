@@ -11,6 +11,7 @@ use App\Http\Requests\Queue\ReturnItemRequest;
 use App\Models\Document;
 use App\Models\TransactionLine;
 use App\Services\Accounting\JournalEntryService;
+use App\Services\Merchant\MerchantResolverService;
 use App\Services\Notification\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -152,7 +153,7 @@ class QueueController extends Controller
             // Resolve and link merchant if TIN was submitted
             if ($request->filled('fields') && array_key_exists('merchantTin', $request->fields)) {
                 $tin      = $request->fields['merchantTin'] ?: null;
-                $merchant = (new \App\Services\Merchant\MerchantResolverService())->resolve(
+                $merchant = (new MerchantResolverService())->resolve(
                     $document->company_id,
                     $document->merchant_name,
                     $tin,
