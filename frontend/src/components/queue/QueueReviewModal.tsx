@@ -176,6 +176,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
   const [date, setDate]                     = useState('')
   const [declaredType, setDeclaredType]     = useState<'income' | 'expense'>('expense')
   const [paymentMethod, setPaymentMethod]   = useState('')
+  const [merchantTin, setMerchantTin]       = useState('')
 
   const [lines, setLines]                   = useState<LineState[]>([])
   const [removedLineIds, setRemovedLineIds] = useState<string[]>([])
@@ -186,6 +187,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     setDate(item.date ?? '')
     setDeclaredType(item.declaredType ?? 'expense')
     setPaymentMethod((item.paymentMethod ?? '').toLowerCase())
+    setMerchantTin(item.merchantTin ?? '')
     setLines(
       item.transactionLines.map((l) => ({
         id:          l.id,
@@ -246,6 +248,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
           date:          date || null,
           declaredType,
           paymentMethod: paymentMethod || null,
+          merchantTin:   declaredType === 'expense' ? (merchantTin || null) : undefined,
         },
         lines:          linePayloads,
         removedLineIds: removedLineIds,
@@ -435,6 +438,19 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                     </select>
                     {aiHint(paymentMethod, item?.paymentMethod ?? 'cash')}
                   </div>
+
+                  {declaredType === 'expense' && (
+                    <div>
+                      <label className="block text-[11px] text-t-muted mb-1">Merchant TIN</label>
+                      <input
+                        type="text"
+                        value={merchantTin}
+                        onChange={(e) => setMerchantTin(e.target.value)}
+                        placeholder="e.g. 123-456-789-000"
+                        className="w-full border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
