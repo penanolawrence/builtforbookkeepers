@@ -59,6 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/expense-breakdown',     [ReportController::class, 'expenseBreakdown']);
         Route::get('/reports/income-statement/pdf',  [ReportController::class, 'exportPDF'])->defaults('type', 'income-statement');
         Route::get('/reports/expense-breakdown/pdf', [ReportController::class, 'exportPDF'])->defaults('type', 'expense-breakdown');
+        Route::get('/reports/vat/2550m',      [VatReportController::class, 'monthly2550m']);
+        Route::get('/reports/vat/2550q',      [VatReportController::class, 'quarterly2550q']);
+        Route::get('/reports/vat/sls',        [VatReportController::class, 'salesList']);
+        Route::get('/reports/vat/slp',        [VatReportController::class, 'purchasesList']);
         Route::get('/reports/vat/2550m/pdf',  [VatReportController::class, 'monthly2550mPdf']);
         Route::get('/reports/vat/2550q/pdf',  [VatReportController::class, 'quarterly2550qPdf']);
         Route::get('/reports/vat/sls/pdf',    [VatReportController::class, 'slsPdf']);

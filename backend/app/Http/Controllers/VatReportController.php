@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Services\Report\PDFExportService;
 use App\Services\Report\VatReportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -101,5 +102,77 @@ class VatReportController extends Controller
             array_merge($data, ['company' => $company]),
             "{$company->name}-slp-{$year}-Q{$quarter}"
         );
+    }
+
+    public function monthly2550m(Request $request): JsonResponse
+    {
+        $company = $this->resolveCompany($request);
+        $this->guardVat($company);
+
+        $month = (int) $request->input('month', now()->month);
+        $year  = (int) $request->input('year',  now()->year);
+        $data  = (new VatReportService())->monthly($company, $month, $year);
+
+        return response()->json(array_merge($data, [
+            'company' => [
+                'name'    => $company->name,
+                'tin'     => $company->tin ?? null,
+                'address' => $company->address ?? null,
+            ],
+        ]));
+    }
+
+    public function quarterly2550q(Request $request): JsonResponse
+    {
+        $company = $this->resolveCompany($request);
+        $this->guardVat($company);
+
+        $quarter = (int) $request->input('quarter', (int) ceil(now()->month / 3));
+        $year    = (int) $request->input('year', now()->year);
+        $data    = (new VatReportService())->quarterly($company, $quarter, $year);
+
+        return response()->json(array_merge($data, [
+            'company' => [
+                'name'    => $company->name,
+                'tin'     => $company->tin ?? null,
+                'address' => $company->address ?? null,
+            ],
+        ]));
+    }
+
+    public function salesList(Request $request): JsonResponse
+    {
+        $company = $this->resolveCompany($request);
+        $this->guardVat($company);
+
+        $quarter = (int) $request->input('quarter', (int) ceil(now()->month / 3));
+        $year    = (int) $request->input('year', now()->year);
+        $data    = (new VatReportService())->salesList($company, $quarter, $year);
+
+        return response()->json(array_merge($data, [
+            'company' => [
+                'name'    => $company->name,
+                'tin'     => $company->tin ?? null,
+                'address' => $company->address ?? null,
+            ],
+        ]));
+    }
+
+    public function purchasesList(Request $request): JsonResponse
+    {
+        $company = $this->resolveCompany($request);
+        $this->guardVat($company);
+
+        $quarter = (int) $request->input('quarter', (int) ceil(now()->month / 3));
+        $year    = (int) $request->input('year', now()->year);
+        $data    = (new VatReportService())->purchasesList($company, $quarter, $year);
+
+        return response()->json(array_merge($data, [
+            'company' => [
+                'name'    => $company->name,
+                'tin'     => $company->tin ?? null,
+                'address' => $company->address ?? null,
+            ],
+        ]));
     }
 }
