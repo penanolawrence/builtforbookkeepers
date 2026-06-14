@@ -12,7 +12,10 @@ async function fetchAdminClients() {
 export default function AdminBIRPage() {
   return (
     <Suspense>
-      <BIRBooksView fetchClients={fetchAdminClients} />
+      <BIRBooksView
+        fetchClients={fetchAdminClients}
+        breadcrumbBase={{ label: 'Reports', href: '/admin/reports' }}
+      />
     </Suspense>
   )
 }

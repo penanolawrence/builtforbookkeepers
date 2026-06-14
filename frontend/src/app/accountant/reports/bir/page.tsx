@@ -11,9 +11,12 @@ async function fetchAccountantClients() {
 
 export default function AccountantBIRPage() {
   return (
-    <div className="max-w-[1100px] mx-auto p-6">
+    <div className="max-w-[1280px] mx-auto p-6">
       <Suspense>
-        <BIRBooksView fetchClients={fetchAccountantClients} />
+        <BIRBooksView
+          fetchClients={fetchAccountantClients}
+          breadcrumbBase={{ label: 'Reports', href: '/accountant/reports' }}
+        />
       </Suspense>
     </div>
   )

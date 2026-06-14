@@ -12,6 +12,7 @@ import type { ClientProfile } from '@/types/admin'
 
 interface Props {
   fetchClients?: () => Promise<ClientProfile[]>
+  breadcrumbBase?: { label: string; href: string }
 }
 
 const BOOKS = [
@@ -21,7 +22,7 @@ const BOOKS = [
   { value: 'gl',  label: 'GL'  },
 ]
 
-export function BIRBooksView({ fetchClients }: Props) {
+export function BIRBooksView({ fetchClients, breadcrumbBase }: Props) {
   const searchParams = useSearchParams()
 
   const initStart     = searchParams.get('start')     ?? ''
@@ -77,7 +78,7 @@ export function BIRBooksView({ fetchClients }: Props) {
 
   return (
     <div className="max-w-[1280px] mx-auto px-9 py-7">
-      <Breadcrumb crumbs={[{ label: 'Reports', href: '/client/reports' }, { label: 'BIR Books' }]} />
+      <Breadcrumb crumbs={[breadcrumbBase ?? { label: 'Reports', href: '/client/reports' }, { label: 'BIR Books' }]} />
       <div className="flex items-start justify-between mb-[22px]">
         <div>
           <h1
