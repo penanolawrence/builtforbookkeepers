@@ -7,6 +7,7 @@ import { Vat2550mTable } from '@/components/reports/Vat2550mTable'
 import { Vat2550qTable } from '@/components/reports/Vat2550qTable'
 import { VatSlsTable } from '@/components/reports/VatSlsTable'
 import { VatSlpTable } from '@/components/reports/VatSlpTable'
+import { VatEmptyState } from '@/components/reports/VatEmptyState'
 import { downloadVatPdf } from '@/lib/api/reports'
 import type { VatReportType } from '@/types/report'
 
@@ -238,29 +239,7 @@ export function VatReportView({ fetchClients, breadcrumbBase }: Props) {
           )}
         </div>
       ) : (
-        <div
-          className="flex flex-col items-center justify-center py-20 text-center"
-          style={{
-            background:   'var(--t-card)',
-            border:       '1px solid var(--t-line)',
-            borderRadius: 20,
-          }}
-        >
-          <p className="text-[14px] text-t-muted mb-4">
-            Select a period and click <strong>View</strong> to generate the report.
-          </p>
-          <button
-            onClick={handleView}
-            disabled={viewDisabled}
-            className="h-10 px-[18px] rounded-[10px] text-[13.5px] font-bold text-white disabled:opacity-40 border-0 cursor-pointer"
-            style={{
-              background: 'linear-gradient(150deg, var(--t-primary), var(--t-primary-deep))',
-              boxShadow:  '0 12px 22px -12px var(--t-primary)',
-            }}
-          >
-            Generate Report
-          </button>
-        </div>
+        <VatEmptyState onGenerate={handleView} disabled={viewDisabled} />
       )}
     </div>
   )
