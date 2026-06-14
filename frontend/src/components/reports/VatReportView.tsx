@@ -54,7 +54,6 @@ export function VatReportView({ fetchClients, breadcrumbBase }: Props) {
 
   function handleTabChange(newTab: VatReportType) {
     setTab(newTab)
-    setLoadedTabs(prev => { const s = new Set(prev); s.delete(newTab); return s })
     setPdfError(null)
   }
 
