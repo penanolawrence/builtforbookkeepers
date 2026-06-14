@@ -59,7 +59,7 @@ class QueueController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $document = Document::with(['company', 'transactionLines.account', 'transactionLines.subtype'])->findOrFail($id);
+        $document = Document::with(['company', 'merchant', 'transactionLines.account', 'transactionLines.subtype'])->findOrFail($id);
 
         try {
             $journalPreview = (new JournalEntryService())->previewFromDocument($document);
@@ -84,6 +84,7 @@ class QueueController extends Controller
             'isOcrFailed'      => $document->is_ocr_failed,
             'declaredType'     => $document->document_type,
             'isVat'            => $document->company->bir_type === 'vat',
+            'merchantTin'      => $document->merchant?->tin,
             'journalPreview'   => $journalPreview,
             'transactionLines' => $document->transactionLines->map(fn ($l) => [
                 'id'          => $l->id,
@@ -144,6 +145,20 @@ class QueueController extends Controller
                 }
                 if ($mapped) {
                     $document->fill($mapped);
+                    $document->save();
+                }
+            }
+
+            // Resolve and link merchant if TIN was submitted
+            if ($request->filled('fields') && array_key_exists('merchantTin', $request->fields)) {
+                $tin      = $request->fields['merchantTin'] ?: null;
+                $merchant = (new \App\Services\Merchant\MerchantResolverService())->resolve(
+                    $document->company_id,
+                    $document->merchant_name,
+                    $tin,
+                );
+                if ($merchant) {
+                    $document->merchant_id = $merchant->id;
                     $document->save();
                 }
             }
