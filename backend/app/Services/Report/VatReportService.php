@@ -54,7 +54,7 @@ class VatReportService
         $rows = DB::table('documents')
             ->leftJoin('merchants', 'merchants.id', '=', 'documents.merchant_id')
             ->where('documents.company_id', $company->id)
-            ->where('documents.status', 'posted')
+            ->where('documents.status', 'approved')
             ->where('documents.document_type', 'income')
             ->whereBetween('documents.document_date', [$start->toDateString(), $end->toDateString()])
             ->orderBy('documents.document_date')
@@ -98,7 +98,7 @@ class VatReportService
         $rows = DB::table('documents')
             ->leftJoin('merchants', 'merchants.id', '=', 'documents.merchant_id')
             ->where('documents.company_id', $company->id)
-            ->where('documents.status', 'posted')
+            ->where('documents.status', 'approved')
             ->where('documents.document_type', 'expense')
             ->whereBetween('documents.document_date', [$start->toDateString(), $end->toDateString()])
             ->orderBy('documents.document_date')
@@ -137,27 +137,23 @@ class VatReportService
 
     private function buildSummary(Company $company, Carbon $start, Carbon $end): array
     {
-        $outputVat = (float) DB::table('journal_entry_lines')
-            ->join('journal_entries', 'journal_entries.id', '=', 'journal_entry_lines.journal_entry_id')
-            ->join('accounts', 'accounts.id', '=', 'journal_entry_lines.account_id')
-            ->where('journal_entries.company_id', $company->id)
-            ->where('journal_entries.status', 'posted')
-            ->where('accounts.code', '2101')
-            ->whereBetween('journal_entries.entry_date', [$start->toDateString(), $end->toDateString()])
-            ->sum('journal_entry_lines.credit');
+        $outputVat = (float) DB::table('documents')
+            ->where('company_id', $company->id)
+            ->where('status', 'approved')
+            ->where('document_type', 'income')
+            ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
+            ->sum('vat_amount');
 
-        $inputVat = (float) DB::table('journal_entry_lines')
-            ->join('journal_entries', 'journal_entries.id', '=', 'journal_entry_lines.journal_entry_id')
-            ->join('accounts', 'accounts.id', '=', 'journal_entry_lines.account_id')
-            ->where('journal_entries.company_id', $company->id)
-            ->where('journal_entries.status', 'posted')
-            ->where('accounts.code', '1101')
-            ->whereBetween('journal_entries.entry_date', [$start->toDateString(), $end->toDateString()])
-            ->sum('journal_entry_lines.debit');
+        $inputVat = (float) DB::table('documents')
+            ->where('company_id', $company->id)
+            ->where('status', 'approved')
+            ->where('document_type', 'expense')
+            ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
+            ->sum('vat_amount');
 
         $taxableSales = (float) DB::table('documents')
             ->where('company_id', $company->id)
-            ->where('status', 'posted')
+            ->where('status', 'approved')
             ->where('document_type', 'income')
             ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
             ->selectRaw('COALESCE(SUM(amount - COALESCE(vat_amount, 0)), 0) as total')
@@ -165,7 +161,7 @@ class VatReportService
 
         $taxablePurchases = (float) DB::table('documents')
             ->where('company_id', $company->id)
-            ->where('status', 'posted')
+            ->where('status', 'approved')
             ->where('document_type', 'expense')
             ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
             ->selectRaw('COALESCE(SUM(amount - COALESCE(vat_amount, 0)), 0) as total')

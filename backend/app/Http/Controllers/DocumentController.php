@@ -48,6 +48,10 @@ class DocumentController extends Controller
 
         $path = $request->file('file')->store('documents', 's3');
 
+        if (!$path) {
+            return response()->json(['message' => 'File upload failed. Please try again.'], 500);
+        }
+
         $document = Document::create([
             'company_id'        => $company->id,
             'uploaded_by'       => $user->id,
@@ -199,6 +203,10 @@ class DocumentController extends Controller
         }
 
         $newPath = $request->file('file')->store('documents', 's3');
+
+        if (!$newPath) {
+            return response()->json(['message' => 'File upload failed. Please try again.'], 500);
+        }
 
         $document->update([
             'status'          => 'processing',
