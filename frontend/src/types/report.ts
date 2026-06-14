@@ -108,23 +108,30 @@ export interface Vat2550qData {
   company: VatCompany
 }
 
-export interface VatDocRow {
+export interface VatSlsRow {
   date: string
   ref_number: string | null
-  buyer_name?: string | null
-  buyer_tin?: string | null
-  supplier_name?: string | null
-  supplier_tin?: string | null
+  buyer_name: string | null
+  buyer_tin: string | null
   taxable_amount: number
-  vat_amount?: number
-  input_vat?: number
+  vat_amount: number
+  total_amount: number
+}
+
+export interface VatSlpRow {
+  date: string
+  ref_number: string | null
+  supplier_name: string | null
+  supplier_tin: string | null
+  taxable_amount: number
+  input_vat: number
   total_amount: number
 }
 
 export interface VatSlsData {
   quarter: number
   year: number
-  rows: VatDocRow[]
+  rows: VatSlsRow[]
   totals: { taxable_amount: number; vat_amount: number; total_amount: number }
   company: VatCompany
 }
@@ -132,7 +139,7 @@ export interface VatSlsData {
 export interface VatSlpData {
   quarter: number
   year: number
-  rows: VatDocRow[]
+  rows: VatSlpRow[]
   totals: { taxable_amount: number; input_vat: number; total_amount: number }
   company: VatCompany
 }

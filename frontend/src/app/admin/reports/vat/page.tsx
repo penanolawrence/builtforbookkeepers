@@ -1,3 +1,5 @@
+'use client'
+
 import { Suspense } from 'react'
 import { VatReportView } from '@/components/reports/VatReportView'
 import { getClients } from '@/lib/api/admin/clients'
