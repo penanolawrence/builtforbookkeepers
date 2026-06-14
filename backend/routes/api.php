@@ -9,6 +9,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PeriodClosingController;
 use App\Http\Controllers\QueueController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\VatReportController;
 use App\Http\Controllers\SubtypeController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\Admin;
@@ -58,6 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/expense-breakdown',     [ReportController::class, 'expenseBreakdown']);
         Route::get('/reports/income-statement/pdf',  [ReportController::class, 'exportPDF'])->defaults('type', 'income-statement');
         Route::get('/reports/expense-breakdown/pdf', [ReportController::class, 'exportPDF'])->defaults('type', 'expense-breakdown');
+        Route::get('/reports/vat/2550m/pdf',  [VatReportController::class, 'monthly2550mPdf']);
+        Route::get('/reports/vat/2550q/pdf',  [VatReportController::class, 'quarterly2550qPdf']);
+        Route::get('/reports/vat/sls/pdf',    [VatReportController::class, 'slsPdf']);
+        Route::get('/reports/vat/slp/pdf',    [VatReportController::class, 'slpPdf']);
         Route::get('/bir/{book}',     [BIRController::class, 'getBook']);
         Route::get('/bir/{book}/pdf', [BIRController::class, 'exportPDF']);
     });
