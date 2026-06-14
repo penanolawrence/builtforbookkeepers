@@ -19,5 +19,6 @@ class TransactionClassifierToolSchemaTest extends TestCase
         $this->assertArrayHasKey('description', $vatProp);
         $this->assertStringContainsString('12/112', $vatProp['description']);
         $this->assertStringContainsString('inclusive', strtolower($vatProp['description']));
+        $this->assertStringContainsString('Return null', $vatProp['description']);
     }
 }

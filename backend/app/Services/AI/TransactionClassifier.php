@@ -267,7 +267,7 @@ class TransactionClassifier
                             'vat_amount'     => [
                                 'type'        => ['number', 'null'],
                                 'minimum'     => 0,
-                                'description' => 'VAT amount for this document. If a VAT figure is explicitly printed on the document, use that value. If the user note says the amount is VAT-inclusive (e.g. "inclusive of VAT", "VAT inclusive", "inc. VAT"), calculate as total_amount × 12/112 (Philippine VAT rate is 12%, so VAT = total × 0.107143). Return null if no VAT applies.',
+                                'description' => 'VAT amount for this document. If a VAT figure is explicitly printed on the document, use that value. If the document or user note indicates the amount is VAT-inclusive (e.g. "inclusive of VAT", "VAT inclusive", "inc. VAT"), calculate as total_amount × 12/112 (Philippine VAT rate is 12%, so VAT = total × 0.107143). Return null if no VAT applies.',
                             ],
                             'or_number'      => ['type' => ['string', 'null'],
                                                 'description' => 'Official Receipt or invoice number'],
