@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getAccountantClients } from '@/lib/api/accountant/clients'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-type ReportType = 'income-statement' | 'expense-breakdown' | 'vat'
+type ReportType = 'income-statement' | 'expense-breakdown'
 
 function defaultStart() {
   const d = new Date()
@@ -19,7 +19,6 @@ function defaultEnd() {
 const REPORT_LABELS: Record<ReportType, string> = {
   'income-statement':  'Income Statement',
   'expense-breakdown': 'Expense Breakdown',
-  'vat':               'VAT Report',
 }
 
 export default function AccountantReportsPage() {
@@ -42,13 +41,9 @@ export default function AccountantReportsPage() {
 
   function handleView() {
     if (!clientId || !pending) return
-    if (pending === 'vat') {
-      router.push(`/accountant/reports/${clientId}/vat`)
-    } else {
-      const base = `/accountant/reports/${clientId}`
-      const qs   = `?start=${start}&end=${end}`
-      router.push(`${base}/${pending}${qs}`)
-    }
+    const base = `/accountant/reports/${clientId}`
+    const qs   = `?start=${start}&end=${end}`
+    router.push(`${base}/${pending}${qs}`)
     setPending(null)
   }
 
@@ -57,7 +52,7 @@ export default function AccountantReportsPage() {
   const labelCls = 'text-[10px] font-bold uppercase tracking-wide text-t-muted mb-1 block'
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 py-5 md:p-6">
+    <div className="max-w-[1280px] mx-auto px-4 py-5 md:p-6">
       <div className="mb-5">
         <h1
           className="text-[28px] md:text-[34px] font-bold tracking-[-0.025em] text-t-ink m-0"
@@ -102,7 +97,7 @@ export default function AccountantReportsPage() {
           <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">View Book →</div>
         </Link>
 
-        <div onClick={() => openModal('vat')} className={cardCls}>
+        <Link href="/accountant/reports/vat" className={cardCls}>
           <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📑</div>
           <div className="flex-1 min-w-0 md:flex-none md:w-full">
             <div className="text-sm font-bold text-t-ink mb-1">VAT Report</div>
@@ -110,8 +105,8 @@ export default function AccountantReportsPage() {
               BIR-compliant VAT returns (2550M, 2550Q) and summary lists of sales and purchases.
             </div>
           </div>
-          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Download PDF →</div>
-        </div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Open Report →</div>
+        </Link>
       </div>
 
       <Dialog open={!!pending} onOpenChange={(o) => { if (!o) setPending(null) }}>
