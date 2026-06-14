@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\Merchant;
 use App\Models\User;
 use App\Services\Report\VatReportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -181,5 +182,123 @@ class VatReportServiceTest extends TestCase
         $this->assertEquals('April 2026',  $result['months'][0]['label']);
         $this->assertEquals('May 2026',    $result['months'][1]['label']);
         $this->assertEquals('June 2026',   $result['months'][2]['label']);
+    }
+
+    // ── salesList() ────────────────────────────────────────────────────────────
+
+    public function test_sales_list_returns_income_documents_with_merchant(): void
+    {
+        $merchant = Merchant::factory()->create(['company_id' => $this->company->id, 'name' => 'Buyer Co', 'tin' => '111-222-333-000']);
+        $uploader = User::factory()->create();
+        Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'uploaded_by'   => $uploader->id,
+            'status'        => 'posted',
+            'document_type' => 'income',
+            'document_date' => '2026-01-15',
+            'amount'        => '11200.00',
+            'vat_amount'    => '1200.00',
+            'merchant_id'   => $merchant->id,
+            'ref_number'    => 'OR-001',
+        ]);
+
+        $result = $this->service->salesList($this->company, 1, 2026);
+
+        $this->assertCount(1, $result['rows']);
+        $row = $result['rows'][0];
+        $this->assertEquals('Buyer Co', $row['buyer_name']);
+        $this->assertEquals('111-222-333-000', $row['buyer_tin']);
+        $this->assertEquals(10000.0, $row['taxable_amount']);   // 11200 - 1200
+        $this->assertEquals(1200.0,  $row['vat_amount']);
+        $this->assertEquals(11200.0, $row['total_amount']);
+        $this->assertEquals('OR-001', $row['ref_number']);
+        $this->assertEquals(10000.0, $result['totals']['taxable_amount']);
+    }
+
+    public function test_sales_list_excludes_expense_documents(): void
+    {
+        $uploader = User::factory()->create();
+        Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'uploaded_by'   => $uploader->id,
+            'status'        => 'posted',
+            'document_type' => 'expense',
+            'document_date' => '2026-01-15',
+            'amount'        => '5600.00',
+            'vat_amount'    => '600.00',
+        ]);
+
+        $result = $this->service->salesList($this->company, 1, 2026);
+
+        $this->assertCount(0, $result['rows']);
+    }
+
+    public function test_sales_list_excludes_other_companies(): void
+    {
+        $otherCompany = Company::factory()->create(['bir_type' => 'vat']);
+        $uploader     = User::factory()->create();
+        Document::factory()->create([
+            'company_id'    => $otherCompany->id,
+            'uploaded_by'   => $uploader->id,
+            'status'        => 'posted',
+            'document_type' => 'income',
+            'document_date' => '2026-01-15',
+            'amount'        => '11200.00',
+            'vat_amount'    => '1200.00',
+        ]);
+
+        $result = $this->service->salesList($this->company, 1, 2026);
+
+        $this->assertCount(0, $result['rows']);
+        $this->assertEquals(0.0, $result['totals']['taxable_amount']);
+    }
+
+    // ── purchasesList() ─────────────────────────────────────────────────────────
+
+    public function test_purchases_list_returns_expense_documents_with_merchant(): void
+    {
+        $merchant = Merchant::factory()->create(['company_id' => $this->company->id, 'name' => 'Supplier Ltd', 'tin' => '444-555-666-000']);
+        $uploader = User::factory()->create();
+        Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'uploaded_by'   => $uploader->id,
+            'status'        => 'posted',
+            'document_type' => 'expense',
+            'document_date' => '2026-01-20',
+            'amount'        => '5600.00',
+            'vat_amount'    => '600.00',
+            'merchant_id'   => $merchant->id,
+            'ref_number'    => 'INV-002',
+        ]);
+
+        $result = $this->service->purchasesList($this->company, 1, 2026);
+
+        $this->assertCount(1, $result['rows']);
+        $row = $result['rows'][0];
+        $this->assertEquals('Supplier Ltd', $row['supplier_name']);
+        $this->assertEquals('444-555-666-000', $row['supplier_tin']);
+        $this->assertEquals(5000.0, $row['taxable_amount']);   // 5600 - 600
+        $this->assertEquals(600.0,  $row['input_vat']);
+        $this->assertEquals(5600.0, $row['total_amount']);
+        $this->assertEquals('INV-002', $row['ref_number']);
+        $this->assertEquals(5000.0, $result['totals']['taxable_amount']);
+    }
+
+    public function test_purchases_list_excludes_income_documents(): void
+    {
+        $uploader = User::factory()->create();
+        Document::factory()->create([
+            'company_id'    => $this->company->id,
+            'uploaded_by'   => $uploader->id,
+            'status'        => 'posted',
+            'document_type' => 'income',
+            'document_date' => '2026-01-15',
+            'amount'        => '11200.00',
+            'vat_amount'    => '1200.00',
+        ]);
+
+        $result = $this->service->purchasesList($this->company, 1, 2026);
+
+        $this->assertCount(0, $result['rows']);
     }
 }

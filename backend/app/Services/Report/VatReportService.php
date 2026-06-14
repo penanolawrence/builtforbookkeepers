@@ -77,15 +77,17 @@ class VatReportService
                 'total_amount'   => (float) $row->amount,
             ]);
 
+        $totals = [
+            'taxable_amount' => $rows->sum('taxable_amount'),
+            'vat_amount'     => $rows->sum('vat_amount'),
+            'total_amount'   => $rows->sum('total_amount'),
+        ];
+
         return [
             'quarter' => $quarter,
             'year'    => $year,
-            'rows'    => $rows,
-            'totals'  => [
-                'taxable_amount' => $rows->sum('taxable_amount'),
-                'vat_amount'     => $rows->sum('vat_amount'),
-                'total_amount'   => $rows->sum('total_amount'),
-            ],
+            'rows'    => $rows->all(),
+            'totals'  => $totals,
         ];
     }
 
@@ -119,15 +121,17 @@ class VatReportService
                 'total_amount'   => (float) $row->amount,
             ]);
 
+        $totals = [
+            'taxable_amount' => $rows->sum('taxable_amount'),
+            'input_vat'      => $rows->sum('input_vat'),
+            'total_amount'   => $rows->sum('total_amount'),
+        ];
+
         return [
             'quarter' => $quarter,
             'year'    => $year,
-            'rows'    => $rows,
-            'totals'  => [
-                'taxable_amount' => $rows->sum('taxable_amount'),
-                'input_vat'      => $rows->sum('input_vat'),
-                'total_amount'   => $rows->sum('total_amount'),
-            ],
+            'rows'    => $rows->all(),
+            'totals'  => $totals,
         ];
     }
 
@@ -139,7 +143,7 @@ class VatReportService
             ->where('journal_entries.company_id', $company->id)
             ->where('journal_entries.status', 'posted')
             ->where('accounts.code', '2101')
-            ->whereBetween('journal_entries.entry_date', [$start, $end])
+            ->whereBetween('journal_entries.entry_date', [$start->toDateString(), $end->toDateString()])
             ->sum('journal_entry_lines.credit');
 
         $inputVat = (float) DB::table('journal_entry_lines')
@@ -148,7 +152,7 @@ class VatReportService
             ->where('journal_entries.company_id', $company->id)
             ->where('journal_entries.status', 'posted')
             ->where('accounts.code', '1101')
-            ->whereBetween('journal_entries.entry_date', [$start, $end])
+            ->whereBetween('journal_entries.entry_date', [$start->toDateString(), $end->toDateString()])
             ->sum('journal_entry_lines.debit');
 
         $taxableSales = (float) DB::table('documents')
