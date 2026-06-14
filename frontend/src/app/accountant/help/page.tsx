@@ -1,6 +1,8 @@
 import s from './help.module.css'
 import { HelpSidebarNav } from '@/components/help/HelpSidebarNav'
 
+export const metadata = { title: 'How the System Works — Sofia Books' }
+
 export default function HelpPage() {
   return (
     <div className={s.page}>
