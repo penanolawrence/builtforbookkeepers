@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
-import { VatReportContent } from '@/components/reports/VatReportContent'
+import { VatReportView } from '@/components/reports/VatReportView'
 
 export default function ClientVatReportPage() {
   return (
     <Suspense>
-      <VatReportContent
+      <VatReportView
         breadcrumbBase={{ label: 'Reports', href: '/client/reports' }}
       />
     </Suspense>
