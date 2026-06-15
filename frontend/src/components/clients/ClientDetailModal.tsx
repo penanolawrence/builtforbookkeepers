@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { X, Link, ChevronDown } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,8 +14,18 @@ import {
   suspendClient, reactivateClient, markClientOverdue, deactivateClient,
   resetClientAccess, reassignAccountant,
   getClientDocumentsAdmin, getChartOfAccounts, saveChartOfAccounts,
+  getMerchants as getMerchantsAdmin,
+  createMerchant as createMerchantAdmin,
+  updateMerchant as updateMerchantAdmin,
+  deleteMerchant as deleteMerchantAdmin,
 } from '@/lib/api/admin/clients'
-import { getAccountantClient, getAccountantClientDocuments } from '@/lib/api/accountant/clients'
+import {
+  getAccountantClient, getAccountantClientDocuments, updateAccountantClient,
+  getMerchants as getMerchantsAccountant,
+  createMerchant as createMerchantAccountant,
+  updateMerchant as updateMerchantAccountant,
+  deleteMerchant as deleteMerchantAccountant,
+} from '@/lib/api/accountant/clients'
 import { AssignAccountantModal } from '@/components/admin/AssignAccountantModal'
 import { ReceivePaymentModal } from '@/components/admin/ReceivePaymentModal'
 import { DocumentsTable } from '@/components/documents/DocumentsTable'
@@ -25,7 +35,15 @@ import type { PagedDocs } from '@/types/document'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Role = 'admin' | 'accountant'
-type Tab  = 'overview' | 'documents' | 'coa' | 'submit'
+type Tab  = 'overview' | 'submit' | 'documents' | 'merchants' | 'coa'
+
+interface MerchantRow {
+  id: string
+  name: string
+  tin: string | null
+  address: string | null
+  documentCount: number
+}
 
 export type ClientDetailModalProps = {
   clientId: string
@@ -309,6 +327,225 @@ function DocumentsTab({ clientId, queryFn, queryKey }: { clientId: string; query
   )
 }
 
+// ─── MerchantsTab ────────────────────────────────────────────────────────────
+
+type MerchantEditState =
+  | { type: 'none' }
+  | { type: 'new' }
+  | { type: 'edit'; id: string }
+
+function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
+  const qc        = useQueryClient()
+  const { toast } = useToast()
+
+  const [editState, setEditState] = useState<MerchantEditState>({ type: 'none' })
+  const [draft,     setDraft]     = useState({ name: '', tin: '', address: '' })
+  const [saving,    setSaving]    = useState(false)
+
+  const getFn    = role === 'admin' ? getMerchantsAdmin    : getMerchantsAccountant
+  const createFn = role === 'admin' ? createMerchantAdmin  : createMerchantAccountant
+  const updateFn = role === 'admin' ? updateMerchantAdmin  : updateMerchantAccountant
+  const deleteFn = role === 'admin' ? deleteMerchantAdmin  : deleteMerchantAccountant
+
+  const { data: merchants = [], isLoading } = useQuery({
+    queryKey: ['client-merchants', clientId],
+    queryFn:  () => getFn(clientId),
+  })
+
+  function startNew() {
+    setDraft({ name: '', tin: '', address: '' })
+    setEditState({ type: 'new' })
+  }
+
+  function startEdit(m: MerchantRow) {
+    setDraft({ name: m.name, tin: m.tin ?? '', address: m.address ?? '' })
+    setEditState({ type: 'edit', id: m.id })
+  }
+
+  function cancelEdit() {
+    setEditState({ type: 'none' })
+    setDraft({ name: '', tin: '', address: '' })
+  }
+
+  async function handleSave() {
+    if (!draft.name.trim()) return
+    setSaving(true)
+    try {
+      const payload = {
+        name:    draft.name.trim(),
+        tin:     draft.tin.trim()     || undefined,
+        address: draft.address.trim() || undefined,
+      }
+      if (editState.type === 'new') {
+        await createFn(clientId, payload)
+      } else if (editState.type === 'edit') {
+        await updateFn(editState.id, payload)
+      }
+      qc.invalidateQueries({ queryKey: ['client-merchants', clientId] })
+      toast({ title: 'Merchant saved.' })
+      cancelEdit()
+    } catch (err: unknown) {
+      toast({ title: (err as any)?.response?.data?.message ?? 'Failed to save merchant.', variant: 'destructive' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteFn(id)
+      qc.invalidateQueries({ queryKey: ['client-merchants', clientId] })
+      toast({ title: 'Merchant deleted.' })
+    } catch (err: unknown) {
+      toast({ title: (err as any)?.response?.data?.message ?? 'Failed to delete merchant.', variant: 'destructive' })
+    }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '5px 10px',
+    fontSize: 13, color: 'var(--t-ink)', background: 'var(--t-card)',
+    fontFamily: 'inherit', fontWeight: 600, outline: 'none', width: '100%',
+  }
+
+  const rowGrid: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 160px 1fr 80px',
+    gap: 10,
+    alignItems: 'center',
+    padding: '9px 20px',
+  }
+
+  if (isLoading) {
+    return <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>Loading…</div>
+  }
+
+  const editRow = (
+    <div style={{ ...rowGrid, background: 'var(--t-card-alt)', borderBottom: '1px solid var(--t-line-soft)' }}>
+      <input
+        autoFocus
+        placeholder="Merchant name *"
+        value={draft.name}
+        onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+        style={inputStyle}
+      />
+      <input
+        placeholder="TIN"
+        value={draft.tin}
+        onChange={(e) => setDraft((d) => ({ ...d, tin: e.target.value }))}
+        style={inputStyle}
+      />
+      <input
+        placeholder="Address"
+        value={draft.address}
+        onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))}
+        style={inputStyle}
+      />
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving || !draft.name.trim()}
+          style={{ border: 0, borderRadius: 8, padding: '5px 12px', fontSize: 12.5, fontWeight: 700, color: '#fff', background: 'linear-gradient(150deg, var(--t-primary), var(--t-primary-deep))', cursor: saving || !draft.name.trim() ? 'not-allowed' : 'pointer', opacity: saving || !draft.name.trim() ? 0.6 : 1, fontFamily: 'inherit' }}
+        >
+          {saving ? '…' : 'Save'}
+        </button>
+        <button
+          type="button"
+          onClick={cancelEdit}
+          style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', fontSize: 12.5, background: 'var(--t-card)', color: 'var(--t-muted)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}
+        >
+          <X size={13} />
+        </button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={{ padding: '20px 28px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-faint)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+          Merchants
+        </span>
+        {editState.type === 'none' && (
+          <button
+            type="button"
+            onClick={startNew}
+            style={{ border: '1.5px dashed var(--t-line)', background: 'transparent', borderRadius: 8, padding: '4px 12px', fontSize: 12, fontWeight: 700, color: 'var(--t-primary)', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            + Add Merchant
+          </button>
+        )}
+      </div>
+
+      {/* List */}
+      <div style={{ background: 'var(--t-card)', border: '1px solid var(--t-line)', borderRadius: 14, overflow: 'hidden' }}>
+
+        {/* Column headers */}
+        <div style={{ ...rowGrid, background: 'var(--t-card-alt)', borderBottom: '1px solid var(--t-line-soft)' }}>
+          {['Name', 'TIN', 'Address', ''].map((h) => (
+            <span key={h} style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-faint)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</span>
+          ))}
+        </div>
+
+        {/* New merchant row */}
+        {editState.type === 'new' && editRow}
+
+        {/* Existing merchants */}
+        {merchants.length === 0 && editState.type !== 'new' ? (
+          <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 13.5, color: 'var(--t-faint)', marginBottom: 12 }}>No merchants yet.</div>
+            <button
+              type="button"
+              onClick={startNew}
+              style={{ border: '1.5px dashed var(--t-line)', background: 'transparent', borderRadius: 8, padding: '6px 16px', fontSize: 13, fontWeight: 700, color: 'var(--t-primary)', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              + Add Merchant
+            </button>
+          </div>
+        ) : (
+          merchants.map((m, idx) => {
+            const isEditing = editState.type === 'edit' && editState.id === m.id
+            if (isEditing) return <React.Fragment key={m.id}>{editRow}</React.Fragment>
+            return (
+              <div
+                key={m.id}
+                style={{ ...rowGrid, borderBottom: '1px solid var(--t-line-soft)', background: idx % 2 === 0 ? 'transparent' : 'var(--t-card-alt)' }}
+              >
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t-ink)' }}>{m.name}</span>
+                <span style={{ fontSize: 13, color: 'var(--t-muted)', fontVariantNumeric: 'tabular-nums' }}>{m.tin ?? '—'}</span>
+                <span style={{ fontSize: 13, color: 'var(--t-muted)' }}>{m.address ?? '—'}</span>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => startEdit(m)}
+                    style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    aria-label={`Edit ${m.name}`}
+                  >
+                    <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  {m.documentCount === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(m.id)}
+                      style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-faint)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      aria-label={`Delete ${m.name}`}
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── OverviewTab ─────────────────────────────────────────────────────────────
 
 function OverviewTab({
@@ -356,18 +593,23 @@ function OverviewTab({
   }, [client.id, client.name, client.mobile, client.email, client.contactPerson, client.tin])
 
   const onSave = async (values: ProfileForm) => {
+    const payload = {
+      name:          values.name,
+      mobile:        values.mobile,
+      email:         values.email || undefined,
+      contactPerson: values.contactPerson,
+      tin:           values.tin,
+    }
     try {
-      await updateClient(clientId, {
-        name:          values.name,
-        mobile:        values.mobile,
-        email:         values.email || undefined,
-        contactPerson: values.contactPerson,
-        tin:           values.tin,
-      })
+      if (role === 'admin') {
+        await updateClient(clientId, payload)
+      } else {
+        await updateAccountantClient(clientId, payload)
+      }
       qc.invalidateQueries({ queryKey: ['client-detail', clientId] })
       toast({ title: 'Changes saved.' })
-    } catch {
-      toast({ title: 'Failed to save changes.', variant: 'destructive' })
+    } catch (err: unknown) {
+      toast({ title: (err as any)?.response?.data?.message ?? 'Failed to save changes.', variant: 'destructive' })
     }
   }
 
@@ -662,10 +904,11 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
   })
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'overview',  label: 'Overview' },
-    { id: 'documents', label: 'Documents' },
-    { id: 'coa',       label: 'Chart of Accounts' },
-    { id: 'submit',    label: 'Submit' },
+    { id: 'overview',   label: 'Overview' },
+    { id: 'submit',     label: 'Submit' },
+    { id: 'documents',  label: 'Documents' },
+    { id: 'merchants',  label: 'Merchants' },
+    { id: 'coa',        label: 'Chart of Accounts' },
   ]
 
   const statusTier = client ? (STATUS_TIER[client.clientStatus] ?? 'pending') : 'pending'
@@ -675,7 +918,7 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ width: '100%', maxWidth: 900, maxHeight: '90vh', background: 'var(--t-card)', borderRadius: 24, boxShadow: 'var(--t-shadow)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ width: '100%', maxWidth: 1280, maxHeight: '90vh', background: 'var(--t-card)', borderRadius: 24, boxShadow: 'var(--t-shadow)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '20px 28px', borderBottom: '1px solid var(--t-line)', flexShrink: 0 }}>
@@ -749,6 +992,12 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
                   onDeactivated={onClose}
                 />
               )}
+              {tab === 'submit' && (
+                <SubmitTab
+                  clientId={clientId}
+                  docsQueryKey={[role === 'admin' ? 'admin-client-docs' : 'client-modal-docs', clientId]}
+                />
+              )}
               {tab === 'documents' && (
                 <DocumentsTab
                   clientId={clientId}
@@ -756,14 +1005,11 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
                   queryKey={role === 'admin' ? 'admin-client-docs' : 'client-modal-docs'}
                 />
               )}
+              {tab === 'merchants' && (
+                <MerchantsTab clientId={clientId} role={role} />
+              )}
               {tab === 'coa' && (
                 <CoaTab clientId={clientId} isVat={client.birType === 'vat'} />
-              )}
-              {tab === 'submit' && (
-                <SubmitTab
-                  clientId={clientId}
-                  docsQueryKey={[role === 'admin' ? 'admin-client-docs' : 'client-modal-docs', clientId]}
-                />
               )}
             </>
           )}
