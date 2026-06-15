@@ -79,8 +79,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/accountant/dashboard/weekly-stats', [Accountant\DashboardController::class, 'weeklyStats']);
         Route::get('/accountant/clients',                [Accountant\ClientController::class, 'index']);
         Route::post('/accountant/clients',               [Accountant\ClientController::class, 'store']);
-        Route::get('/accountant/clients/{id}',           [Accountant\ClientController::class, 'show']);
-        Route::get('/accountant/clients/{id}/documents', [Accountant\ClientController::class, 'getDocuments']);
+        Route::get('/accountant/clients/{id}',            [Accountant\ClientController::class, 'show']);
+        Route::patch('/accountant/clients/{id}',          [Accountant\ClientController::class, 'update']);
+        Route::get('/accountant/clients/{id}/documents',  [Accountant\ClientController::class, 'getDocuments']);
     });
 
     // Accountant + Admin shared routes
@@ -133,6 +134,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/admin/clients/{id}/mark-overdue',     [Admin\ClientController::class, 'markOverdue']);
         Route::post('/admin/clients/{id}/reassign',         [Admin\ClientController::class, 'reassignAccountant']);
         Route::get('/admin/clients/{id}/documents',         [Admin\ClientController::class, 'getDocuments']);
+        Route::get('/admin/clients/{id}/merchants',  [Admin\ClientController::class, 'merchants']);
+        Route::post('/admin/clients/{id}/merchants', [Admin\ClientController::class, 'storeMerchant']);
+        Route::patch('/admin/merchants/{id}',        [Admin\ClientController::class, 'updateMerchant']);
+        Route::delete('/admin/merchants/{id}',       [Admin\ClientController::class, 'destroyMerchant']);
 
         Route::get('/admin/accountants',                       [Admin\AccountantController::class, 'index']);
         Route::post('/admin/accountants',                      [Admin\AccountantController::class, 'store']);

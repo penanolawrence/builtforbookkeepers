@@ -9,6 +9,7 @@ use App\Models\AccountantAssignmentLog;
 use App\Models\Company;
 use App\Models\Document;
 use App\Models\JournalEntry;
+use App\Models\Merchant;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Accounting\ChartOfAccountsService;
@@ -335,6 +336,79 @@ class ClientController extends Controller
             'totalInflow'  => 0,
             'totalOutflow' => 0,
         ]);
+    }
+
+    public function merchants(string $id): JsonResponse
+    {
+        $company = Company::findOrFail($id);
+
+        $merchants = Merchant::where('company_id', $company->id)
+            ->withCount('documents')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($m) => [
+                'id'            => $m->id,
+                'name'          => $m->name,
+                'tin'           => $m->tin,
+                'address'       => $m->address,
+                'documentCount' => $m->documents_count,
+            ]);
+
+        return response()->json($merchants);
+    }
+
+    public function storeMerchant(Request $request, string $id): JsonResponse
+    {
+        $request->validate(['name' => 'required|string|max:255']);
+
+        $company  = Company::findOrFail($id);
+        $merchant = Merchant::create([
+            'company_id' => $company->id,
+            'name'       => $request->name,
+            'tin'        => $request->tin,
+            'address'    => $request->address,
+        ]);
+
+        return response()->json([
+            'id'            => $merchant->id,
+            'name'          => $merchant->name,
+            'tin'           => $merchant->tin,
+            'address'       => $merchant->address,
+            'documentCount' => 0,
+        ], 201);
+    }
+
+    public function updateMerchant(Request $request, string $id): JsonResponse
+    {
+        $request->validate(['name' => 'required|string|max:255']);
+
+        $merchant = Merchant::findOrFail($id);
+        $merchant->update([
+            'name'    => $request->name,
+            'tin'     => $request->tin,
+            'address' => $request->address,
+        ]);
+
+        return response()->json([
+            'id'            => $merchant->id,
+            'name'          => $merchant->name,
+            'tin'           => $merchant->tin,
+            'address'       => $merchant->address,
+            'documentCount' => Document::where('merchant_id', $merchant->id)->count(),
+        ]);
+    }
+
+    public function destroyMerchant(string $id): JsonResponse
+    {
+        $merchant = Merchant::findOrFail($id);
+
+        if (Document::where('merchant_id', $merchant->id)->exists()) {
+            return response()->json(['message' => 'Cannot delete a merchant with linked documents.'], 422);
+        }
+
+        $merchant->delete();
+
+        return response()->json(['message' => 'Merchant deleted.']);
     }
 
     private function toListItem(Company $c): array
