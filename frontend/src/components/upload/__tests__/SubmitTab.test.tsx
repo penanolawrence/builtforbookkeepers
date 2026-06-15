@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { SubmitTab } from '../SubmitTab'
 
 const redItem = {
@@ -161,8 +161,27 @@ describe('SubmitTab', () => {
     fireEvent.click(screen.getByRole('checkbox'))
     fireEvent.click(screen.getByRole('button', { name: /approve selected/i }))
 
-    await screen.findByTestId('batch-approve-bar')
-    expect(batchApprove).toHaveBeenCalledWith(['doc-green'])
+    await waitFor(() => expect(batchApprove).toHaveBeenCalledWith(['doc-green']))
     expect(toast).toHaveBeenCalledWith({ title: 'Approved 1 item(s).' })
+  })
+
+  it('shows error toast when batchApprove throws', async () => {
+    const { useQuery } = require('@tanstack/react-query')
+    const { batchApprove } = require('@/lib/api/queue')
+    const toast = jest.fn()
+    const { useToast } = require('@/hooks/use-toast')
+    ;(useToast as jest.Mock).mockReturnValue({ toast })
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [greenItem], isLoading: false })
+    ;(batchApprove as jest.Mock).mockRejectedValue(new Error('network'))
+
+    wrap()
+    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByRole('button', { name: /approve selected/i }))
+
+    await screen.findByRole('button', { name: /approve selected/i })
+    expect(toast).toHaveBeenCalledWith({
+      title: 'Batch approval failed. Please try again.',
+      variant: 'destructive',
+    })
   })
 })

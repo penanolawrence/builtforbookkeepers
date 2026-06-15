@@ -111,8 +111,9 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
     toast({ title: 'Entry submitted — processing…' })
   }
 
-  function handleRemoved(_id: string) {
+  function handleRemoved(id: string) {
     setReviewingId(null)
+    setSelected((prev) => { const next = new Set(prev); next.delete(id); return next })
     qc.invalidateQueries({ queryKey: ['client-queue', clientId] })
   }
 
