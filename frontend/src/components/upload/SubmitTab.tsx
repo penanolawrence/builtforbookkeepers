@@ -7,7 +7,7 @@ import { TwoAreaUpload } from './TwoAreaUpload'
 import { ConfirmUploadDialog } from './ConfirmUploadDialog'
 import { QueueReviewModal } from '@/components/queue/QueueReviewModal'
 import { uploadDocument } from '@/lib/api/documents'
-import { getQueue } from '@/lib/api/queue'
+import { getQueue, batchApprove } from '@/lib/api/queue'
 import type { DeclaredType } from '@/types/document'
 import type { Role } from '@/types/auth'
 import type { QueueItem } from '@/types/queue'
@@ -63,6 +63,8 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
   const [uploading,    setUploading]    = useState(false)
   const [reviewingId,  setReviewingId]  = useState<string | null>(null)
+  const [selected,     setSelected]     = useState<Set<string>>(new Set())
+  const [approving,    setApproving]    = useState(false)
 
   const { data: queueItems = [], isLoading: queueLoading } = useQuery({
     queryKey: ['client-queue', clientId],
@@ -114,6 +116,21 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
     qc.invalidateQueries({ queryKey: ['client-queue', clientId] })
   }
 
+  async function handleBatchApprove() {
+    if (selected.size === 0) return
+    setApproving(true)
+    try {
+      const result = await batchApprove(Array.from(selected))
+      setSelected(new Set())
+      qc.invalidateQueries({ queryKey: ['client-queue', clientId] })
+      toast({ title: `Approved ${result.approved.length} item(s).` })
+    } catch {
+      toast({ title: 'Batch approval failed. Please try again.', variant: 'destructive' })
+    } finally {
+      setApproving(false)
+    }
+  }
+
   return (
     <div style={{ padding: '20px 28px' }}>
       <TwoAreaUpload
@@ -160,6 +177,7 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
                 <th style={thStyle}>Merchant</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Amount</th>
                 <th style={thStyle}>Date</th>
+                <th style={{ ...thStyle, width: 36 }} />
               </tr>
             </thead>
             <tbody>
@@ -181,6 +199,23 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
                   <td style={tdStyle}>{item.merchantName || '—'}</td>
                   <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmtPeso(item.amount)}</td>
                   <td style={tdStyle}>{fmtShort(item.date)}</td>
+                  <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    {item.flag === 'GREEN' && (
+                      <input
+                        type="checkbox"
+                        checked={selected.has(item.documentId)}
+                        onChange={() => {
+                          setSelected((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(item.documentId)) next.delete(item.documentId)
+                            else next.add(item.documentId)
+                            return next
+                          })
+                        }}
+                        style={{ width: 15, height: 15, cursor: 'pointer', accentColor: 'var(--t-primary)' }}
+                      />
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -194,6 +229,24 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
           onClose={() => setReviewingId(null)}
           onRemoved={handleRemoved}
         />
+      )}
+
+      {selected.size > 0 && (
+        <div
+          data-testid="batch-approve-bar"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, padding: '12px 16px', background: 'var(--t-card-alt)', borderRadius: 12, border: '1px solid var(--t-line)' }}
+        >
+          <span style={{ fontSize: 13, color: 'var(--t-faint)', fontWeight: 600 }}>
+            {selected.size} green item{selected.size !== 1 ? 's' : ''} selected
+          </span>
+          <button
+            onClick={handleBatchApprove}
+            disabled={approving}
+            style={{ background: 'var(--t-primary)', color: '#fff', border: 0, borderRadius: 9, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: approving ? 'not-allowed' : 'pointer', opacity: approving ? 0.7 : 1, fontFamily: 'inherit' }}
+          >
+            {approving ? 'Approving…' : `Approve Selected (${selected.size})`}
+          </button>
+        </div>
       )}
     </div>
   )

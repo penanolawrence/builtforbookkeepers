@@ -38,7 +38,7 @@ jest.mock('@/lib/api/queue', () => ({
   batchApprove: jest.fn(),
 }))
 jest.mock('@/lib/api/documents', () => ({ uploadDocument: jest.fn() }))
-jest.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: jest.fn() }) }))
+jest.mock('@/hooks/use-toast', () => ({ useToast: jest.fn(() => ({ toast: jest.fn() })) }))
 jest.mock('../TwoAreaUpload', () => ({
   TwoAreaUpload: ({ clientId }: { clientId: string }) => (
     <div data-testid="two-area-upload" data-client-id={clientId} />
@@ -121,5 +121,48 @@ describe('SubmitTab', () => {
     fireEvent.click(screen.getByTestId('mock-remove'))
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['client-queue', 'c1'] })
     expect(screen.queryByTestId('queue-review-modal')).not.toBeInTheDocument()
+  })
+
+  it('renders checkbox only on GREEN rows', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [redItem, greenItem], isLoading: false })
+    wrap()
+    const checkboxes = screen.getAllByRole('checkbox')
+    expect(checkboxes).toHaveLength(1)
+  })
+
+  it('does not show batch approve bar when nothing selected', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [greenItem], isLoading: false })
+    wrap()
+    expect(screen.queryByTestId('batch-approve-bar')).not.toBeInTheDocument()
+  })
+
+  it('shows batch approve bar when a GREEN row is checked', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [greenItem], isLoading: false })
+    wrap()
+    fireEvent.click(screen.getByRole('checkbox'))
+    expect(screen.getByTestId('batch-approve-bar')).toBeInTheDocument()
+    expect(screen.getByText(/1 green item selected/i)).toBeInTheDocument()
+  })
+
+  it('calls batchApprove with selected ids and shows success toast', async () => {
+    const { useQuery, useQueryClient } = require('@tanstack/react-query')
+    const { batchApprove } = require('@/lib/api/queue')
+    const toast = jest.fn()
+    const { useToast } = require('@/hooks/use-toast')
+    ;(useToast as jest.Mock).mockReturnValue({ toast })
+    ;(useQueryClient as jest.Mock).mockReturnValue({ invalidateQueries: jest.fn() })
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [greenItem], isLoading: false })
+    ;(batchApprove as jest.Mock).mockResolvedValue({ approved: ['doc-green'], failed: [] })
+
+    wrap()
+    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByRole('button', { name: /approve selected/i }))
+
+    await screen.findByTestId('batch-approve-bar')
+    expect(batchApprove).toHaveBeenCalledWith(['doc-green'])
+    expect(toast).toHaveBeenCalledWith({ title: 'Approved 1 item(s).' })
   })
 })
