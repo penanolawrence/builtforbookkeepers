@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -39,8 +40,10 @@ function AccountSelect({
   accounts: Account[]
   onChange: (accountId: string, accountCode: string) => void
 }) {
-  const [search, setSearch] = useState('')
-  const [open, setOpen]     = useState(false)
+  const [search, setSearch]           = useState('')
+  const [open, setOpen]               = useState(false)
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 })
+  const inputRef                      = useRef<HTMLInputElement>(null)
 
   const selected = accounts.find((a) => a.id === value)
   const filtered = accounts.filter(
@@ -49,19 +52,32 @@ function AccountSelect({
       a.name.toLowerCase().includes(search.toLowerCase())
   )
 
+  function handleFocus() {
+    setOpen(true)
+    setSearch('')
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect()
+      setDropdownPos({ top: rect.bottom + 2, left: rect.left, width: rect.width })
+    }
+  }
+
   return (
     <div className="relative">
       <input
+        ref={inputRef}
         type="text"
         value={open ? search : selected ? `${selected.code} — ${selected.name}` : ''}
-        onFocus={() => { setOpen(true); setSearch('') }}
+        onFocus={handleFocus}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onChange={(e) => setSearch(e.target.value)}
         className="w-full border border-t-line rounded px-2 py-1 text-xs"
         placeholder="Search accounts…"
       />
-      {open && filtered.length > 0 && (
-        <ul className="absolute z-50 w-full bg-t-card border border-t-line rounded shadow-md max-h-48 overflow-y-auto text-xs">
+      {open && filtered.length > 0 && createPortal(
+        <ul
+          style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
+          className="bg-t-card border border-t-line rounded shadow-md max-h-48 overflow-y-auto text-xs"
+        >
           {filtered.map((a) => (
             <li
               key={a.id}
@@ -71,7 +87,8 @@ function AccountSelect({
               {a.code} — {a.name}
             </li>
           ))}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   )
@@ -305,8 +322,8 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     GREEN:  'bg-green-100 text-green-700',
   }
 
-  const incomeAccounts  = accounts.filter((a) => a.type === 'income')
-  const expenseAccounts = accounts.filter((a) => a.type === 'expense')
+  const incomeAccounts  = accounts.filter((a) => a.type === 'income' || a.type === 'vat')
+  const expenseAccounts = accounts.filter((a) => a.type === 'expense' || a.type === 'vat')
 
   return (
     <>

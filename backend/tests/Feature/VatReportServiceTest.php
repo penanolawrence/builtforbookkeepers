@@ -92,7 +92,7 @@ class VatReportServiceTest extends TestCase
         Document::factory()->create([
             'company_id'    => $this->company->id,
             'uploaded_by'   => $uploader->id,
-            'status'        => 'posted',
+            'status'        => 'approved',
             'document_type' => $type,
             'document_date' => $date,
             'amount'        => $amount,
@@ -167,6 +167,14 @@ class VatReportServiceTest extends TestCase
         $this->seedJournalEntry('2026-02-10', outputVat: 200.0, inputVat: 80.0);
         $this->seedJournalEntry('2026-03-10', outputVat: 300.0, inputVat: 120.0);
 
+        // The service reads VAT totals from approved documents, not journal entries.
+        $this->seedDocument('2026-01-10', 'income',  1100.0, 100.0);
+        $this->seedDocument('2026-01-10', 'expense',  550.0,  50.0);
+        $this->seedDocument('2026-02-10', 'income',  2200.0, 200.0);
+        $this->seedDocument('2026-02-10', 'expense',  880.0,  80.0);
+        $this->seedDocument('2026-03-10', 'income',  3300.0, 300.0);
+        $this->seedDocument('2026-03-10', 'expense', 1320.0, 120.0);
+
         $result = $this->service->quarterly($this->company, 1, 2026);
 
         $this->assertCount(3, $result['months']);
@@ -193,7 +201,7 @@ class VatReportServiceTest extends TestCase
         Document::factory()->create([
             'company_id'    => $this->company->id,
             'uploaded_by'   => $uploader->id,
-            'status'        => 'posted',
+            'status'        => 'approved',
             'document_type' => 'income',
             'document_date' => '2026-01-15',
             'amount'        => '11200.00',
@@ -221,7 +229,7 @@ class VatReportServiceTest extends TestCase
         Document::factory()->create([
             'company_id'    => $this->company->id,
             'uploaded_by'   => $uploader->id,
-            'status'        => 'posted',
+            'status'        => 'approved',
             'document_type' => 'expense',
             'document_date' => '2026-01-15',
             'amount'        => '5600.00',
@@ -240,7 +248,7 @@ class VatReportServiceTest extends TestCase
         Document::factory()->create([
             'company_id'    => $otherCompany->id,
             'uploaded_by'   => $uploader->id,
-            'status'        => 'posted',
+            'status'        => 'approved',
             'document_type' => 'income',
             'document_date' => '2026-01-15',
             'amount'        => '11200.00',
@@ -262,7 +270,7 @@ class VatReportServiceTest extends TestCase
         Document::factory()->create([
             'company_id'    => $this->company->id,
             'uploaded_by'   => $uploader->id,
-            'status'        => 'posted',
+            'status'        => 'approved',
             'document_type' => 'expense',
             'document_date' => '2026-01-20',
             'amount'        => '5600.00',
@@ -290,7 +298,7 @@ class VatReportServiceTest extends TestCase
         Document::factory()->create([
             'company_id'    => $this->company->id,
             'uploaded_by'   => $uploader->id,
-            'status'        => 'posted',
+            'status'        => 'approved',
             'document_type' => 'income',
             'document_date' => '2026-01-15',
             'amount'        => '11200.00',
