@@ -79,6 +79,26 @@ class AccountantMerchantTabTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_store_requires_name(): void
+    {
+        $response = $this->actingAs($this->accountant)
+            ->postJson("/api/accountant/clients/{$this->company->id}/merchants", []);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['name']);
+    }
+
+    public function test_update_requires_name(): void
+    {
+        $merchant = Merchant::factory()->create(['company_id' => $this->company->id]);
+
+        $response = $this->actingAs($this->accountant)
+            ->patchJson("/api/accountant/merchants/{$merchant->id}", []);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['name']);
+    }
+
     public function test_update_changes_merchant_fields(): void
     {
         $merchant = Merchant::factory()->create([
