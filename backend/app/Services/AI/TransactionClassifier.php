@@ -254,7 +254,8 @@ class TransactionClassifier
                 "\n\nVAT income rule: This client is VAT-registered and this is an income entry. " .
                 "Always treat the entered amounts as VAT-inclusive. " .
                 "Compute vat_amount = total_amount × 12/112. " .
-                "Create a separate Output VAT line assigned to account 2101.";
+                "Create a separate Output VAT line assigned to account 2101. " .
+                "All other income line amounts must use the net amount (total_amount ÷ 1.12).";
         }
 
         return "The client has manually entered this transaction. " .
