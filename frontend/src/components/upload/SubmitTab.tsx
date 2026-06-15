@@ -16,9 +16,10 @@ interface PendingFile {
 interface Props {
   clientId: string
   docsQueryKey: unknown[]
+  role: 'admin' | 'accountant'
 }
 
-export function SubmitTab({ clientId, docsQueryKey }: Props) {
+export function SubmitTab({ clientId, docsQueryKey, role }: Props) {
   const qc                              = useQueryClient()
   const { toast }                       = useToast()
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])

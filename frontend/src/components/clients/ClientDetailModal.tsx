@@ -913,7 +913,7 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'overview',   label: 'Overview' },
-    { id: 'submit',     label: 'Submit' },
+    { id: 'submit',     label: 'Submit & Review' },
     { id: 'documents',  label: 'Documents' },
     { id: 'merchants',  label: 'Merchants' },
     { id: 'coa',        label: 'Chart of Accounts' },
@@ -1004,6 +1004,7 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
                 <SubmitTab
                   clientId={clientId}
                   docsQueryKey={[role === 'admin' ? 'admin-client-docs' : 'client-modal-docs', clientId]}
+                  role={role}
                 />
               )}
               {tab === 'documents' && (
