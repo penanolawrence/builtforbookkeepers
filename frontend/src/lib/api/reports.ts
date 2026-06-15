@@ -1,5 +1,5 @@
 import api from './client'
-import type { IncomeStatement, ExpenseBreakdown, VatReportType, VatPdfParams, Vat2550mData, Vat2550qData, VatSlsData, VatSlpData } from '@/types/report'
+import type { IncomeStatement, ExpenseBreakdown, VatReportType, VatPdfParams, Vat2550mData, Vat2550qData, VatSlsData, VatSlpData, NonVat2551qData } from '@/types/report'
 
 export async function getIncomeStatement(params: {
   clientId?: string
@@ -92,4 +92,31 @@ export async function fetchVatSlp(params: {
 }): Promise<VatSlpData> {
   const { data } = await api.get('/reports/vat/slp', { params })
   return data
+}
+
+export async function fetchNonVat2551q(params: {
+  clientId?: string
+  quarter: number
+  year: number
+}): Promise<NonVat2551qData> {
+  const { data } = await api.get<NonVat2551qData>('/reports/non-vat/2551q', { params })
+  return data
+}
+
+export async function downloadNonVatPdf(params: {
+  clientId?: string
+  quarter: number
+  year: number
+}): Promise<void> {
+  const { data } = await api.get('/reports/non-vat/2551q/pdf', {
+    params,
+    responseType: 'blob',
+  })
+  const url      = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+  const filename = `2551q-${params.year}-Q${params.quarter}.pdf`
+  const a        = document.createElement('a')
+  a.href         = url
+  a.download     = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }

@@ -27,6 +27,7 @@ export async function getAccountantClients(params?: {
   page?: number
   per_page?: number
   search?: string
+  bir_type?: 'vat' | 'non_vat'
 }): Promise<PagedClients> {
   const { data } = await api.get<PagedClients>('/accountant/clients', { params })
   return data

@@ -7,6 +7,7 @@ export async function getClients(params?: {
   status?: string
   accountantId?: string
   page?: number
+  birType?: 'vat' | 'non_vat'
 }): Promise<{ data: ClientProfile[]; pagination: { currentPage: number; perPage: number; total: number } }> {
   const { data } = await api.get('/admin/clients', { params })
   return data

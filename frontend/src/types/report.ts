@@ -143,3 +143,21 @@ export interface VatSlpData {
   totals: { taxable_amount: number; input_vat: number; total_amount: number }
   company: VatCompany
 }
+
+export interface NonVat2551qMonthRow {
+  month: number
+  label: string
+  gross_receipts: number
+  percentage_tax: number
+}
+
+export interface NonVat2551qData {
+  quarter: number
+  year: number
+  months: NonVat2551qMonthRow[]
+  totals: {
+    gross_receipts: number
+    percentage_tax: number
+  }
+  company: { name: string; tin: string | null; address: string | null }
+}
