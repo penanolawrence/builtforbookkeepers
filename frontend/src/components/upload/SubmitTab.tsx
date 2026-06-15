@@ -7,6 +7,7 @@ import { TwoAreaUpload } from './TwoAreaUpload'
 import { ConfirmUploadDialog } from './ConfirmUploadDialog'
 import { uploadDocument } from '@/lib/api/documents'
 import type { DeclaredType } from '@/types/document'
+import type { Role } from '@/types/auth'
 
 interface PendingFile {
   file: File
@@ -16,10 +17,10 @@ interface PendingFile {
 interface Props {
   clientId: string
   docsQueryKey: unknown[]
-  role: 'admin' | 'accountant'
+  role: Exclude<Role, 'client'>
 }
 
-export function SubmitTab({ clientId, docsQueryKey, role }: Props) {
+export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
   const qc                              = useQueryClient()
   const { toast }                       = useToast()
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
