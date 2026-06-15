@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Events\DocumentStatusChanged;
 use App\Events\QueueItemRemoved;
 use App\Http\Requests\Queue\ApproveItemRequest;
+use App\Jobs\ClassifyWithAI;
+use App\Jobs\PrepareDocumentForAI;
 use App\Http\Requests\Queue\BatchApproveRequest;
 use App\Http\Requests\Queue\RejectItemRequest;
 use App\Http\Requests\Queue\ReturnItemRequest;
@@ -86,6 +88,7 @@ class QueueController extends Controller
             'declaredType'     => $document->document_type,
             'isVat'            => $document->company->bir_type === 'vat',
             'merchantTin'      => $document->merchant?->tin,
+            'note'             => $document->note,
             'journalPreview'   => $journalPreview,
             'transactionLines' => $document->transactionLines->map(fn ($l) => [
                 'id'          => $l->id,
@@ -367,6 +370,28 @@ class QueueController extends Controller
         });
 
         return response()->json(['message' => 'Document rejected.']);
+    }
+
+    public function reclassify(string $id): JsonResponse
+    {
+        $document = Document::with('company')->findOrFail($id);
+        $user     = auth()->user();
+
+        if ($document->status !== 'parked') {
+            return response()->json(['message' => 'Document is not in the queue.'], 422);
+        }
+
+        if ($user->role === 'accountant' && $document->company->accountant_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        if ($document->is_no_receipt) {
+            ClassifyWithAI::dispatch($document, null);
+        } else {
+            PrepareDocumentForAI::dispatch($document);
+        }
+
+        return response()->json(['message' => 'Reclassification queued.'], 202);
     }
 
     public function batchApprove(BatchApproveRequest $request): JsonResponse

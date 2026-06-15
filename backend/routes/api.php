@@ -89,8 +89,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/queue/{id}',           [QueueController::class, 'show']);
         Route::post('/queue/{id}/approve',  [QueueController::class, 'approve']);
         Route::post('/queue/{id}/return',   [QueueController::class, 'return']);
-        Route::post('/queue/{id}/reject',   [QueueController::class, 'reject']);
-        Route::post('/queue/batch-approve', [QueueController::class, 'batchApprove']);
+        Route::post('/queue/{id}/reject',      [QueueController::class, 'reject']);
+        Route::post('/queue/{id}/reclassify', [QueueController::class, 'reclassify']);
+        Route::post('/queue/batch-approve',   [QueueController::class, 'batchApprove']);
 
         Route::get('/adjusting-entries',      [AdjustingEntryController::class, 'index']);
         Route::get('/adjusting-entries/{id}', [AdjustingEntryController::class, 'show']);
