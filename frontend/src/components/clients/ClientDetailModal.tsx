@@ -341,6 +341,7 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
   const [editState, setEditState] = useState<MerchantEditState>({ type: 'none' })
   const [draft,     setDraft]     = useState({ name: '', tin: '', address: '' })
   const [saving,    setSaving]    = useState(false)
+  const [deleting,  setDeleting]  = useState<string | null>(null)
 
   const getFn    = role === 'admin' ? getMerchantsAdmin    : getMerchantsAccountant
   const createFn = role === 'admin' ? createMerchantAdmin  : createMerchantAccountant
@@ -391,13 +392,17 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
     }
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, name: string) {
+    if (!window.confirm(`Delete merchant "${name}"? This cannot be undone.`)) return
+    setDeleting(id)
     try {
       await deleteFn(id)
       qc.invalidateQueries({ queryKey: ['client-merchants', clientId] })
       toast({ title: 'Merchant deleted.' })
     } catch (err: unknown) {
       toast({ title: (err as any)?.response?.data?.message ?? 'Failed to delete merchant.', variant: 'destructive' })
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -452,6 +457,7 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
         <button
           type="button"
           onClick={cancelEdit}
+          aria-label="Cancel"
           style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', fontSize: 12.5, background: 'var(--t-card)', color: 'var(--t-muted)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center' }}
         >
           <X size={13} />
@@ -483,8 +489,8 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
 
         {/* Column headers */}
         <div style={{ ...rowGrid, background: 'var(--t-card-alt)', borderBottom: '1px solid var(--t-line-soft)' }}>
-          {['Name', 'TIN', 'Address', ''].map((h) => (
-            <span key={h} style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-faint)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</span>
+          {['Name', 'TIN', 'Address', ''].map((h, i) => (
+            <span key={i} style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-faint)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</span>
           ))}
         </div>
 
@@ -519,7 +525,8 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
                   <button
                     type="button"
                     onClick={() => startEdit(m)}
-                    style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    disabled={deleting === m.id}
+                    style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-muted)', cursor: deleting === m.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: deleting === m.id ? 0.4 : 1 }}
                     aria-label={`Edit ${m.name}`}
                   >
                     <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -529,8 +536,9 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
                   {m.documentCount === 0 && (
                     <button
                       type="button"
-                      onClick={() => handleDelete(m.id)}
-                      style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-faint)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      onClick={() => handleDelete(m.id, m.name)}
+                      disabled={deleting === m.id}
+                      style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-faint)', cursor: deleting === m.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: deleting === m.id ? 0.4 : 1 }}
                       aria-label={`Delete ${m.name}`}
                     >
                       <X size={13} />
