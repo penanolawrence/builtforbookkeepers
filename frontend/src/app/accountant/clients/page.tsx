@@ -280,7 +280,7 @@ export default function AccountantClientsPage() {
 
       {selectedClient && (
         <ClientDetailModal
-          client={selectedClient}
+          clientId={selectedClient.id}
           onClose={() => setSelectedClient(null)}
         />
       )}
