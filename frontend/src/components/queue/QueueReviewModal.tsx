@@ -305,6 +305,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
       onClose()
     } catch {
       toast({ title: 'Failed to queue reclassification. Please try again.', variant: 'destructive' })
+    } finally {
       setReclassifying(false)
     }
   }
@@ -357,7 +358,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
             <div className="flex items-center gap-3">
               <button
                 onClick={handleReclassify}
-                disabled={reclassifying || isLoading}
+                disabled={reclassifying || submitting || isLoading}
                 className="border border-t-line text-t-muted hover:text-t-ink hover:border-t-ink text-[11px] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50"
               >
                 {reclassifying ? 'Queuing…' : '↻ Re-run AI'}
