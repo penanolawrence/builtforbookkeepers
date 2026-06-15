@@ -201,6 +201,10 @@ export function HelpPageContent() {
               </tbody>
             </table>
 
+            <div className="callout" style={{ marginTop: 20 }}>
+              <strong>Merchant TIN (expense transactions only):</strong> When reviewing an expense, fill in the supplier&apos;s TIN if it is visible on the receipt — it is required for the BIR Summary List of Purchases (SLP) report.
+            </div>
+
             <p className="subhead">What Happens When You Return a Document</p>
             <div className="timeline">
               <div className="tl-item sm-item"><div className="tl-num sm">A</div><div className="tl-body"><h3>Client is notified the next morning</h3><p>They see a &quot;Returned Documents&quot; section with your note and the original image.</p></div></div>
@@ -233,10 +237,10 @@ export function HelpPageContent() {
             </table>
           </div>
 
-          {/* S6: BIR REPORTS */}
+          {/* S6: BIR BOOKS */}
           <div className="section" id="reports">
             <div className="eyebrow"><span className="pip" />Section 6</div>
-            <h2>BIR Books and Reports</h2>
+            <h2>BIR Books</h2>
             <p className="section-lead">Once transactions are posted, the system generates everything automatically. No manual preparation needed.</p>
             <table className="dtable">
               <thead><tr><th>Book / Report</th><th>What it contains</th></tr></thead>
@@ -250,13 +254,45 @@ export function HelpPageContent() {
             <div className="callout">All four books are formatted for <strong>loose-leaf printing and BIR binding</strong>. VAT computation (12/112 split) is handled automatically for VAT-registered clients.</div>
           </div>
 
-          {/* S7: CLIENT SETUP */}
-          <div className="section" id="clients">
+          {/* S7: BIR TAX REPORTS */}
+          <div className="section" id="tax-reports">
             <div className="eyebrow"><span className="pip" />Section 7</div>
+            <h2>BIR Tax Reports</h2>
+            <p className="section-lead">The system generates two types of BIR tax reports depending on the client&apos;s VAT status. Which report a client sees is determined by their BIR type, set when the account was created.</p>
+
+            <p className="subhead">For VAT-registered clients — VAT Report</p>
+            <p style={{ color: 'var(--hiw-muted)', fontSize: 14, marginBottom: 14 }}>Accessible at Reports → VAT Report. A full-page view with four tabs:</p>
+            <table className="dtable">
+              <thead><tr><th>Tab</th><th>What it is</th><th>Filter</th></tr></thead>
+              <tbody>
+                <tr><td>2550M</td><td>Monthly VAT return — taxable sales, output VAT, taxable purchases, input VAT, net VAT payable</td><td>Month + Year</td></tr>
+                <tr><td>2550Q</td><td>Quarterly VAT return — same columns, broken down by month with a quarter total</td><td>Quarter + Year</td></tr>
+                <tr><td>SLS</td><td>Summary List of Sales — one row per income transaction, includes buyer TIN</td><td>Quarter + Year</td></tr>
+                <tr><td>SLP</td><td>Purchases list — one row per expense transaction, includes supplier TIN</td><td>Quarter + Year</td></tr>
+              </tbody>
+            </table>
+            <div className="callout">Select a client (accountant/admin only), choose your filters, click <strong>&quot;View&quot;</strong> to preview on screen, then <strong>&quot;Download PDF&quot;</strong>.</div>
+
+            <p className="subhead" style={{ marginTop: 32 }}>For non-VAT registered clients — Non-VAT Report</p>
+            <p style={{ color: 'var(--hiw-muted)', fontSize: 14, marginBottom: 20 }}>Accessible at Reports → Non-VAT Report. A single-tab page showing Quarterly Percentage Tax at 3% of gross receipts. The table lists gross receipts and percentage tax per month in the quarter, with a quarter total. This covers BIR Form 2551Q, filed quarterly.</p>
+
+            <p className="subhead">Who sees what</p>
+            <table className="dtable">
+              <thead><tr><th>Portal</th><th>What they see</th></tr></thead>
+              <tbody>
+                <tr><td>Accountant / Admin</td><td>Both VAT Report and Non-VAT Report cards are always visible. The client selector on each report page only shows clients of the matching BIR type.</td></tr>
+                <tr><td>Client</td><td>Only their own report card appears, based on their BIR type (VAT-registered or Non-VAT).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* S8: CLIENT SETUP */}
+          <div className="section" id="clients">
+            <div className="eyebrow"><span className="pip" />Section 8</div>
             <h2>Setting Up a New Client</h2>
             <p className="section-lead">You add clients directly from your account. The process takes a few minutes.</p>
             <div className="timeline">
-              <div className="tl-item"><div className="tl-num">1</div><div className="tl-body"><h3>Fill in the client&apos;s details</h3><p>Go to <strong>Clients → Add New Client</strong>. Required: business name, mobile number, VAT status (VAT-registered or Non-VAT), and plan type.</p></div></div>
+              <div className="tl-item"><div className="tl-num">1</div><div className="tl-body"><h3>Fill in the client&apos;s details</h3><p>Go to <strong>Clients → Add New Client</strong>. Required: business name, mobile number, VAT status (VAT-registered or Non-VAT), and plan type. The VAT status also determines which BIR tax report the client can access — VAT-registered clients see the VAT Report, non-VAT clients see the Non-VAT Report.</p></div></div>
               <div className="tl-item"><div className="tl-num">2</div><div className="tl-body"><h3>System generates an invite link</h3><p>A one-time link is created for the client to set their own password. If an email was provided it&apos;s sent automatically. Otherwise copy the link and send via Viber, SMS, or in person.</p></div></div>
               <div className="tl-item"><div className="tl-num">3</div><div className="tl-body"><h3>Client sets up their account</h3><p>The client clicks the link, enters their name and a password, and lands on their dashboard. The link works once and expires after 30 days.</p></div></div>
               <div className="tl-item"><div className="tl-num">4</div><div className="tl-body"><h3>If the client never used the link</h3><p>Go to <strong>Client Profile → Reset Access</strong> to generate a new invite link. Same process as the initial setup.</p></div></div>

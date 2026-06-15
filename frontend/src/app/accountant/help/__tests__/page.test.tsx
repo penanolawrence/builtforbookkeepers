@@ -12,15 +12,36 @@ describe('HelpPage', () => {
     expect(screen.getByText(/Sofia Books/)).toBeInTheDocument()
   })
 
-  it('renders all 7 section headings', () => {
+  it('renders all 8 section headings', () => {
     render(<HelpPage />)
     expect(screen.getByText('Who Does What')).toBeInTheDocument()
     expect(screen.getByText(/How a Transaction Enters/)).toBeInTheDocument()
     expect(screen.getByText(/Flag Colors/)).toBeInTheDocument()
     expect(screen.getByText('The Approval Queue')).toBeInTheDocument()
     expect(screen.getByText(/Correcting a Posted/)).toBeInTheDocument()
-    expect(screen.getByText(/BIR Books/)).toBeInTheDocument()
+    expect(screen.getByText('BIR Books')).toBeInTheDocument()
+    expect(screen.getByText('BIR Tax Reports')).toBeInTheDocument()
     expect(screen.getByText(/Setting Up a New Client/)).toBeInTheDocument()
+  })
+
+  it('renders the Merchant TIN callout in the Approval Queue section', () => {
+    render(<HelpPage />)
+    expect(screen.getByText(/Merchant TIN/)).toBeInTheDocument()
+    expect(screen.getByText(/Summary List of Purchases/)).toBeInTheDocument()
+  })
+
+  it('renders the VAT report tab descriptions', () => {
+    render(<HelpPage />)
+    expect(screen.getByText('2550M')).toBeInTheDocument()
+    expect(screen.getByText('2550Q')).toBeInTheDocument()
+    expect(screen.getByText('SLS')).toBeInTheDocument()
+    expect(screen.getByText('SLP')).toBeInTheDocument()
+  })
+
+  it('renders the Non-VAT 2551Q description', () => {
+    render(<HelpPage />)
+    expect(screen.getByText(/2551Q/)).toBeInTheDocument()
+    expect(screen.getByText(/3% of gross receipts/)).toBeInTheDocument()
   })
 
   it('renders the Quick Reference section', () => {

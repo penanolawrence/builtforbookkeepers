@@ -3,14 +3,15 @@
 import { useEffect, useState } from 'react'
 
 const NAV_ITEMS = [
-  { id: 'overview',     label: 'Who Does What',    num: '1' },
-  { id: 'transaction',  label: 'Transaction Flow',  num: '2' },
-  { id: 'flags',        label: 'Flag Colors',       num: '3' },
-  { id: 'approval',     label: 'Approval Queue',    num: '4' },
-  { id: 'corrections',  label: 'Corrections',       num: '5' },
-  { id: 'reports',      label: 'BIR Reports',       num: '6' },
-  { id: 'clients',      label: 'Client Setup',      num: '7' },
-  { id: 'status',       label: 'Quick Reference',   num: '—' },
+  { id: 'overview',    label: 'Who Does What',    num: '1' },
+  { id: 'transaction', label: 'Transaction Flow',  num: '2' },
+  { id: 'flags',       label: 'Flag Colors',       num: '3' },
+  { id: 'approval',    label: 'Approval Queue',    num: '4' },
+  { id: 'corrections', label: 'Corrections',       num: '5' },
+  { id: 'reports',     label: 'BIR Books',         num: '6' },
+  { id: 'tax-reports', label: 'BIR Tax Reports',   num: '7' },
+  { id: 'clients',     label: 'Client Setup',      num: '8' },
+  { id: 'status',      label: 'Quick Reference',   num: '—' },
 ]
 
 export function HelpSidebarNav() {
