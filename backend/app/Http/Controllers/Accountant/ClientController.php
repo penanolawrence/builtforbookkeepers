@@ -30,7 +30,8 @@ class ClientController extends Controller
         $page    = max(1, (int) $request->get('page', 1));
 
         $baseQuery = Company::where('accountant_id', $user->id)
-            ->when($search !== '', fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', [strtolower("%{$search}%")]));
+            ->when($search !== '', fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', [strtolower("%{$search}%")]))
+            ->when($request->filled('bir_type'), fn ($q) => $q->where('bir_type', $request->bir_type));
 
         // ── Summary (all matching companies, not just this page) ─────────────
         $allIds = (clone $baseQuery)->pluck('id');

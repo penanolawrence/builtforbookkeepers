@@ -36,6 +36,9 @@ class ClientController extends Controller
         if ($request->filled('accountantId')) {
             $query->where('accountant_id', $request->accountantId);
         }
+        if ($request->filled('birType')) {
+            $query->where('bir_type', $request->birType);
+        }
 
         $paginated = $query->paginate(20);
 
