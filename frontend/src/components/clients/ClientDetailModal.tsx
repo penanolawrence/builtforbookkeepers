@@ -315,11 +315,13 @@ function OverviewTab({
   clientId,
   role,
   client,
+  queueCounts,
   onDeactivated,
 }: {
   clientId:       string
   role:           Role
   client:         ClientProfile
+  queueCounts?:   { red: number; yellow: number; green: number }
   onDeactivated:  () => void
 }) {
   const qc        = useQueryClient()
@@ -330,12 +332,6 @@ function OverviewTab({
   const [paymentOpen,   setPaymentOpen]   = useState(false)
   const [inviteLink,    setInviteLink]    = useState<string | null>(null)
   const [linkCopied,    setLinkCopied]    = useState(false)
-
-  const { data: accountantDetail } = useQuery({
-    queryKey: ['accountant-client-detail', clientId],
-    queryFn:  () => getAccountantClient(clientId),
-    enabled:  role === 'accountant',
-  })
 
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -386,6 +382,8 @@ function OverviewTab({
         toast({ title: 'Client suspended.' })
       }
       qc.invalidateQueries({ queryKey: ['client-detail', clientId] })
+    } catch {
+      toast({ title: 'Action failed. Please try again.', variant: 'destructive' })
     } finally { setActionLoading(false) }
   }
 
@@ -395,6 +393,8 @@ function OverviewTab({
       await markClientOverdue(clientId)
       toast({ title: 'Marked as overdue.' })
       qc.invalidateQueries({ queryKey: ['client-detail', clientId] })
+    } catch {
+      toast({ title: 'Action failed. Please try again.', variant: 'destructive' })
     } finally { setActionLoading(false) }
   }
 
@@ -435,7 +435,7 @@ function OverviewTab({
   const statusLabel = STATUS_LABEL[client.clientStatus] ?? client.clientStatus
   const isSuspended = client.clientStatus === 'SUSPENDED'
   const isInactive  = client.clientStatus === 'INACTIVE'
-  const q           = accountantDetail?.queueCounts ?? { red: 0, yellow: 0, green: 0 }
+  const q           = queueCounts ?? { red: 0, yellow: 0, green: 0 }
 
   const inputCls    = 'w-full border border-t-line rounded-lg px-3 py-1.5 text-[13px] text-t-ink outline-none focus:border-t-primary transition-colors'
   const labelCls    = 'block text-xs font-semibold text-t-muted mb-1'
@@ -657,8 +657,8 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
   const [tab, setTab] = useState<Tab>('overview')
 
   const { data: client, isLoading } = useQuery({
-    queryKey: ['client-detail', clientId],
-    queryFn:  () => getClient(clientId),
+    queryKey: [role === 'admin' ? 'admin-client-detail' : 'accountant-client-detail', clientId],
+    queryFn:  () => role === 'admin' ? getClient(clientId) : getAccountantClient(clientId),
   })
 
   const tabs: { id: Tab; label: string }[] = [
@@ -745,6 +745,7 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
                   clientId={clientId}
                   role={role}
                   client={client}
+                  queueCounts={client.queueCounts}
                   onDeactivated={onClose}
                 />
               )}
