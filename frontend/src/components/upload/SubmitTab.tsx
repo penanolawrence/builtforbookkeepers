@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/hooks/use-toast'
 import { TwoAreaUpload } from './TwoAreaUpload'
@@ -70,6 +70,17 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
     queryKey: ['client-queue', clientId],
     queryFn:  () => getQueue({ clientId }),
   })
+
+  const greenIdKey = queueItems
+    .filter((i) => i.flag === 'GREEN')
+    .map((i) => i.documentId)
+    .sort()
+    .join(',')
+
+  useEffect(() => {
+    setSelected(new Set(greenIdKey ? greenIdKey.split(',') : []))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [greenIdKey])
 
   const sorted = [...queueItems].sort(
     (a, b) => (FLAG_ORDER[a.flag] ?? 99) - (FLAG_ORDER[b.flag] ?? 99)

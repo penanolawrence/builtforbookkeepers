@@ -131,18 +131,17 @@ describe('SubmitTab', () => {
     expect(checkboxes).toHaveLength(1)
   })
 
-  it('does not show batch approve bar when nothing selected', () => {
+  it('does not show batch approve bar when no GREEN items exist', () => {
     const { useQuery } = require('@tanstack/react-query')
-    ;(useQuery as jest.Mock).mockReturnValue({ data: [greenItem], isLoading: false })
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [redItem], isLoading: false })
     wrap()
     expect(screen.queryByTestId('batch-approve-bar')).not.toBeInTheDocument()
   })
 
-  it('shows batch approve bar when a GREEN row is checked', () => {
+  it('auto-selects GREEN items and shows batch approve bar on load', () => {
     const { useQuery } = require('@tanstack/react-query')
     ;(useQuery as jest.Mock).mockReturnValue({ data: [greenItem], isLoading: false })
     wrap()
-    fireEvent.click(screen.getByRole('checkbox'))
     expect(screen.getByTestId('batch-approve-bar')).toBeInTheDocument()
     expect(screen.getByText(/1 green item selected/i)).toBeInTheDocument()
   })
@@ -158,7 +157,6 @@ describe('SubmitTab', () => {
     ;(batchApprove as jest.Mock).mockResolvedValue({ approved: ['doc-green'], failed: [] })
 
     wrap()
-    fireEvent.click(screen.getByRole('checkbox'))
     fireEvent.click(screen.getByRole('button', { name: /approve selected/i }))
 
     await waitFor(() => expect(batchApprove).toHaveBeenCalledWith(['doc-green']))
@@ -175,7 +173,6 @@ describe('SubmitTab', () => {
     ;(batchApprove as jest.Mock).mockRejectedValue(new Error('network'))
 
     wrap()
-    fireEvent.click(screen.getByRole('checkbox'))
     fireEvent.click(screen.getByRole('button', { name: /approve selected/i }))
 
     await screen.findByRole('button', { name: /approve selected/i })
