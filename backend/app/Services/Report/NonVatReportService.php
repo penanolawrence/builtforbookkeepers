@@ -21,7 +21,7 @@ class NonVatReportService
 
             $gross = (float) DB::table('documents')
                 ->where('company_id', $company->id)
-                ->where('status', 'approved')
+                ->whereIn('status', ['posted', 'approved'])
                 ->where('document_type', 'income')
                 ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
                 ->sum('amount');

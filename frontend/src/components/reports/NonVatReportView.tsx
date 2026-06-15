@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Breadcrumb } from '@/components/shared/Breadcrumb'
 import { NonVat2551qTable } from '@/components/reports/NonVat2551qTable'
+import { NonVatEmptyState } from '@/components/reports/NonVatEmptyState'
 import { downloadNonVatPdf } from '@/lib/api/reports'
 
 interface Props {
@@ -96,16 +97,25 @@ export function NonVatReportView({ fetchClients, breadcrumbBase }: Props) {
         <div className="w-px h-7 bg-t-line mx-1" />
 
         {/* Client selector — admin/accountant only */}
-        {fetchClients && clients && clients.length > 0 && (
+        {fetchClients && (
           <select
             value={clientId ?? ''}
             onChange={(e) => { setClientId(e.target.value || undefined); handleFilterChange() }}
             className={selectCls}
+            disabled={!clients || clients.length === 0}
           >
-            <option value="">Select client…</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
+            {!clients ? (
+              <option value="">Loading clients…</option>
+            ) : clients.length === 0 ? (
+              <option value="">No non-VAT clients found</option>
+            ) : (
+              <>
+                <option value="">Select client…</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </>
+            )}
           </select>
         )}
 
@@ -175,23 +185,7 @@ export function NonVatReportView({ fetchClients, breadcrumbBase }: Props) {
           <NonVat2551qTable clientId={clientId} quarter={quarter} year={year} />
         </div>
       ) : (
-        <div
-          className="flex flex-col items-center justify-center py-20 rounded-[20px] border border-dashed border-t-line bg-t-surface"
-        >
-          <div className="text-4xl mb-3">📋</div>
-          <p className="text-[14px] font-semibold text-t-ink mb-1">No report generated yet</p>
-          <p className="text-[13px] text-t-muted mb-5">
-            {viewDisabled ? 'Select a client to continue' : 'Select a period and click View'}
-          </p>
-          <button
-            onClick={handleView}
-            disabled={viewDisabled}
-            className="h-10 px-[18px] rounded-[10px] text-[13.5px] font-bold text-white disabled:opacity-40 border-0 cursor-pointer"
-            style={{ background: 'linear-gradient(150deg, var(--t-primary), var(--t-primary-deep))' }}
-          >
-            Generate Report
-          </button>
-        </div>
+        <NonVatEmptyState onGenerate={handleView} disabled={viewDisabled} />
       )}
     </div>
   )

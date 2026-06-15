@@ -54,10 +54,11 @@ class VatReportService
         $rows = DB::table('documents')
             ->leftJoin('merchants', 'merchants.id', '=', 'documents.merchant_id')
             ->where('documents.company_id', $company->id)
-            ->where('documents.status', 'approved')
+            ->whereIn('documents.status', ['posted', 'approved'])
             ->where('documents.document_type', 'income')
             ->whereBetween('documents.document_date', [$start->toDateString(), $end->toDateString()])
             ->orderBy('documents.document_date')
+            ->orderBy('documents.ref_number')
             ->select([
                 'documents.document_date',
                 'documents.ref_number',
@@ -98,7 +99,7 @@ class VatReportService
         $rows = DB::table('documents')
             ->leftJoin('merchants', 'merchants.id', '=', 'documents.merchant_id')
             ->where('documents.company_id', $company->id)
-            ->where('documents.status', 'approved')
+            ->whereIn('documents.status', ['posted', 'approved'])
             ->where('documents.document_type', 'expense')
             ->whereBetween('documents.document_date', [$start->toDateString(), $end->toDateString()])
             ->orderBy('documents.document_date')
@@ -139,21 +140,21 @@ class VatReportService
     {
         $outputVat = (float) DB::table('documents')
             ->where('company_id', $company->id)
-            ->where('status', 'approved')
+            ->whereIn('status', ['posted', 'approved'])
             ->where('document_type', 'income')
             ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
             ->sum('vat_amount');
 
         $inputVat = (float) DB::table('documents')
             ->where('company_id', $company->id)
-            ->where('status', 'approved')
+            ->whereIn('status', ['posted', 'approved'])
             ->where('document_type', 'expense')
             ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
             ->sum('vat_amount');
 
         $taxableSales = (float) DB::table('documents')
             ->where('company_id', $company->id)
-            ->where('status', 'approved')
+            ->whereIn('status', ['posted', 'approved'])
             ->where('document_type', 'income')
             ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
             ->selectRaw('COALESCE(SUM(amount - COALESCE(vat_amount, 0)), 0) as total')
@@ -161,7 +162,7 @@ class VatReportService
 
         $taxablePurchases = (float) DB::table('documents')
             ->where('company_id', $company->id)
-            ->where('status', 'approved')
+            ->whereIn('status', ['posted', 'approved'])
             ->where('document_type', 'expense')
             ->whereBetween('document_date', [$start->toDateString(), $end->toDateString()])
             ->selectRaw('COALESCE(SUM(amount - COALESCE(vat_amount, 0)), 0) as total')

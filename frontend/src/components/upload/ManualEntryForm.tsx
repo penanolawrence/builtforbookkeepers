@@ -24,7 +24,7 @@ const today = () => new Date().toISOString().split('T')[0]
 const emptyLine = (id: number): Line => ({ id, description: '', amount: '' })
 
 export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
-  const [type, setType]               = useState<DeclaredType>('expense')
+  const [type, setType]               = useState<DeclaredType>('income')
   const [date, setDate]               = useState(today())
   const [paymentMethod, setPaymentMethod] = useState('Cash')
   const [lines, setLines]             = useState<Line[]>([emptyLine(1)])
@@ -45,8 +45,14 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
   const updateLine = useCallback((id: number, field: keyof Omit<Line, 'id'>, value: string) => {
     setLines((prev) => {
       const mapped = prev.map((l) => (l.id === id ? { ...l, [field]: value } : l))
-      const filled = mapped.filter((l) => !isTrailing(l))
-      return [...filled, emptyLine(nextIdRef.current++)]
+      // Always keep the line being edited (even if it becomes trailing) to preserve focus.
+      // Remove other trailing lines so there's only one placeholder at a time.
+      const kept = mapped.filter((l) => l.id === id || !isTrailing(l))
+      const last = kept[kept.length - 1]
+      if (!isTrailing(last)) {
+        return [...kept, emptyLine(nextIdRef.current++)]
+      }
+      return kept
     })
   }, [])
 
@@ -133,7 +139,7 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
 
           {/* Type toggle */}
           <div className="grid grid-cols-2 gap-2">
-            {(['expense', 'income'] as DeclaredType[]).map((t) => {
+            {(['income', 'expense'] as DeclaredType[]).map((t) => {
               const active = type === t
               const cls = t === 'expense'
                 ? active ? 'bg-red-50 border-red-500 text-red-700 font-bold' : 'border-gray-200 text-gray-400'

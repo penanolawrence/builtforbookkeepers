@@ -29,6 +29,7 @@ export interface JournalPreviewLine {
 export interface QueueItemDetail extends QueueItem {
   isVat: boolean
   merchantTin?: string | null
+  note?: string | null
   journalPreview: JournalPreviewLine[]
   transactionLines: TransactionLine[]
 }

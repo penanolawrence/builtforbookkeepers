@@ -359,7 +359,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
               <button
                 onClick={handleReclassify}
                 disabled={reclassifying || submitting || isLoading}
-                className="border border-t-line text-t-muted hover:text-t-ink hover:border-t-ink text-[11px] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50"
+                className="bg-violet-50 border border-violet-300 text-violet-700 hover:bg-violet-100 text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50"
               >
                 {reclassifying ? 'Queuing…' : '↻ Re-run AI'}
               </button>

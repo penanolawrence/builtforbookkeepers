@@ -111,12 +111,16 @@ class ClassifyWithAI implements ShouldQueue
             ]);
         }
 
-        // Apply cleaned fields from Claude (OCR path only)
+        // Apply vat_amount from Claude for both OCR and manual paths
+        if (!empty($classification['document'])) {
+            $this->document->vat_amount = $classification['document']['vat_amount'] ?? $this->document->vat_amount;
+        }
+
+        // Apply remaining cleaned fields from Claude (OCR path only)
         if (!$this->document->is_no_receipt && !empty($classification['document'])) {
             $doc = $classification['document'];
-            $this->document->merchant_name = $doc['merchant']     ?? $this->document->merchant_name;
-            $this->document->document_date = $doc['date']         ?? $this->document->document_date;
-            $this->document->vat_amount    = $doc['vat_amount']   ?? $this->document->vat_amount;
+            $this->document->merchant_name = $doc['merchant'] ?? $this->document->merchant_name;
+            $this->document->document_date = $doc['date']     ?? $this->document->document_date;
 
             if (!empty($doc['payment_method'])) {
                 $this->document->payment_method = $doc['payment_method'];
