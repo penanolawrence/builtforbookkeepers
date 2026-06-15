@@ -74,7 +74,8 @@ class AuthController extends Controller
         ];
 
         if ($user->role === 'client') {
-            $data['tin'] = $user->company?->tin;
+            $data['tin']     = $user->company?->tin;
+            $data['birType'] = $user->company?->bir_type;
         }
 
         return response()->json($data);

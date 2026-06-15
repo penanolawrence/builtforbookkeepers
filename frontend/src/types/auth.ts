@@ -11,4 +11,5 @@ export interface User {
   tin: string | null
   companyId: string | null
   status: AccountStatus
+  birType?: 'vat' | 'non_vat'
 }
