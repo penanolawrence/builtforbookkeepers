@@ -120,5 +120,6 @@ describe('SubmitTab', () => {
     fireEvent.click(screen.getByTestId('queue-row'))
     fireEvent.click(screen.getByTestId('mock-remove'))
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['client-queue', 'c1'] })
+    expect(screen.queryByTestId('queue-review-modal')).not.toBeInTheDocument()
   })
 })

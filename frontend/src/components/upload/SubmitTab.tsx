@@ -38,7 +38,7 @@ function fmtPeso(n: number | null) {
 
 function fmtShort(s: string | null) {
   if (!s) return '—'
-  return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
 const thStyle: React.CSSProperties = {
