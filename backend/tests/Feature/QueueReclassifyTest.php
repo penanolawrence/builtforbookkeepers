@@ -78,6 +78,7 @@ class QueueReclassifyTest extends TestCase
     {
         Queue::fake();
 
+        /** @var User $other */
         $other = User::factory()->create(['role' => 'accountant']);
 
         $response = $this->actingAs($other)
@@ -91,12 +92,13 @@ class QueueReclassifyTest extends TestCase
     {
         Queue::fake();
 
+        /** @var User $admin */
         $admin = User::factory()->create(['role' => 'admin']);
 
         $response = $this->actingAs($admin)
             ->postJson("/api/queue/{$this->document->id}/reclassify");
 
         $response->assertStatus(202);
-        Queue::assertPushed(PrepareDocumentForAI::class);
+        Queue::assertPushed(PrepareDocumentForAI::class, fn ($job) => $job->document->id === $this->document->id);
     }
 }
