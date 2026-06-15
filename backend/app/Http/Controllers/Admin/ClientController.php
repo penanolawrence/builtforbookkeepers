@@ -389,12 +389,14 @@ class ClientController extends Controller
             'address' => $request->address,
         ]);
 
+        $merchant->loadCount('documents');
+
         return response()->json([
             'id'            => $merchant->id,
             'name'          => $merchant->name,
             'tin'           => $merchant->tin,
             'address'       => $merchant->address,
-            'documentCount' => Document::where('merchant_id', $merchant->id)->count(),
+            'documentCount' => $merchant->documents_count,
         ]);
     }
 
