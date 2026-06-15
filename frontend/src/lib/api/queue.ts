@@ -43,6 +43,10 @@ export async function rejectItem(id: string, reason: string): Promise<void> {
   await api.post(`/queue/${id}/reject`, { reason })
 }
 
+export async function reclassifyItem(id: string): Promise<void> {
+  await api.post(`/queue/${id}/reclassify`)
+}
+
 export async function batchApprove(
   ids: string[]
 ): Promise<{ approved: string[]; failed: { id: string; reason: string }[] }> {

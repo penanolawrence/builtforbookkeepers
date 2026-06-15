@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { getQueueItem, approveItem, returnItem, rejectItem } from '@/lib/api/queue'
+import { getQueueItem, approveItem, returnItem, rejectItem, reclassifyItem } from '@/lib/api/queue'
 import { getSignedUrl } from '@/lib/api/documents'
 import { getAccounts } from '@/lib/api/accounts'
 import type { Account } from '@/types/admin'
@@ -75,13 +75,15 @@ function AccountSelect({
       />
       {open && filtered.length > 0 && createPortal(
         <ul
-          style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
+          style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 99999, pointerEvents: 'auto' }}
           className="bg-t-card border border-t-line rounded shadow-md max-h-48 overflow-y-auto text-xs"
+          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation() }}
+          onWheel={(e) => { e.stopPropagation(); e.currentTarget.scrollTop += e.deltaMode === 0 ? e.deltaY : e.deltaY * 32 }}
         >
           {filtered.map((a) => (
             <li
               key={a.id}
-              onMouseDown={() => { onChange(a.id, a.code); setOpen(false) }}
+              onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); onChange(a.id, a.code); setOpen(false) }}
               className="px-2 py-1.5 hover:bg-t-surface cursor-pointer"
             >
               {a.code} — {a.name}
@@ -224,6 +226,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
   const [rejectReason, setRejectReason]   = useState('')
   const [returnNote, setReturnNote]       = useState('')
   const [submitting, setSubmitting]       = useState(false)
+  const [reclassifying, setReclassifying] = useState(false)
 
   function updateLine(index: number, patch: Partial<LineState>) {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
@@ -294,6 +297,18 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     }
   }
 
+  const handleReclassify = async () => {
+    setReclassifying(true)
+    try {
+      await reclassifyItem(documentId)
+      toast({ title: 'Reclassifying… reopen this item once the AI finishes.' })
+      onClose()
+    } catch {
+      toast({ title: 'Failed to queue reclassification. Please try again.', variant: 'destructive' })
+      setReclassifying(false)
+    }
+  }
+
   const handleReturn = async () => {
     if (!returnNote.trim()) return
     setSubmitting(true)
@@ -339,11 +354,20 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
               </div>
               <div className="text-[11px] text-t-muted mt-0.5">{item?.clientName}</div>
             </div>
-            {item?.flag && (
-              <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full ${flagCls[item.flag] ?? ''}`}>
-                {item.flag}
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleReclassify}
+                disabled={reclassifying || isLoading}
+                className="border border-t-line text-t-muted hover:text-t-ink hover:border-t-ink text-[11px] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50"
+              >
+                {reclassifying ? 'Queuing…' : '↻ Re-run AI'}
+              </button>
+              {item?.flag && (
+                <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full ${flagCls[item.flag] ?? ''}`}>
+                  {item.flag}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Body */}
@@ -465,6 +489,18 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                         onChange={(e) => setMerchantTin(e.target.value)}
                         placeholder="e.g. 123-456-789-000"
                         className="w-full border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-ink"
+                      />
+                    </div>
+                  )}
+
+                  {item?.note && (
+                    <div>
+                      <label className="block text-[11px] text-t-muted mb-1">Client Notes</label>
+                      <textarea
+                        value={item.note}
+                        disabled
+                        rows={3}
+                        className="w-full border border-t-line rounded-md px-2.5 py-1.5 text-xs text-t-muted bg-t-surface resize-none cursor-default"
                       />
                     </div>
                   )}
