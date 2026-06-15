@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { getAccounts } from '@/lib/api/accounts'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 type ReportType = 'income-statement' | 'expense-breakdown' | 'bir'
 
@@ -25,6 +26,7 @@ const REPORT_LABELS: Record<ReportType, string> = {
 
 export default function ClientReportsPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [pending,   setPending]   = useState<ReportType | null>(null)
   const [start,     setStart]     = useState(defaultStart())
   const [end,       setEnd]       = useState(defaultEnd())
@@ -104,16 +106,31 @@ export default function ClientReportsPage() {
           <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Open Books →</div>
         </div>
 
-        <Link href="/client/reports/vat" className={cardCls}>
-          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📑</div>
-          <div className="flex-1 min-w-0 md:flex-none md:w-full">
-            <div className="text-sm font-bold text-t-ink mb-1">VAT Report</div>
-            <div className="text-xs text-t-muted leading-relaxed">
-              BIR-compliant VAT returns (2550M, 2550Q) and summary lists of sales and purchases.
+        {user?.birType === 'vat' && (
+          <Link href="/client/reports/vat" className={cardCls}>
+            <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📑</div>
+            <div className="flex-1 min-w-0 md:flex-none md:w-full">
+              <div className="text-sm font-bold text-t-ink mb-1">VAT Report</div>
+              <div className="text-xs text-t-muted leading-relaxed">
+                BIR-compliant VAT returns (2550M, 2550Q) and summary lists of sales and purchases.
+              </div>
             </div>
-          </div>
-          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Download PDF →</div>
-        </Link>
+            <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Download PDF →</div>
+          </Link>
+        )}
+
+        {user?.birType === 'non_vat' && (
+          <Link href="/client/reports/non-vat" className={cardCls}>
+            <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📋</div>
+            <div className="flex-1 min-w-0 md:flex-none md:w-full">
+              <div className="text-sm font-bold text-t-ink mb-1">Non-VAT Report</div>
+              <div className="text-xs text-t-muted leading-relaxed">
+                BIR Quarterly Percentage Tax (2551Q) — 3% on gross receipts each quarter.
+              </div>
+            </div>
+            <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Download PDF →</div>
+          </Link>
+        )}
       </div>
 
       <Dialog open={!!pending} onOpenChange={(o) => { if (!o) setPending(null) }}>

@@ -95,6 +95,15 @@ export default function AdminReportsPage() {
           </div>
           <div className="mt-3.5 text-xs font-bold text-t-primary">Open Report →</div>
         </Link>
+
+        <Link href="/admin/reports/non-vat" className={cardCls}>
+          <div className="text-[28px] mb-3">📋</div>
+          <div className="text-sm font-bold text-t-ink mb-1">Non-VAT Report</div>
+          <div className="text-xs text-t-muted leading-relaxed flex-1">
+            BIR Quarterly Percentage Tax (2551Q) — 3% on gross receipts. For non-VAT registered clients.
+          </div>
+          <div className="mt-3.5 text-xs font-bold text-t-primary">Open Report →</div>
+        </Link>
       </div>
 
       <Dialog open={!!pending} onOpenChange={(o) => { if (!o) setPending(null) }}>
