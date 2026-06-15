@@ -1,8 +1,36 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { SubmitTab } from '../SubmitTab'
 
+const redItem = {
+  documentId: 'doc-red',
+  clientId: 'c1',
+  clientName: 'ABC',
+  accountantName: null,
+  flag: 'RED' as const,
+  anomalyReasons: ['Amount mismatch'],
+  merchantName: 'Meralco',
+  amount: 4200,
+  vatAmount: null,
+  date: '2026-06-10',
+  category: null,
+  isNoReceipt: false,
+  isOcrFailed: false,
+  refNumber: '#1042',
+  paymentMethod: null,
+  declaredType: 'expense' as const,
+}
+const greenItem = {
+  ...redItem,
+  documentId: 'doc-green',
+  flag: 'GREEN' as const,
+  anomalyReasons: [],
+  merchantName: 'SM Supermarket',
+  amount: 650,
+  refNumber: '#1040',
+}
+
 jest.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: jest.fn() }),
+  useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
   useQuery: jest.fn(() => ({ data: [], isLoading: false })),
 }))
 jest.mock('@/lib/api/queue', () => ({
@@ -49,5 +77,48 @@ describe('SubmitTab', () => {
   it('accepts role prop without error', () => {
     expect(() => wrap('admin')).not.toThrow()
     expect(() => wrap('accountant')).not.toThrow()
+  })
+
+  it('shows loading skeleton when queue is loading', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    ;(useQuery as jest.Mock).mockReturnValue({ data: undefined, isLoading: true })
+    wrap()
+    expect(screen.getByTestId('queue-skeleton')).toBeInTheDocument()
+  })
+
+  it('shows empty state when no queue items', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [], isLoading: false })
+    wrap()
+    expect(screen.getByText('No documents pending review.')).toBeInTheDocument()
+  })
+
+  it('renders queue items sorted RED before GREEN', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [greenItem, redItem], isLoading: false })
+    wrap()
+    const rows = screen.getAllByTestId('queue-row')
+    expect(rows[0]).toHaveAttribute('data-flag', 'RED')
+    expect(rows[1]).toHaveAttribute('data-flag', 'GREEN')
+  })
+
+  it('opens QueueReviewModal when a row is clicked', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [redItem], isLoading: false })
+    wrap()
+    fireEvent.click(screen.getByTestId('queue-row'))
+    expect(screen.getByTestId('queue-review-modal')).toBeInTheDocument()
+    expect(screen.getByTestId('queue-review-modal')).toHaveAttribute('data-doc-id', 'doc-red')
+  })
+
+  it('invalidates client-queue when item is removed from the modal', () => {
+    const invalidateQueries = jest.fn()
+    const { useQuery, useQueryClient } = require('@tanstack/react-query')
+    ;(useQueryClient as jest.Mock).mockReturnValue({ invalidateQueries })
+    ;(useQuery as jest.Mock).mockReturnValue({ data: [redItem], isLoading: false })
+    wrap()
+    fireEvent.click(screen.getByTestId('queue-row'))
+    fireEvent.click(screen.getByTestId('mock-remove'))
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['client-queue', 'c1'] })
   })
 })
