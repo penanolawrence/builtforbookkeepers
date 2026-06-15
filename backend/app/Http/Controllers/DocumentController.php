@@ -298,6 +298,7 @@ class DocumentController extends Controller
             'document_date'     => $request->date,
             'amount'            => $totalAmount,
             'payment_method'    => $request->payment_method,
+            'note'              => $request->note,
         ]);
 
         // Pre-create lines (description + amount only; AI will assign account codes)

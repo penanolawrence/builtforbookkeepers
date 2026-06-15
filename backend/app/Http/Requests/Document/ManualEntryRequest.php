@@ -21,6 +21,7 @@ class ManualEntryRequest extends FormRequest
             'lines.*.description'     => ['required', 'string', 'max:500'],
             'lines.*.amount'          => ['required', 'numeric', 'min:0.01'],
             'client_id'               => ['nullable', 'string', 'exists:companies,id'],
+            'note'                    => ['nullable', 'string', 'max:5000'],
         ];
     }
 

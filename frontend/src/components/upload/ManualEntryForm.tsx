@@ -27,6 +27,7 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
   const [type, setType]               = useState<DeclaredType>('expense')
   const [date, setDate]               = useState(today())
   const [paymentMethod, setPaymentMethod] = useState('Cash')
+  const [note, setNote]               = useState('')
   const [lines, setLines]             = useState<Line[]>([emptyLine(1)])
   const nextIdRef                     = useRef(2)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -68,6 +69,7 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
     setType('expense')
     setDate(today())
     setPaymentMethod('Cash')
+    setNote('')
     setLines([emptyLine(1)])
     nextIdRef.current = 2
     onClose()
@@ -86,6 +88,7 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
           amount:      parseFloat(l.amount),
         })),
         clientId,
+        note: note.trim() || undefined,
       })
       handleClose()
       onSuccess(documentId)
@@ -234,6 +237,20 @@ export function ManualEntryForm({ open, onClose, onSuccess, clientId }: Props) {
               <span className={cn('text-base font-bold', totalCls)}>{fmt(total)}</span>
             </div>
           )}
+
+          {/* Context note for AI */}
+          <div>
+            <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              Notes <span className="normal-case font-normal text-gray-400">(optional — helps AI classify)</span>
+            </div>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. Meralco bill for May, VAT-inclusive"
+              rows={2}
+              className="w-full border-[1.5px] border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 outline-none focus:border-indigo-300 transition-colors resize-none"
+            />
+          </div>
 
           <p className="text-[11px] text-gray-400 italic">AI will assign account codes automatically.</p>
 
