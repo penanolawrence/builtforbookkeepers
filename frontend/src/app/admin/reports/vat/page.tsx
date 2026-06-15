@@ -8,7 +8,7 @@ export default function AdminVatReportPage() {
   return (
     <Suspense>
       <VatReportView
-        fetchClients={() => getClients().then((r: any) => r.data ?? [])}
+        fetchClients={() => getClients({ birType: 'vat' }).then((r: any) => r.data ?? [])}
         breadcrumbBase={{ label: 'Reports', href: '/admin/reports' }}
       />
     </Suspense>

@@ -8,7 +8,7 @@ export default function AccountantVatReportPage() {
   return (
     <Suspense>
       <VatReportView
-        fetchClients={() => getAccountantClients({ per_page: 100 }).then((r) => r.data)}
+        fetchClients={() => getAccountantClients({ per_page: 100, bir_type: 'vat' }).then((r) => r.data)}
         breadcrumbBase={{ label: 'Reports', href: '/accountant/reports' }}
       />
     </Suspense>
