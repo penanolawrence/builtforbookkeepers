@@ -27,7 +27,7 @@ describe('HelpPage', () => {
   it('renders the Merchant TIN callout in the Approval Queue section', () => {
     render(<HelpPage />)
     expect(screen.getByText(/Merchant TIN/)).toBeInTheDocument()
-    expect(screen.getByText(/Summary List of Purchases/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Summary List of Purchases/).length).toBeGreaterThan(0)
   })
 
   it('renders the VAT report tab descriptions', () => {
@@ -40,7 +40,7 @@ describe('HelpPage', () => {
 
   it('renders the Non-VAT 2551Q description', () => {
     render(<HelpPage />)
-    expect(screen.getByText(/2551Q/)).toBeInTheDocument()
+    expect(screen.getAllByText(/2551Q/).length).toBeGreaterThan(0)
     expect(screen.getByText(/3% of gross receipts/)).toBeInTheDocument()
   })
 

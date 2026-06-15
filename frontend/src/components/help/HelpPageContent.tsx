@@ -268,12 +268,12 @@ export function HelpPageContent() {
                 <tr><td>2550M</td><td>Monthly VAT return — taxable sales, output VAT, taxable purchases, input VAT, net VAT payable</td><td>Month + Year</td></tr>
                 <tr><td>2550Q</td><td>Quarterly VAT return — same columns, broken down by month with a quarter total</td><td>Quarter + Year</td></tr>
                 <tr><td>SLS</td><td>Summary List of Sales — one row per income transaction, includes buyer TIN</td><td>Quarter + Year</td></tr>
-                <tr><td>SLP</td><td>Purchases list — one row per expense transaction, includes supplier TIN</td><td>Quarter + Year</td></tr>
+                <tr><td>SLP</td><td>Summary List of Purchases — one row per expense transaction, includes supplier TIN</td><td>Quarter + Year</td></tr>
               </tbody>
             </table>
             <div className="callout">Select a client (accountant/admin only), choose your filters, click <strong>&quot;View&quot;</strong> to preview on screen, then <strong>&quot;Download PDF&quot;</strong>.</div>
 
-            <p className="subhead" style={{ marginTop: 32 }}>For non-VAT registered clients — Non-VAT Report</p>
+            <p className="subhead" style={{ marginTop: 32 }}>For non-VAT registered clients — Non-VAT Report (2551Q)</p>
             <p style={{ color: 'var(--hiw-muted)', fontSize: 14, marginBottom: 20 }}>Accessible at Reports → Non-VAT Report. A single-tab page showing Quarterly Percentage Tax at 3% of gross receipts. The table lists gross receipts and percentage tax per month in the quarter, with a quarter total. This covers BIR Form 2551Q, filed quarterly.</p>
 
             <p className="subhead">Who sees what</p>
@@ -292,7 +292,7 @@ export function HelpPageContent() {
             <h2>Setting Up a New Client</h2>
             <p className="section-lead">You add clients directly from your account. The process takes a few minutes.</p>
             <div className="timeline">
-              <div className="tl-item"><div className="tl-num">1</div><div className="tl-body"><h3>Fill in the client&apos;s details</h3><p>Go to <strong>Clients → Add New Client</strong>. Required: business name, mobile number, VAT status (VAT-registered or Non-VAT), and plan type. The VAT status also determines which BIR tax report the client can access — VAT-registered clients see the VAT Report, non-VAT clients see the Non-VAT Report.</p></div></div>
+              <div className="tl-item"><div className="tl-num">1</div><div className="tl-body"><h3>Fill in the client&apos;s details</h3><p>Go to <strong>Clients → Add New Client</strong>. Required: business name, mobile number, VAT status (VAT-registered or Non-VAT), and plan type. The VAT status also determines which BIR tax report the client can access — VAT-registered clients see the VAT Report, non-VAT clients see the Non-VAT Report (2551Q).</p></div></div>
               <div className="tl-item"><div className="tl-num">2</div><div className="tl-body"><h3>System generates an invite link</h3><p>A one-time link is created for the client to set their own password. If an email was provided it&apos;s sent automatically. Otherwise copy the link and send via Viber, SMS, or in person.</p></div></div>
               <div className="tl-item"><div className="tl-num">3</div><div className="tl-body"><h3>Client sets up their account</h3><p>The client clicks the link, enters their name and a password, and lands on their dashboard. The link works once and expires after 30 days.</p></div></div>
               <div className="tl-item"><div className="tl-num">4</div><div className="tl-body"><h3>If the client never used the link</h3><p>Go to <strong>Client Profile → Reset Access</strong> to generate a new invite link. Same process as the initial setup.</p></div></div>
