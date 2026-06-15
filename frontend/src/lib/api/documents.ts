@@ -69,7 +69,6 @@ export async function createManualEntry(payload: {
   paymentMethod: string
   lines: ManualEntryLine[]
   clientId?: string
-  note?: string
 }): Promise<{ documentId: string }> {
   const { data } = await api.post<{ documentId: string }>('/documents/manual', {
     declared_type:  payload.declaredType,
@@ -80,7 +79,6 @@ export async function createManualEntry(payload: {
       amount:      l.amount,
     })),
     ...(payload.clientId ? { client_id: payload.clientId } : {}),
-    ...(payload.note     ? { note: payload.note }          : {}),
   })
   return data
 }
