@@ -8,6 +8,7 @@ use App\Mail\ClientInviteMail;
 use App\Models\AdjustingEntry;
 use App\Models\Company;
 use App\Models\Document;
+use App\Models\Merchant;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Accounting\ChartOfAccountsService;
@@ -243,6 +244,126 @@ class ClientController extends Controller
             'pendingEntries' => $pendingEntries,
             'draftEntries'   => $draftEntries,
         ]);
+    }
+
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $user    = auth()->user();
+        $company = Company::findOrFail($id);
+
+        if ($company->accountant_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $company->update(array_filter([
+            'name'           => $request->businessName,
+            'mobile'         => $request->mobile,
+            'email'          => $request->email,
+            'tin'            => $request->tin,
+            'contact_person' => $request->contactPerson,
+        ], fn ($v) => !is_null($v)));
+
+        $client = $company->users()->where('role', 'client')->first();
+        if ($client && $request->filled('email')) {
+            $client->update(['email' => $request->email]);
+        }
+
+        return response()->json(['message' => 'Updated.']);
+    }
+
+    public function merchants(string $id): JsonResponse
+    {
+        $user    = auth()->user();
+        $company = Company::findOrFail($id);
+
+        if ($company->accountant_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $merchants = Merchant::where('company_id', $company->id)
+            ->withCount('documents')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($m) => [
+                'id'            => $m->id,
+                'name'          => $m->name,
+                'tin'           => $m->tin,
+                'address'       => $m->address,
+                'documentCount' => $m->documents_count,
+            ]);
+
+        return response()->json($merchants);
+    }
+
+    public function storeMerchant(Request $request, string $id): JsonResponse
+    {
+        $request->validate(['name' => 'required|string|max:255']);
+
+        $user    = auth()->user();
+        $company = Company::findOrFail($id);
+
+        if ($company->accountant_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $merchant = Merchant::create([
+            'company_id' => $company->id,
+            'name'       => $request->name,
+            'tin'        => $request->tin,
+            'address'    => $request->address,
+        ]);
+
+        return response()->json([
+            'id'            => $merchant->id,
+            'name'          => $merchant->name,
+            'tin'           => $merchant->tin,
+            'address'       => $merchant->address,
+            'documentCount' => 0,
+        ], 201);
+    }
+
+    public function updateMerchant(Request $request, string $id): JsonResponse
+    {
+        $request->validate(['name' => 'required|string|max:255']);
+
+        $merchant = Merchant::with('company')->findOrFail($id);
+
+        if ($merchant->company->accountant_id !== auth()->id()) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $merchant->update([
+            'name'    => $request->name,
+            'tin'     => $request->tin,
+            'address' => $request->address,
+        ]);
+
+        $merchant->loadCount('documents');
+
+        return response()->json([
+            'id'            => $merchant->id,
+            'name'          => $merchant->name,
+            'tin'           => $merchant->tin,
+            'address'       => $merchant->address,
+            'documentCount' => $merchant->documents_count,
+        ]);
+    }
+
+    public function destroyMerchant(string $id): JsonResponse
+    {
+        $merchant = Merchant::with('company')->findOrFail($id);
+
+        if ($merchant->company->accountant_id !== auth()->id()) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        if (Document::where('merchant_id', $merchant->id)->exists()) {
+            return response()->json(['message' => 'Cannot delete a merchant with linked documents.'], 422);
+        }
+
+        $merchant->delete();
+
+        return response()->json(['message' => 'Merchant deleted.']);
     }
 
     public function getDocuments(Request $request, string $id): JsonResponse

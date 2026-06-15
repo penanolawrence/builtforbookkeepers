@@ -82,6 +82,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/accountant/clients/{id}',            [Accountant\ClientController::class, 'show']);
         Route::patch('/accountant/clients/{id}',          [Accountant\ClientController::class, 'update']);
         Route::get('/accountant/clients/{id}/documents',  [Accountant\ClientController::class, 'getDocuments']);
+        Route::get('/accountant/clients/{id}/merchants',  [Accountant\ClientController::class, 'merchants']);
+        Route::post('/accountant/clients/{id}/merchants', [Accountant\ClientController::class, 'storeMerchant']);
+        Route::patch('/accountant/merchants/{id}',        [Accountant\ClientController::class, 'updateMerchant']);
+        Route::delete('/accountant/merchants/{id}',       [Accountant\ClientController::class, 'destroyMerchant']);
     });
 
     // Accountant + Admin shared routes
