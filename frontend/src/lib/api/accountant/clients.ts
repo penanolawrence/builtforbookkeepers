@@ -42,10 +42,50 @@ export async function getAccountantClient(id: string): Promise<ClientProfile & {
   return data
 }
 
+export async function updateAccountantClient(
+  id: string,
+  payload: { name?: string; mobile?: string; email?: string; contactPerson?: string; tin?: string }
+): Promise<void> {
+  await api.patch(`/accountant/clients/${id}`, payload)
+}
+
 export async function getAccountantClientDocuments(
   id: string,
   params?: { status?: string; type?: string; start?: string; end?: string; page?: number; per_page?: number }
 ): Promise<PagedDocs> {
   const { data } = await api.get<PagedDocs>(`/accountant/clients/${id}/documents`, { params })
   return data
+}
+
+export interface MerchantData {
+  id: string
+  name: string
+  tin: string | null
+  address: string | null
+  documentCount: number
+}
+
+export async function getMerchants(clientId: string): Promise<MerchantData[]> {
+  const { data } = await api.get<MerchantData[]>(`/accountant/clients/${clientId}/merchants`)
+  return data
+}
+
+export async function createMerchant(
+  clientId: string,
+  payload: { name: string; tin?: string; address?: string }
+): Promise<MerchantData> {
+  const { data } = await api.post<MerchantData>(`/accountant/clients/${clientId}/merchants`, payload)
+  return data
+}
+
+export async function updateMerchant(
+  merchantId: string,
+  payload: { name: string; tin?: string; address?: string }
+): Promise<MerchantData> {
+  const { data } = await api.patch<MerchantData>(`/accountant/merchants/${merchantId}`, payload)
+  return data
+}
+
+export async function deleteMerchant(merchantId: string): Promise<void> {
+  await api.delete(`/accountant/merchants/${merchantId}`)
 }

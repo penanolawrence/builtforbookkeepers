@@ -94,3 +94,36 @@ export async function saveChartOfAccounts(
 ): Promise<void> {
   await api.put(`/admin/clients/${clientId}/accounts`, { accounts })
 }
+
+export interface MerchantData {
+  id: string
+  name: string
+  tin: string | null
+  address: string | null
+  documentCount: number
+}
+
+export async function getMerchants(clientId: string): Promise<MerchantData[]> {
+  const { data } = await api.get<MerchantData[]>(`/admin/clients/${clientId}/merchants`)
+  return data
+}
+
+export async function createMerchant(
+  clientId: string,
+  payload: { name: string; tin?: string; address?: string }
+): Promise<MerchantData> {
+  const { data } = await api.post<MerchantData>(`/admin/clients/${clientId}/merchants`, payload)
+  return data
+}
+
+export async function updateMerchant(
+  merchantId: string,
+  payload: { name: string; tin?: string; address?: string }
+): Promise<MerchantData> {
+  const { data } = await api.patch<MerchantData>(`/admin/merchants/${merchantId}`, payload)
+  return data
+}
+
+export async function deleteMerchant(merchantId: string): Promise<void> {
+  await api.delete(`/admin/merchants/${merchantId}`)
+}
