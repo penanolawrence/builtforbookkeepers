@@ -93,6 +93,7 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
     }
     setUploading(false)
     setPendingFiles([])
+    setSelected(new Set())
     const total = batch.length
     if (failed.length < total) {
       qc.invalidateQueries({ queryKey: docsQueryKey })
@@ -108,6 +109,7 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
 
   function handleManualSuccess() {
     qc.invalidateQueries({ queryKey: docsQueryKey })
+    setSelected(new Set())
     toast({ title: 'Entry submitted — processing…' })
   }
 
@@ -125,6 +127,9 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
       setSelected(new Set())
       qc.invalidateQueries({ queryKey: ['client-queue', clientId] })
       toast({ title: `Approved ${result.approved.length} item(s).` })
+      if (result.failed.length > 0) {
+        toast({ title: `${result.failed.length} item(s) could not be approved.`, variant: 'destructive' })
+      }
     } catch {
       toast({ title: 'Batch approval failed. Please try again.', variant: 'destructive' })
     } finally {
