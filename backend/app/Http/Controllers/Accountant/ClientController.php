@@ -256,7 +256,7 @@ class ClientController extends Controller
         }
 
         $company->update(array_filter([
-            'name'           => $request->businessName,
+            'name'           => $request->name,
             'mobile'         => $request->mobile,
             'email'          => $request->email,
             'tin'            => $request->tin,
