@@ -68,7 +68,8 @@ class TransactionClassifier
                 "  * Create a SEPARATE line for the VAT amount.\n" .
                 "  * For expense documents: assign the VAT line to account code 1101 (Input VAT).\n" .
                 "  * For income documents: assign the VAT line to account code 2101 (Output VAT).\n" .
-                "  * All other expense/income lines must use NET amounts (total minus VAT).\n" .
+                "  * All other expense/income lines must use NET amounts: each line's amount = (the printed AMOUNT column value for that line) ÷ 1.12. Do NOT use the full line total without dividing.\n" .
+                "  * Example: receipt AMOUNT column shows ₱25.00 for an item → net expense line = 25.00 ÷ 1.12 = 22.32.\n" .
                 "  * sum(lines[].amount) must still equal document.total_amount (the gross total).\n";
         } else {
             $systemPrompt .=
@@ -76,6 +77,7 @@ class TransactionClassifier
         }
 
         $systemPrompt .=
+            "- For itemized receipts that have an AMOUNT (or TOTAL) column: that column is already QTY × UNIT PRICE — the receipt has done the math. Use only the AMOUNT column as the line amount and disregard the QTY column.\n" .
             "- Use one line for simple single-purpose documents.\n" .
             "- Use multiple lines when the document covers multiple categories, multiple dates, or has an expenses breakdown.\n" .
             "- For each line, always try to assign a date (YYYY-MM-DD). " .
@@ -94,7 +96,8 @@ class TransactionClassifier
         } elseif ($isOcrPath) {
             $messages = [['role' => 'user', 'content' => $this->buildOcrPrompt($inputData, $userNote)]];
         } else {
-            $messages = [['role' => 'user', 'content' => $this->buildManualPrompt($inputData, $userNote)]];
+            $vatIncome = $company->bir_type === 'vat' && $declaredType === 'income';
+            $messages  = [['role' => 'user', 'content' => $this->buildManualPrompt($inputData, $userNote, $vatIncome)]];
         }
 
         try {
@@ -241,9 +244,18 @@ class TransactionClassifier
                $noteBlock;
     }
 
-    private function buildManualPrompt(array $inputData, ?string $userNote = null): string
+    private function buildManualPrompt(array $inputData, ?string $userNote = null, bool $vatIncome = false): string
     {
         $noteBlock = $this->buildNoteBlock($userNote);
+
+        $vatIncomeInstruction = '';
+        if ($vatIncome) {
+            $vatIncomeInstruction =
+                "\n\nVAT income rule: This client is VAT-registered and this is an income entry. " .
+                "Always treat the entered amounts as VAT-inclusive. " .
+                "Compute vat_amount = total_amount × 12/112. " .
+                "Create a separate Output VAT line assigned to account 2101.";
+        }
 
         return "The client has manually entered this transaction. " .
                "Assign the correct account_code and category to each line from the Chart of Accounts. " .
@@ -253,6 +265,7 @@ class TransactionClassifier
                "Classify using the classify_transaction tool. " .
                "For document.merchant, document.date, document.or_number — return null " .
                "(those fields are already set on the document)." .
+               $vatIncomeInstruction .
                $noteBlock;
     }
 
@@ -286,7 +299,7 @@ class TransactionClassifier
                             'vat_amount'     => [
                                 'type'        => ['number', 'null'],
                                 'minimum'     => 0,
-                                'description' => 'VAT amount for this document. If a VAT figure is explicitly printed on the document, use that value. If the document or user note indicates the amount is VAT-inclusive (e.g. "inclusive of VAT", "VAT inclusive", "inc. VAT"), calculate as total_amount × 12/112 (Philippine VAT rate is 12%, so VAT = total × 0.107143). Return null if no VAT applies.',
+                                'description' => 'VAT amount for this document. Use these rules in order: (1) If a VAT figure is explicitly printed, use that value. (2) If the document or user note says it is VAT-inclusive (e.g. "inclusive of VAT", "VAT inclusive", "inc. VAT"), calculate as total_amount × 12/112. (3) If the merchant/seller on the receipt is identified as VAT-registered — shown by text such as "VAT Reg. TIN", "VAT Registration No.", "VAT REG No.", or a TIN labeled as VAT-registered — the total is VAT-inclusive under Philippine tax law even if no VAT amount is printed; calculate as total_amount × 12/112. Return null only if none of the above apply.',
                             ],
                             'or_number'      => ['type' => ['string', 'null'],
                                                 'description' => 'Official Receipt or invoice number'],
@@ -307,7 +320,8 @@ class TransactionClassifier
                             'properties' => [
                                 'description'  => ['type' => 'string',
                                                    'description' => 'What this line covers'],
-                                'amount'       => ['type' => 'number', 'minimum' => 0.01],
+                                'amount'       => ['type' => 'number', 'minimum' => 0.01,
+                                                   'description' => 'The net amount for this line after VAT split (for VAT-registered clients) or the gross amount (for non-VAT clients). For VAT-registered clients: take the printed AMOUNT column value and divide by 1.12. For itemized receipts with an AMOUNT or TOTAL column: use only that column — it is already QTY × UNIT PRICE, so disregard QTY.'],
                                 'account_code' => ['type' => 'string',
                                                    'description' => 'Code from the Chart of Accounts'],
                                 'type'         => ['type' => 'string', 'enum' => ['income', 'expense']],
