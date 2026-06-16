@@ -1,7 +1,18 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
 import s from './help.module.css'
 import { HelpSidebarNav } from './HelpSidebarNav'
+import { setTourContinueFlag } from '@/components/tour/tourSession'
 
 export function HelpPageContent() {
+  const router = useRouter()
+
+  const replayTutorial = () => {
+    setTourContinueFlag('dashboard')
+    router.push('/accountant/dashboard')
+  }
+
   return (
     <div className={s.page}>
       <div className="hiw-shell">
@@ -28,6 +39,23 @@ export function HelpPageContent() {
                 ~10 min read
               </span>
             </div>
+            <button
+              type="button"
+              onClick={replayTutorial}
+              style={{
+                marginTop: 16,
+                background: 'none',
+                border: '1px solid var(--t-line)',
+                borderRadius: 10,
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 700,
+                color: 'var(--t-primary)',
+              }}
+            >
+              Replay tutorial
+            </button>
           </div>
 
           {/* S1: WHO DOES WHAT */}
