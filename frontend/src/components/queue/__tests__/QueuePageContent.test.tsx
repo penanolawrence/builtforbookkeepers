@@ -1,4 +1,6 @@
 import { render, screen } from '@testing-library/react'
+import type { User } from '@/types/auth'
+import type { TourStep } from '@/components/tour/types'
 import { QueuePageContent } from '../QueuePageContent'
 import { setTourContinueFlag, getTourContinueFlag } from '@/components/tour/tourSession'
 
@@ -11,13 +13,13 @@ jest.mock('@/lib/api/accountant/clients', () => ({ getAccountantClients: jest.fn
 jest.mock('@/lib/api/admin/accountants', () => ({ getAccountants: jest.fn() }))
 jest.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: jest.fn() }) }))
 
-let mockUser: any = { hasSeenTutorial: true }
+let mockUser: Partial<User> = { hasSeenTutorial: true }
 const mockMarkTutorialSeen = jest.fn()
 jest.mock('@/lib/hooks/useAuth', () => ({
   useAuth: () => ({ user: mockUser, markTutorialSeen: mockMarkTutorialSeen }),
 }))
 jest.mock('@/components/tour/TourOverlay', () => ({
-  TourOverlay: ({ step }: any) => <div data-testid="tour-overlay">{step.title}</div>,
+  TourOverlay: ({ step }: { step: TourStep }) => <div data-testid="tour-overlay">{step.title}</div>,
 }))
 
 describe('QueuePageContent tour', () => {

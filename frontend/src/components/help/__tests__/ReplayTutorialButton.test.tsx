@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import type { User } from '@/types/auth'
 import { ReplayTutorialButton } from '../ReplayTutorialButton'
 import { getTourContinueFlag } from '@/components/tour/tourSession'
 
@@ -7,7 +8,7 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
-let mockUser: any = { role: 'accountant' }
+let mockUser: Partial<User> = { role: 'accountant' }
 jest.mock('@/lib/hooks/useAuth', () => ({
   useAuth: () => ({ user: mockUser }),
 }))

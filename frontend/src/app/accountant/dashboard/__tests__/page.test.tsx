@@ -1,4 +1,6 @@
 import { render, screen } from '@testing-library/react'
+import type { User } from '@/types/auth'
+import type { TourStep } from '@/components/tour/types'
 import AccountantDashboard from '../page'
 
 jest.mock('@/components/layout/ThemeProvider', () => ({
@@ -8,13 +10,13 @@ jest.mock('@/components/layout/ThemeProvider', () => ({
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }))
-let mockUser: any = { name: 'Maria Santos', hasSeenTutorial: true }
+let mockUser: Partial<User> = { name: 'Maria Santos', hasSeenTutorial: true }
 const mockMarkTutorialSeen = jest.fn()
 jest.mock('@/lib/hooks/useAuth', () => ({
   useAuth: () => ({ user: mockUser, markTutorialSeen: mockMarkTutorialSeen }),
 }))
 jest.mock('@/components/tour/TourOverlay', () => ({
-  TourOverlay: ({ step }: any) => <div data-testid="tour-overlay">{step.title}</div>,
+  TourOverlay: ({ step }: { step: TourStep }) => <div data-testid="tour-overlay">{step.title}</div>,
 }))
 jest.mock('@tanstack/react-query', () => ({
   useQuery: ({ queryKey }: { queryKey: string[] }) => {
