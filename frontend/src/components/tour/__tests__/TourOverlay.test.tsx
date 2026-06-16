@@ -109,4 +109,57 @@ describe('TourOverlay', () => {
 
     Element.prototype.getBoundingClientRect = originalRect
   })
+
+  it('flips the tooltip above the target when there is not enough room below', () => {
+    const originalRect = Element.prototype.getBoundingClientRect
+    const originalInnerHeight = window.innerHeight
+    Object.defineProperty(window, 'innerHeight', { value: 600, configurable: true })
+    Element.prototype.getBoundingClientRect = jest.fn(() => ({
+      top: 520,
+      left: 100,
+      right: 200,
+      bottom: 580,
+      width: 100,
+      height: 60,
+      x: 100,
+      y: 520,
+      toJSON: () => {},
+    }))
+
+    render(
+      <TourOverlay step={step} stepNumber={1} totalSteps={3} theme="sofia" onNext={jest.fn()} onBack={jest.fn()} onSkip={jest.fn()} />
+    )
+
+    const dialog = screen.getByRole('dialog')
+    const top = parseFloat(dialog.style.top)
+    expect(top).toBeLessThan(520)
+
+    Element.prototype.getBoundingClientRect = originalRect
+    Object.defineProperty(window, 'innerHeight', { value: originalInnerHeight, configurable: true })
+  })
+
+  it('keeps the tooltip below the target when there is enough room below', () => {
+    const originalRect = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = jest.fn(() => ({
+      top: 100,
+      left: 100,
+      right: 200,
+      bottom: 150,
+      width: 100,
+      height: 50,
+      x: 100,
+      y: 100,
+      toJSON: () => {},
+    }))
+
+    render(
+      <TourOverlay step={step} stepNumber={1} totalSteps={3} theme="sofia" onNext={jest.fn()} onBack={jest.fn()} onSkip={jest.fn()} />
+    )
+
+    const dialog = screen.getByRole('dialog')
+    const top = parseFloat(dialog.style.top)
+    expect(top).toBeGreaterThan(150)
+
+    Element.prototype.getBoundingClientRect = originalRect
+  })
 })
