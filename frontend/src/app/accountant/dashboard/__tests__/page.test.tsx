@@ -121,4 +121,11 @@ describe('AccountantDashboard', () => {
     wrap()
     expect(screen.queryByTestId('tour-overlay')).not.toBeInTheDocument()
   })
+
+  it('starts the tour when the sessionStorage continue flag is set to dashboard, even if already seen', () => {
+    mockUser = { name: 'Maria Santos', hasSeenTutorial: true }
+    sessionStorage.setItem('sofia_tour_continue', 'dashboard')
+    wrap()
+    expect(screen.getByTestId('tour-overlay')).toBeInTheDocument()
+  })
 })
