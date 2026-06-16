@@ -5,6 +5,10 @@ jest.mock('@/components/help/HelpSidebarNav', () => ({
   HelpSidebarNav: () => <aside data-testid="sidebar-nav" />,
 }))
 
+jest.mock('@/components/help/ReplayTutorialButton', () => ({
+  ReplayTutorialButton: () => null,
+}))
+
 describe('HelpPage', () => {
   it('renders the page heading', () => {
     render(<HelpPage />)
