@@ -44,6 +44,11 @@ export async function updateProfile(data: Partial<User>): Promise<User> {
   return updated
 }
 
+export async function markTutorialSeen(): Promise<{ hasSeenTutorial: boolean }> {
+  const { data } = await api.patch<{ hasSeenTutorial: boolean }>('/auth/tutorial')
+  return data
+}
+
 export async function validateSetupToken(
   token: string
 ): Promise<{ valid: boolean; role: Role; expired: boolean }> {
