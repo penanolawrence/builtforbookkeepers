@@ -31,8 +31,8 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'password'           => 'hashed',
-        'has_seen_tutorial'  => 'boolean',
+        'password' => 'hashed',
+        'has_seen_tutorial' => 'boolean',
     ];
 
     public function company(): BelongsTo
