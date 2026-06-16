@@ -215,7 +215,7 @@ export default function ClientDashboard() {
     <div className="dashboard-root" style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
 
       {/* Greeting row */}
-      <div className="dashboard-greeting" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+      <div className="dashboard-greeting" data-tour="client-dash-greeting" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
         <div style={{ flex: 1 }}>
           <h1 style={{
             fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 34,

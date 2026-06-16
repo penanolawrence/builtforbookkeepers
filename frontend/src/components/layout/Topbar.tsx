@@ -180,6 +180,38 @@ export function Topbar() {
                 <div style={{ fontSize: 11, color: 'var(--t-faint)', marginTop: 2 }}>{user.email}</div>
               )}
             </div>
+            <div className="md:hidden">
+              {links.map((link) => {
+                const active = pathname.startsWith(link.href)
+                const count  = link.badge ? queueCount : 0
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                      padding: '10px 14px', fontSize: 13, fontWeight: active ? 700 : 400,
+                      color: active ? 'var(--t-primary)' : 'var(--t-ink)', textDecoration: 'none',
+                    }}
+                  >
+                    {link.label}
+                    {count > 0 && (
+                      <span
+                        style={{
+                          fontSize: 11, fontWeight: 800, color: '#fff',
+                          background: 'var(--t-tier-review-fg)',
+                          borderRadius: 999, padding: '1px 7px',
+                        }}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
+              <div style={{ height: 1, background: 'var(--t-line)' }} />
+            </div>
             <Link
               href={user ? `/${user.role}/settings` : '#'}
               onClick={() => setMenuOpen(false)}

@@ -7,14 +7,14 @@ import { LayoutDashboard, Upload, FileText, BarChart2, Inbox, Users } from 'luci
 
 const CLIENT_TABS = [
   { href: '/client/dashboard', label: 'Home',      Icon: LayoutDashboard },
-  { href: '/client/upload',    label: 'Upload',    Icon: Upload          },
+  { href: '/client/upload',    label: 'Upload',    Icon: Upload,    tourTarget: 'client-dash-upload-btn-mobile' },
   { href: '/client/documents', label: 'Documents', Icon: FileText        },
   { href: '/client/reports',   label: 'Reports',   Icon: BarChart2       },
 ]
 
 const ACCOUNTANT_TABS = [
   { href: '/accountant/dashboard', label: 'Home',    Icon: LayoutDashboard },
-  { href: '/accountant/queue',     label: 'Queue',   Icon: Inbox           },
+  { href: '/accountant/queue',     label: 'Queue',   Icon: Inbox,    tourTarget: 'dashboard-go-queue-mobile' },
   { href: '/accountant/clients',   label: 'Clients', Icon: Users           },
   { href: '/accountant/reports',   label: 'Reports', Icon: BarChart2       },
 ]
@@ -44,12 +44,13 @@ export function BottomTabBar() {
         borderTop:      '1px solid var(--t-line)',
       }}
     >
-      {tabs.map(({ href, label, Icon }) => {
+      {tabs.map(({ href, label, Icon, tourTarget }) => {
         const active = pathname.startsWith(href)
         return (
           <Link
             key={href}
             href={href}
+            data-tour={tourTarget}
             className="flex flex-col items-center justify-center flex-1 no-underline gap-[3px]"
             style={{ color: active ? 'var(--t-primary)' : 'var(--t-muted)' }}
           >

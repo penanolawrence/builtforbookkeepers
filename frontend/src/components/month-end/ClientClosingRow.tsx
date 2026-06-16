@@ -57,9 +57,8 @@ export function ClientClosingRow({ client }: ClientClosingRowProps) {
       {/* Main row */}
       <div
         onClick={() => setExpanded((v) => !v)}
-        className="grid cursor-pointer transition-colors"
+        className="grid grid-cols-[200px_120px_120px_140px_32px] md:grid-cols-[1fr_140px_140px_160px_40px] cursor-pointer transition-colors"
         style={{
-          gridTemplateColumns: '1fr 140px 140px 160px 40px',
           columnGap: 16,
           padding: '14px 24px',
           alignItems: 'center',

@@ -23,6 +23,7 @@ export const DASHBOARD_TOUR_STEPS: TourStep[] = [
   },
   {
     targetId: 'dashboard-go-queue',
+    fallbackTargetId: 'dashboard-go-queue-mobile',
     title: "Let's check the queue",
     body: "This button takes you to the Review Queue, where you'll actually approve documents. Let's go take a look.",
   },
@@ -49,6 +50,7 @@ export const QUEUE_TOUR_STEPS: TourStep[] = [
 export const CLIENT_DASHBOARD_TOUR_STEPS: TourStep[] = [
   {
     targetId: 'client-dash-mascot',
+    fallbackTargetId: 'client-dash-greeting',
     title: 'Meet your AI co-pilot',
     body: "This is your AI co-pilot. It keeps you posted on what's parked, what's posted, and what needs your attention.",
   },
@@ -64,6 +66,7 @@ export const CLIENT_DASHBOARD_TOUR_STEPS: TourStep[] = [
   },
   {
     targetId: 'client-dash-upload-btn',
+    fallbackTargetId: 'client-dash-upload-btn-mobile',
     title: "Let's upload something",
     body: "This button takes you to the Upload page, where you'll send receipts and invoices to your bookkeeper. Let's go take a look.",
   },

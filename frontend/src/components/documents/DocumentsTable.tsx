@@ -132,9 +132,10 @@ export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, pa
 
       {/* ── Desktop table — hidden on mobile ── */}
       <div className="hidden md:block">
+        <div className="overflow-x-auto">
 
         {/* ── Column headers ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: COLS, columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)', minWidth: 880 }}>
           {COL_HEADERS.map(({ label, align, color }) =>
             label === 'Date' ? (
               <button
@@ -187,6 +188,7 @@ export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, pa
                 cursor:               'pointer',
                 transition:           'background 0.14s',
                 background:           rowBg,
+                minWidth:             880,
                 boxShadow:            flagTier
                   ? `inset 3px 0 0 var(--t-tier-${flagTier}-fg)`
                   : 'inset 3px 0 0 transparent',
@@ -264,6 +266,7 @@ export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, pa
           padding:             '14px 24px',
           borderTop:           '2px solid var(--t-line)',
           background:          'var(--t-card-alt)',
+          minWidth:            880,
         }}>
           <span style={{ gridColumn: '1 / 4', fontSize: 13, fontWeight: 700, color: 'var(--t-muted)' }}>
             {pageDocs.length} {pageDocs.length === 1 ? 'entry' : 'entries'} on this page
@@ -276,6 +279,7 @@ export function DocumentsTable({ docs, totalDocs = docs.length, lastPage = 1, pa
           </span>
           <span />
           <span />
+        </div>
         </div>
 
         {/* ── Pagination bar ── */}

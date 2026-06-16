@@ -138,6 +138,71 @@ describe('TourOverlay', () => {
     Object.defineProperty(window, 'innerHeight', { value: originalInnerHeight, configurable: true })
   })
 
+  it('falls back to a centered dialog with no spotlight when the target is hidden (zero-size rect)', () => {
+    // jsdom's default getBoundingClientRect on `demo-target` returns all zeros,
+    // which is what a real browser also returns for a `display: none` element.
+    render(
+      <TourOverlay step={step} stepNumber={1} totalSteps={3} theme="sofia" onNext={jest.fn()} onBack={jest.fn()} onSkip={jest.fn()} />
+    )
+
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.style.top).toBe('50%')
+    expect(dialog.style.left).toBe('50%')
+  })
+
+  it('falls back to the fallbackTargetId target when the primary target is hidden', () => {
+    document.body.innerHTML = '<div data-tour="demo-target"></div><div data-tour="fallback-target"></div>'
+    const originalRect = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = jest.fn(function (this: Element) {
+      if (this.getAttribute('data-tour') === 'fallback-target') {
+        return { top: 50, left: 60, right: 140, bottom: 90, width: 80, height: 40, x: 60, y: 50, toJSON: () => {} }
+      }
+      return { top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => {} }
+    })
+
+    const stepWithFallback: TourStep = { ...step, fallbackTargetId: 'fallback-target' }
+    render(
+      <TourOverlay step={stepWithFallback} stepNumber={1} totalSteps={3} theme="sofia" onNext={jest.fn()} onBack={jest.fn()} onSkip={jest.fn()} />
+    )
+
+    const spotlight = screen.getByTestId('tour-spotlight')
+    expect(spotlight.style.top).toBe('42px')
+    expect(spotlight.style.left).toBe('52px')
+
+    Element.prototype.getBoundingClientRect = originalRect
+  })
+
+  it('renders the full-overlay fallback when neither the primary nor the fallback target are visible', () => {
+    document.body.innerHTML = '<div data-tour="demo-target"></div><div data-tour="fallback-target"></div>'
+    const stepWithFallback: TourStep = { ...step, fallbackTargetId: 'fallback-target' }
+
+    render(
+      <TourOverlay step={stepWithFallback} stepNumber={1} totalSteps={3} theme="sofia" onNext={jest.fn()} onBack={jest.fn()} onSkip={jest.fn()} />
+    )
+
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.style.top).toBe('50%')
+    expect(dialog.style.left).toBe('50%')
+  })
+
+  it('scrolls the target element into view when the step targets an element below the fold', () => {
+    const originalRect = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = jest.fn(() => ({
+      top: 1200, left: 20, right: 300, bottom: 1260, width: 280, height: 60, x: 20, y: 1200, toJSON: () => {},
+    }))
+    const scrollIntoView = jest.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+
+    render(
+      <TourOverlay step={step} stepNumber={1} totalSteps={3} theme="sofia" onNext={jest.fn()} onBack={jest.fn()} onSkip={jest.fn()} />
+    )
+
+    expect(scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ block: 'center' }))
+
+    Element.prototype.getBoundingClientRect = originalRect
+    delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView
+  })
+
   it('keeps the tooltip below the target when there is enough room below', () => {
     const originalRect = Element.prototype.getBoundingClientRect
     Element.prototype.getBoundingClientRect = jest.fn(() => ({

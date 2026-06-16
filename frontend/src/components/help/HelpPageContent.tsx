@@ -87,6 +87,7 @@ export function HelpPageContent() {
                   <p>The system scans the image and extracts key details — no manual typing required.</p>
                   <div className="tl-sub"><ul>
                     <li>Merchant name</li>
+                    <li>Address</li>
                     <li>Date of transaction</li>
                     <li>Total amount and VAT</li>
                     <li>Official Receipt (OR) number</li>

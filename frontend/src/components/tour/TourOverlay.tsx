@@ -21,9 +21,22 @@ const ACCENT: Record<'sofia' | 'yoda', { accent: string; accentGlow: string }> =
   yoda:  { accent: '#7C9CFF', accentGlow: '#AFC4FF' },
 }
 
-function getTargetRect(targetId: string): DOMRect | null {
+function isZeroRect(rect: DOMRect): boolean {
+  return rect.width === 0 && rect.height === 0
+}
+
+function findVisibleEl(targetId: string): Element | null {
   const el = document.querySelector(`[data-tour="${targetId}"]`)
-  return el ? el.getBoundingClientRect() : null
+  if (!el) return null
+  return isZeroRect(el.getBoundingClientRect()) ? null : el
+}
+
+function resolveTargetEl(targetId: string, fallbackTargetId?: string): Element | null {
+  return findVisibleEl(targetId) ?? (fallbackTargetId ? findVisibleEl(fallbackTargetId) : null)
+}
+
+function getTargetRect(targetId: string, fallbackTargetId?: string): DOMRect | null {
+  return resolveTargetEl(targetId, fallbackTargetId)?.getBoundingClientRect() ?? null
 }
 
 export function TourOverlay({ step, stepNumber, totalSteps, theme, onNext, onBack, onSkip, nextLabel }: TourOverlayProps) {
@@ -33,7 +46,9 @@ export function TourOverlay({ step, stepNumber, totalSteps, theme, onNext, onBac
   useEffect(() => setMounted(true), [])
 
   useEffect(() => {
-    const update = () => setRect(getTargetRect(step.targetId))
+    const update = () => setRect(getTargetRect(step.targetId, step.fallbackTargetId))
+    const target = resolveTargetEl(step.targetId, step.fallbackTargetId)
+    target?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
     update()
     window.addEventListener('resize', update)
     window.addEventListener('scroll', update, true)
@@ -41,7 +56,7 @@ export function TourOverlay({ step, stepNumber, totalSteps, theme, onNext, onBac
       window.removeEventListener('resize', update)
       window.removeEventListener('scroll', update, true)
     }
-  }, [step.targetId])
+  }, [step.targetId, step.fallbackTargetId])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -97,7 +112,7 @@ export function TourOverlay({ step, stepNumber, totalSteps, theme, onNext, onBac
   return createPortal(
     <>
       <div style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'auto' }} />
-      <div style={spotlightStyle} />
+      <div data-testid="tour-spotlight" style={spotlightStyle} />
       <div
         role="dialog"
         aria-modal="true"

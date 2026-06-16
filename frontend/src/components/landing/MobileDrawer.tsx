@@ -45,7 +45,12 @@ export function MobileDrawer() {
         </div>
         {dashboardPath
           ? <Link href={dashboardPath} className="ld-drawer__link ld-drawer__link--cta" onClick={() => setOpen(false)}>Dashboard →</Link>
-          : <a href="#cta" className="ld-drawer__link ld-drawer__link--cta" onClick={() => setOpen(false)}>Get Started →</a>
+          : (
+            <>
+              <Link href="/login" className="ld-drawer__link" onClick={() => setOpen(false)}>Log in</Link>
+              <a href="#cta" className="ld-drawer__link ld-drawer__link--cta" onClick={() => setOpen(false)}>Get Started →</a>
+            </>
+          )
         }
       </div>
     </>

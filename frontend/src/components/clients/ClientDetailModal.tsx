@@ -418,6 +418,7 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
     gap: 10,
     alignItems: 'center',
     padding: '9px 20px',
+    minWidth: 560,
   }
 
   if (isLoading) {
@@ -486,69 +487,71 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
 
       {/* List */}
       <div style={{ background: 'var(--t-card)', border: '1px solid var(--t-line)', borderRadius: 14, overflow: 'hidden' }}>
+        <div className="overflow-x-auto">
 
-        {/* Column headers */}
-        <div style={{ ...rowGrid, background: 'var(--t-card-alt)', borderBottom: '1px solid var(--t-line-soft)' }}>
-          {['Name', 'TIN', 'Address', ''].map((h, i) => (
-            <span key={i} style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-faint)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</span>
-          ))}
-        </div>
-
-        {/* New merchant row */}
-        {editState.type === 'new' && editRow}
-
-        {/* Existing merchants */}
-        {merchants.length === 0 && editState.type !== 'new' ? (
-          <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-            <div style={{ fontSize: 13.5, color: 'var(--t-faint)', marginBottom: 12 }}>No merchants yet.</div>
-            <button
-              type="button"
-              onClick={startNew}
-              style={{ border: '1.5px dashed var(--t-line)', background: 'transparent', borderRadius: 8, padding: '6px 16px', fontSize: 13, fontWeight: 700, color: 'var(--t-primary)', cursor: 'pointer', fontFamily: 'inherit' }}
-            >
-              + Add Merchant
-            </button>
+          {/* Column headers */}
+          <div style={{ ...rowGrid, background: 'var(--t-card-alt)', borderBottom: '1px solid var(--t-line-soft)' }}>
+            {['Name', 'TIN', 'Address', ''].map((h, i) => (
+              <span key={i} style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-faint)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</span>
+            ))}
           </div>
-        ) : (
-          merchants.map((m, idx) => {
-            const isEditing = editState.type === 'edit' && editState.id === m.id
-            if (isEditing) return <React.Fragment key={m.id}>{editRow}</React.Fragment>
-            return (
-              <div
-                key={m.id}
-                style={{ ...rowGrid, borderBottom: '1px solid var(--t-line-soft)', background: idx % 2 === 0 ? 'transparent' : 'var(--t-card-alt)' }}
+
+          {/* New merchant row */}
+          {editState.type === 'new' && editRow}
+
+          {/* Existing merchants */}
+          {merchants.length === 0 && editState.type !== 'new' ? (
+            <div style={{ padding: '32px 20px', textAlign: 'center', minWidth: 560 }}>
+              <div style={{ fontSize: 13.5, color: 'var(--t-faint)', marginBottom: 12 }}>No merchants yet.</div>
+              <button
+                type="button"
+                onClick={startNew}
+                style={{ border: '1.5px dashed var(--t-line)', background: 'transparent', borderRadius: 8, padding: '6px 16px', fontSize: 13, fontWeight: 700, color: 'var(--t-primary)', cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t-ink)' }}>{m.name}</span>
-                <span style={{ fontSize: 13, color: 'var(--t-muted)', fontVariantNumeric: 'tabular-nums' }}>{m.tin ?? '—'}</span>
-                <span style={{ fontSize: 13, color: 'var(--t-muted)' }}>{m.address ?? '—'}</span>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
-                  <button
-                    type="button"
-                    onClick={() => startEdit(m)}
-                    disabled={deleting === m.id}
-                    style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-muted)', cursor: deleting === m.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: deleting === m.id ? 0.4 : 1 }}
-                    aria-label={`Edit ${m.name}`}
-                  >
-                    <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                  </button>
-                  {m.documentCount === 0 && (
+                + Add Merchant
+              </button>
+            </div>
+          ) : (
+            merchants.map((m, idx) => {
+              const isEditing = editState.type === 'edit' && editState.id === m.id
+              if (isEditing) return <React.Fragment key={m.id}>{editRow}</React.Fragment>
+              return (
+                <div
+                  key={m.id}
+                  style={{ ...rowGrid, borderBottom: '1px solid var(--t-line-soft)', background: idx % 2 === 0 ? 'transparent' : 'var(--t-card-alt)' }}
+                >
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--t-ink)' }}>{m.name}</span>
+                  <span style={{ fontSize: 13, color: 'var(--t-muted)', fontVariantNumeric: 'tabular-nums' }}>{m.tin ?? '—'}</span>
+                  <span style={{ fontSize: 13, color: 'var(--t-muted)' }}>{m.address ?? '—'}</span>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
                     <button
                       type="button"
-                      onClick={() => handleDelete(m.id, m.name)}
+                      onClick={() => startEdit(m)}
                       disabled={deleting === m.id}
-                      style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-faint)', cursor: deleting === m.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: deleting === m.id ? 0.4 : 1 }}
-                      aria-label={`Delete ${m.name}`}
+                      style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-muted)', cursor: deleting === m.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: deleting === m.id ? 0.4 : 1 }}
+                      aria-label={`Edit ${m.name}`}
                     >
-                      <X size={13} />
+                      <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
                     </button>
-                  )}
+                    {m.documentCount === 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(m.id, m.name)}
+                        disabled={deleting === m.id}
+                        style={{ border: '1.5px solid var(--t-line)', borderRadius: 8, padding: '4px 8px', background: 'var(--t-card)', color: 'var(--t-faint)', cursor: deleting === m.id ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: deleting === m.id ? 0.4 : 1 }}
+                        aria-label={`Delete ${m.name}`}
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })
-        )}
+              )
+            })
+          )}
+        </div>
       </div>
     </div>
   )
@@ -694,7 +697,7 @@ function OverviewTab({
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, padding: '24px 28px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px]" style={{ gap: 24, padding: '24px 28px' }}>
 
         {/* Left — editable form (shared) */}
         <div>
@@ -706,7 +709,7 @@ function OverviewTab({
               <label className={labelCls}>Business Name *</label>
               <input className={inputCls} {...register('name')} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 12 }}>
               <div>
                 <label className={labelCls}>Mobile *</label>
                 <input className={inputCls} {...register('mobile')} />
@@ -716,7 +719,7 @@ function OverviewTab({
                 <input className={inputCls} type="email" {...register('email')} />
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 12 }}>
               <div>
                 <label className={labelCls}>Contact Person</label>
                 <input className={inputCls} {...register('contactPerson')} />
@@ -962,7 +965,10 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
         </div>
 
         {/* Tab bar */}
-        <div style={{ display: 'flex', gap: 2, padding: '0 28px', borderBottom: '1px solid var(--t-line)', flexShrink: 0 }}>
+        <div
+          className="overflow-x-auto"
+          style={{ display: 'flex', gap: 2, padding: '0 28px', borderBottom: '1px solid var(--t-line)', flexShrink: 0 }}
+        >
           {tabs.map((tb) => (
             <button
               key={tb.id}
@@ -976,6 +982,7 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
                 cursor: 'pointer', fontFamily: 'inherit',
                 borderBottom: `2.5px solid ${tab === tb.id ? 'var(--t-primary)' : 'transparent'}`,
                 marginBottom: -1, transition: 'color .15s, border-color .15s', whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
               {tb.label}

@@ -134,27 +134,29 @@ export function MonthEndPage({ showAccountantFilter }: MonthEndPageProps) {
           </span>
         </div>
 
-        {/* Column headers */}
-        <div
-          className="hidden md:grid"
-          style={{ gridTemplateColumns: '1fr 140px 140px 160px 40px', columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}
-        >
-          {['Client', 'Last Closed', 'Next Period', 'Status', ''].map((h, i) => (
-            <span key={i} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--t-faint)' }}>
-              {h}
-            </span>
-          ))}
-        </div>
+        <div className="overflow-x-auto">
+          {/* Column headers */}
+          <div
+            className="grid grid-cols-[200px_120px_120px_140px_32px] md:grid-cols-[1fr_140px_140px_160px_40px]"
+            style={{ columnGap: 16, padding: '12px 24px', borderBottom: '1px solid var(--t-line)' }}
+          >
+            {['Client', 'Last Closed', 'Next Period', 'Status', ''].map((h, i) => (
+              <span key={i} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--t-faint)', whiteSpace: 'nowrap' }}>
+                {h}
+              </span>
+            ))}
+          </div>
 
-        {isLoading ? (
-          <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>Loading…</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>No clients found.</div>
-        ) : (
-          filtered.map((client) => (
-            <ClientClosingRow key={client.companyId} client={client} />
-          ))
-        )}
+          {isLoading ? (
+            <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>Loading…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>No clients found.</div>
+          ) : (
+            filtered.map((client) => (
+              <ClientClosingRow key={client.companyId} client={client} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   )

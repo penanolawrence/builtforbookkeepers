@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useId, useRef } from 'react'
 
 interface PugMascotProps {
   variant: 'sofia' | 'yoda'
@@ -34,6 +34,10 @@ export default function PugMascot({
   const svgRef = useRef<SVGSVGElement>(null)
   const pupilsRef = useRef<SVGGElement>(null)
   const [blinking, setBlinking] = useState(false)
+  const uid = useId()
+  const bellyGId = `bellyG${uid}`
+  const headGId = `headG${uid}`
+  const glowGId = `glowG${uid}`
 
   const h = Math.round(size * (369 / 320))
 
@@ -95,15 +99,15 @@ export default function PugMascot({
       aria-label={`${isSofia ? 'Sofia' : 'Yoda'}, the AI pug`}
     >
       <defs>
-        <radialGradient id="bellyG" cx="50%" cy="35%" r="70%">
+        <radialGradient id={bellyGId} cx="50%" cy="35%" r="70%">
           <stop offset="0%" stopColor={P.furHi} />
           <stop offset="100%" stopColor={P.fur} />
         </radialGradient>
-        <radialGradient id="headG" cx="42%" cy="34%" r="75%">
+        <radialGradient id={headGId} cx="42%" cy="34%" r="75%">
           <stop offset="0%" stopColor={P.furHi} />
           <stop offset="100%" stopColor={P.fur} />
         </radialGradient>
-        <radialGradient id="glowG" cx="50%" cy="50%" r="50%">
+        <radialGradient id={glowGId} cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor={accentGlow} stopOpacity="0.9" />
           <stop offset="100%" stopColor={accentGlow} stopOpacity="0" />
         </radialGradient>
@@ -120,7 +124,7 @@ export default function PugMascot({
         <ellipse cx="202" cy="104" rx="21" ry="46" fill={P.mask} transform="rotate(12 202 104)" className="ear earR" />
 
         {/* Body */}
-        <ellipse cx="130" cy="234" rx="64" ry="46" fill="url(#bellyG)" />
+        <ellipse cx="130" cy="234" rx="64" ry="46" fill={`url(#${bellyGId})`} />
         <ellipse cx="100" cy="264" rx="19" ry="13" fill={P.fur} />
         <ellipse cx="160" cy="264" rx="19" ry="13" fill={P.fur} />
         <path d="M92 264 v8 M100 265 v9 M108 264 v8" stroke={P.furSh} strokeWidth="2" strokeLinecap="round" />
@@ -131,7 +135,7 @@ export default function PugMascot({
         <circle cx="130" cy="214" r="7" style={{ fill: accentGlow }} stroke={WHITE} strokeWidth="1.5" />
 
         {/* Head */}
-        <circle cx="130" cy="116" r="78" fill="url(#headG)" />
+        <circle cx="130" cy="116" r="78" fill={`url(#${headGId})`} />
         <path d="M104 70 Q130 60 156 70" fill="none" stroke={P.furSh} strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
         <path d="M110 82 Q130 73 150 82" fill="none" stroke={P.furSh} strokeWidth="2.5" strokeLinecap="round" opacity="0.55" />
 
@@ -165,7 +169,7 @@ export default function PugMascot({
 
         {/* AI headset */}
         <path d="M64 96 Q130 34 196 96" fill="none" style={{ stroke: accent }} strokeWidth="8" strokeLinecap="round" />
-        <circle cx="130" cy="40" r="9" fill="url(#glowG)" />
+        <circle cx="130" cy="40" r="9" fill={`url(#${glowGId})`} />
         <circle cx="130" cy="40" r="4.5" style={{ fill: accent }} className="antenna" />
         <circle cx="62" cy="104" r="13" style={{ fill: accent }} />
         <circle cx="62" cy="104" r="6" style={{ fill: accentGlow }} />
