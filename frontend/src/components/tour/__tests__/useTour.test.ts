@@ -50,6 +50,22 @@ describe('useTour', () => {
     expect(result.current.currentIndex).toBe(0)
   })
 
+  it('calls onFinish exactly once even if next() is invoked twice synchronously on the last step', () => {
+    const onFinish = jest.fn()
+    const { result } = renderHook(() => useTour(steps, { onFinish, onSkip: jest.fn() }))
+    act(() => {
+      result.current.start()
+    })
+    act(() => {
+      result.current.next() // -> index 1 (last step)
+    })
+    act(() => {
+      result.current.next() // finish
+      result.current.next() // would double-finish with stale closure; should not with the ref fix
+    })
+    expect(onFinish).toHaveBeenCalledTimes(1)
+  })
+
   it('calls onSkip and deactivates on skip()', () => {
     const onSkip = jest.fn()
     const { result } = renderHook(() => useTour(steps, { onFinish: jest.fn(), onSkip }))
