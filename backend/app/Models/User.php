@@ -22,6 +22,7 @@ class User extends Authenticatable
         'role',
         'status',
         'company_id',
+        'has_seen_tutorial',
     ];
 
     protected $hidden = [
@@ -30,7 +31,8 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'password' => 'hashed',
+        'password'           => 'hashed',
+        'has_seen_tutorial'  => 'boolean',
     ];
 
     public function company(): BelongsTo
