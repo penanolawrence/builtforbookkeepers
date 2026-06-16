@@ -33,7 +33,7 @@ class AuthController extends Controller
         if ($user->role === 'client' && in_array($user->status, ['suspended', 'inactive'])) {
             return response()->json([
                 'message' => 'Account suspended. Contact us to resolve.',
-                'status'  => $user->status,
+                'status' => $user->status,
             ], 403);
         }
 
@@ -41,12 +41,13 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => [
-                'id'        => $user->id,
-                'name'      => $user->name,
-                'role'      => $user->role,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'role' => $user->role,
                 'companyId' => $user->company_id,
-                'status'    => $user->status,
+                'status' => $user->status,
+                'hasSeenTutorial' => $user->has_seen_tutorial,
             ],
         ]);
     }
@@ -63,18 +64,19 @@ class AuthController extends Controller
         $user = $request->user();
 
         $data = [
-            'id'        => $user->id,
-            'name'      => $user->name,
-            'role'      => $user->role,
-            'email'     => $user->email,
-            'mobile'    => $user->mobile,
-            'username'  => $user->username,
+            'id' => $user->id,
+            'name' => $user->name,
+            'role' => $user->role,
+            'email' => $user->email,
+            'mobile' => $user->mobile,
+            'username' => $user->username,
             'companyId' => $user->company_id,
-            'status'    => $user->status,
+            'status' => $user->status,
+            'hasSeenTutorial' => $user->has_seen_tutorial,
         ];
 
         if ($user->role === 'client') {
-            $data['tin']     = $user->company?->tin;
+            $data['tin'] = $user->company?->tin;
             $data['birType'] = $user->company?->bir_type;
         }
 
@@ -103,7 +105,7 @@ class AuthController extends Controller
         }
 
         $user = User::findOrFail($inviteToken->user_id);
-        $user->name     = $request->name;
+        $user->name = $request->name;
         $user->password = Hash::make($request->password);
         $user->save();
 
@@ -113,12 +115,12 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user'  => [
-                'id'        => $user->id,
-                'name'      => $user->name,
-                'role'      => $user->role,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'role' => $user->role,
                 'companyId' => $user->company_id,
-                'status'    => $user->status,
+                'status' => $user->status,
             ],
         ]);
     }
@@ -128,8 +130,8 @@ class AuthController extends Controller
         $user = $request->user();
 
         $rules = [
-            'name'   => ['sometimes', 'string', 'max:255'],
-            'email'  => ['sometimes', 'nullable', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'name' => ['sometimes', 'string', 'max:255'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'mobile' => ['sometimes', 'nullable', 'string', 'max:20'],
         ];
 
@@ -147,14 +149,14 @@ class AuthController extends Controller
         $user->fill($validated)->save();
 
         $data = [
-            'id'        => $user->id,
-            'name'      => $user->name,
-            'role'      => $user->role,
-            'email'     => $user->email,
-            'mobile'    => $user->mobile,
-            'username'  => $user->username,
+            'id' => $user->id,
+            'name' => $user->name,
+            'role' => $user->role,
+            'email' => $user->email,
+            'mobile' => $user->mobile,
+            'username' => $user->username,
             'companyId' => $user->company_id,
-            'status'    => $user->status,
+            'status' => $user->status,
         ];
 
         if ($user->role === 'client') {
