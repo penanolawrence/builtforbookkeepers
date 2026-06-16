@@ -1,4 +1,6 @@
 import { render, screen } from '@testing-library/react'
+import type { User } from '@/types/auth'
+import type { TourStep } from '@/components/tour/types'
 import AccountantDashboard from '../page'
 
 jest.mock('@/components/layout/ThemeProvider', () => ({
@@ -8,8 +10,13 @@ jest.mock('@/components/layout/ThemeProvider', () => ({
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }))
+let mockUser: Partial<User> = { name: 'Maria Santos', hasSeenTutorial: true }
+const mockMarkTutorialSeen = jest.fn()
 jest.mock('@/lib/hooks/useAuth', () => ({
-  useAuth: () => ({ user: { name: 'Maria Santos' } }),
+  useAuth: () => ({ user: mockUser, markTutorialSeen: mockMarkTutorialSeen }),
+}))
+jest.mock('@/components/tour/TourOverlay', () => ({
+  TourOverlay: ({ step }: { step: TourStep }) => <div data-testid="tour-overlay">{step.title}</div>,
 }))
 jest.mock('@tanstack/react-query', () => ({
   useQuery: ({ queryKey }: { queryKey: string[] }) => {
@@ -53,6 +60,11 @@ jest.mock('@/components/dashboard/ClientsTable', () => ({
     <div data-testid="clients-table">{rows.map((r) => r.name).join(',')}</div>
   ),
 }))
+
+afterEach(() => {
+  mockUser = { name: 'Maria Santos', hasSeenTutorial: true }
+  sessionStorage.clear()
+})
 
 function wrap() {
   return render(
@@ -98,5 +110,24 @@ describe('AccountantDashboard', () => {
   it('renders Go to Queue button', () => {
     wrap()
     expect(screen.getByRole('button', { name: /Go to Queue/ })).toBeInTheDocument()
+  })
+
+  it('auto-starts the tour when the user has not seen it', () => {
+    mockUser = { name: 'Maria Santos', hasSeenTutorial: false }
+    wrap()
+    expect(screen.getByTestId('tour-overlay')).toBeInTheDocument()
+  })
+
+  it('does not start the tour when the user has already seen it', () => {
+    mockUser = { name: 'Maria Santos', hasSeenTutorial: true }
+    wrap()
+    expect(screen.queryByTestId('tour-overlay')).not.toBeInTheDocument()
+  })
+
+  it('starts the tour when the sessionStorage continue flag is set to dashboard, even if already seen', () => {
+    mockUser = { name: 'Maria Santos', hasSeenTutorial: true }
+    sessionStorage.setItem('sofia_tour_continue', 'dashboard')
+    wrap()
+    expect(screen.getByTestId('tour-overlay')).toBeInTheDocument()
   })
 })

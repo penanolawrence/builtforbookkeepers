@@ -1,5 +1,6 @@
 import s from './help.module.css'
 import { HelpSidebarNav } from './HelpSidebarNav'
+import { ReplayTutorialButton } from './ReplayTutorialButton'
 
 export function HelpPageContent() {
   return (
@@ -28,6 +29,7 @@ export function HelpPageContent() {
                 ~10 min read
               </span>
             </div>
+            <ReplayTutorialButton />
           </div>
 
           {/* S1: WHO DOES WHAT */}

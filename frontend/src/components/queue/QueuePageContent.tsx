@@ -10,6 +10,11 @@ import { QueueReviewModal } from './QueueReviewModal'
 import { Breadcrumb } from '@/components/shared/Breadcrumb'
 import { SummaryCard } from '@/components/shared/SummaryCard'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { TourOverlay } from '@/components/tour/TourOverlay'
+import { useTour } from '@/components/tour/useTour'
+import { QUEUE_TOUR_STEPS } from '@/components/tour/steps'
+import { getTourContinueFlag, clearTourContinueFlag } from '@/components/tour/tourSession'
 import type { QueueItem } from '@/types/queue'
 import type { ClientProfile } from '@/types/admin'
 
@@ -32,6 +37,27 @@ function fmtDate(iso: string | null) {
 export function QueuePageContent({ showAccountant = false, reviewBasePath }: Props) {
   const { items, isLoading, batchApprove, removeItem } = useApprovalQueue()
   const { toast } = useToast()
+  const { user, markTutorialSeen } = useAuth()
+
+  const tour = useTour(QUEUE_TOUR_STEPS, {
+    onFinish: () => {
+      clearTourContinueFlag()
+      if (!user?.hasSeenTutorial) markTutorialSeen()
+    },
+    onSkip: () => {
+      clearTourContinueFlag()
+      if (!user?.hasSeenTutorial) markTutorialSeen()
+    },
+  })
+
+  useEffect(() => {
+    if (showAccountant) return
+    if (getTourContinueFlag() === 'queue') {
+      clearTourContinueFlag()
+      tour.start()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [clientFilter, setClientFilter]         = useState('')
   const [flagFilter, setFlagFilter]             = useState('')
@@ -162,7 +188,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
       )}
 
       {/* Filter bar */}
-      <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-2.5 mb-5">
+      <div data-tour="queue-filters" className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-2.5 mb-5">
         <select
           value={clientFilter}
           onChange={(e) => setClientFilter(e.target.value)}
@@ -197,6 +223,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
         )}
         <div className="hidden md:block flex-1" />
         <button
+          data-tour="queue-batch-approve"
           onClick={handleBatchApprove}
           disabled={selected.size === 0 || approving}
           className="flex items-center justify-center gap-2 w-full md:w-auto rounded-[12px] px-5 py-3 text-[14px] font-bold text-white disabled:opacity-40"
@@ -240,7 +267,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
         let greenIndex = 0
 
         return (
-          <div style={{
+          <div data-tour="queue-list" style={{
             background: 'var(--t-card)', border: '1px solid var(--t-line)',
             borderRadius: 20, overflow: 'hidden', boxShadow: 'var(--t-shadow)',
           }}>
@@ -500,6 +527,18 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
           documentId={reviewingId}
           onClose={() => setReviewingId(null)}
           onRemoved={(id) => { removeItem(id); setReviewingId(null) }}
+        />
+      )}
+
+      {!showAccountant && tour.isActive && tour.currentStep && (
+        <TourOverlay
+          step={tour.currentStep}
+          stepNumber={tour.currentIndex + 1}
+          totalSteps={tour.total}
+          theme="sofia"
+          onNext={tour.next}
+          onBack={tour.back}
+          onSkip={tour.skip}
         />
       )}
     </div>
