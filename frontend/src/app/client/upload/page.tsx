@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TwoAreaUpload } from '@/components/upload/TwoAreaUpload'
 import { ConfirmUploadDialog } from '@/components/upload/ConfirmUploadDialog'
@@ -11,10 +11,36 @@ import { useToast } from '@/hooks/use-toast'
 import type { DeclaredType, Document } from '@/types/document'
 import { Breadcrumb } from '@/components/shared/Breadcrumb'
 import { SummaryCard } from '@/components/shared/SummaryCard'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { TourOverlay } from '@/components/tour/TourOverlay'
+import { useTour } from '@/components/tour/useTour'
+import { CLIENT_UPLOAD_TOUR_STEPS } from '@/components/tour/steps'
+import { getTourContinueFlag, clearTourContinueFlag } from '@/components/tour/tourSession'
 
 export default function UploadPage() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const { user, markTutorialSeen } = useAuth()
+
+  const tour = useTour(CLIENT_UPLOAD_TOUR_STEPS, {
+    onFinish: () => {
+      clearTourContinueFlag()
+      if (!user?.hasSeenTutorial) markTutorialSeen()
+    },
+    onSkip: () => {
+      clearTourContinueFlag()
+      if (!user?.hasSeenTutorial) markTutorialSeen()
+    },
+  })
+
+  useEffect(() => {
+    if (getTourContinueFlag() === 'client-upload') {
+      clearTourContinueFlag()
+      tour.start()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
   const [pendingFiles, setPendingFiles] = useState<Array<{
     file: File
@@ -125,7 +151,7 @@ export default function UploadPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-2 md:flex md:gap-[14px] mb-[22px]">
+      <div className="grid grid-cols-3 gap-2 md:flex md:gap-[14px] mb-[22px]" data-tour="upload-summary-cards">
         <SummaryCard
           label="Income This Month"
           value={String(incomeCount)}
@@ -160,7 +186,7 @@ export default function UploadPage() {
         onCancel={() => setPendingFiles([])}
       />
 
-      <div className="mt-4">
+      <div className="mt-4" data-tour="upload-in-progress">
         <DocumentsTable
           docs={inProgress}
           onRowClick={setSelectedDoc}
@@ -175,6 +201,18 @@ export default function UploadPage() {
         onReupload={handleReupload}
         onCancel={handleCancel}
       />
+
+      {tour.isActive && tour.currentStep && (
+        <TourOverlay
+          step={tour.currentStep}
+          stepNumber={tour.currentIndex + 1}
+          totalSteps={tour.total}
+          theme="sofia"
+          onNext={tour.next}
+          onBack={tour.back}
+          onSkip={tour.skip}
+        />
+      )}
     </div>
   )
 }
