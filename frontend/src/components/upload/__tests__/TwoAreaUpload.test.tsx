@@ -50,4 +50,12 @@ describe('TwoAreaUpload', () => {
     fireEvent.change(inputs[1], { target: { files: [file] } })
     expect(onFilePicked).toHaveBeenCalledWith([file], 'expense')
   })
+
+  it('wraps both zones in a data-tour target for the upload tour', () => {
+    const { container } = wrap()
+    const target = container.querySelector('[data-tour="upload-drop-zones"]')
+    expect(target).not.toBeNull()
+    expect(target?.textContent).toContain('Income')
+    expect(target?.textContent).toContain('Expense')
+  })
 })

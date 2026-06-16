@@ -18,7 +18,7 @@ export function TwoAreaUpload({ onFilePicked, onManualSuccess, incomeCount, expe
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-tour="upload-drop-zones">
         <UploadZone
           declaredType="income"
           onFilesSelect={(files) => onFilePicked(files, 'income')}
