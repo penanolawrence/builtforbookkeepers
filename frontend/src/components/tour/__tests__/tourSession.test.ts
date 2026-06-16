@@ -24,4 +24,9 @@ describe('tourSession', () => {
     sessionStorage.setItem('sofia_tour_continue', 'something-else')
     expect(getTourContinueFlag()).toBeNull()
   })
+
+  it('accepts client-upload as a valid continue target', () => {
+    setTourContinueFlag('client-upload')
+    expect(getTourContinueFlag()).toBe('client-upload')
+  })
 })
