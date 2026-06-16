@@ -34,4 +34,16 @@ class TutorialFlagTest extends TestCase
             ->assertOk()
             ->assertJsonFragment(['hasSeenTutorial' => false]);
     }
+
+    public function test_marking_tutorial_seen_persists(): void
+    {
+        $accountant = User::factory()->create(['role' => 'accountant']);
+
+        $this->actingAs($accountant)
+            ->patchJson('/api/auth/tutorial')
+            ->assertOk()
+            ->assertJsonFragment(['hasSeenTutorial' => true]);
+
+        $this->assertTrue($accountant->refresh()->has_seen_tutorial);
+    }
 }

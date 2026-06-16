@@ -83,6 +83,15 @@ class AuthController extends Controller
         return response()->json($data);
     }
 
+    public function markTutorialSeen(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $user->has_seen_tutorial = true;
+        $user->save();
+
+        return response()->json(['hasSeenTutorial' => true]);
+    }
+
     public function validateToken(Request $request): JsonResponse
     {
         $rawToken = $request->query('token', '');
