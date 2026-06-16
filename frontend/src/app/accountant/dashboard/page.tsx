@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Sparkles } from 'lucide-react'
@@ -13,6 +14,10 @@ import { TierCard, Tier } from '@/components/dashboard/TierCard'
 import { MascotCompanion } from '@/components/dashboard/MascotCompanion'
 import { ClientsTable, ClientRow } from '@/components/dashboard/ClientsTable'
 import { WeekStat } from '@/components/dashboard/WeekStat'
+import { TourOverlay } from '@/components/tour/TourOverlay'
+import { useTour } from '@/components/tour/useTour'
+import { DASHBOARD_TOUR_STEPS } from '@/components/tour/steps'
+import { getTourContinueFlag, setTourContinueFlag, clearTourContinueFlag } from '@/components/tour/tourSession'
 import type { QueueItem } from '@/types/queue'
 import type { AdjustingEntry } from '@/types/adjusting-entry'
 
@@ -25,8 +30,28 @@ const TIERS: Omit<Tier, 'count'>[] = [
 
 export default function AccountantDashboard() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, markTutorialSeen } = useAuth()
   const { theme } = useTheme()
+
+  const tour = useTour(DASHBOARD_TOUR_STEPS, {
+    onFinish: () => {
+      setTourContinueFlag('queue')
+      router.push('/accountant/queue')
+    },
+    onSkip: () => {
+      clearTourContinueFlag()
+      if (!user?.hasSeenTutorial) markTutorialSeen()
+    },
+  })
+
+  useEffect(() => {
+    if (!user) return
+    if (!user.hasSeenTutorial || getTourContinueFlag() === 'dashboard') {
+      clearTourContinueFlag()
+      tour.start()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.hasSeenTutorial])
 
   const { data: queue   = [] } = useQuery({ queryKey: ['accountant-queue'],           queryFn: () => getQueue() })
   const { data: pending = [] } = useQuery({ queryKey: ['accountant-pending-entries'], queryFn: () => getEntries({ status: 'PENDING' }) })
@@ -81,7 +106,7 @@ export default function AccountantDashboard() {
       }}
     >
       {/* Row 1 — Greeting + Mascot */}
-      <div className="acct-dash-greeting" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+      <div className="acct-dash-greeting" data-tour="dashboard-greeting" style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
         <div style={{ flex: 1 }}>
           <h1
             style={{
@@ -107,6 +132,7 @@ export default function AccountantDashboard() {
       {/* Row 2 — Tier Cards */}
       <div
         className="dash-tier-grid"
+        data-tour="dashboard-tiers"
         style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}
       >
         {tiers.map((tier) => <TierCard key={tier.key} tier={tier} />)}
@@ -119,6 +145,7 @@ export default function AccountantDashboard() {
       >
         {/* My Clients panel */}
         <section
+          data-tour="dashboard-clients"
           style={{
             background: 'var(--t-card)',
             border: '1px solid var(--t-line)',
@@ -183,7 +210,7 @@ export default function AccountantDashboard() {
         </section>
 
         {/* Week Rail */}
-        <aside className="acct-dash-week" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <aside className="acct-dash-week" data-tour="dashboard-week" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div
             style={{
               background: 'var(--t-card)',
@@ -216,6 +243,7 @@ export default function AccountantDashboard() {
 
           <button
             onClick={() => router.push('/accountant/queue')}
+            data-tour="dashboard-go-queue"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -238,6 +266,19 @@ export default function AccountantDashboard() {
           </button>
         </aside>
       </div>
+
+      {tour.isActive && tour.currentStep && (
+        <TourOverlay
+          step={tour.currentStep}
+          stepNumber={tour.currentIndex + 1}
+          totalSteps={tour.total}
+          theme={theme}
+          onNext={tour.next}
+          onBack={tour.back}
+          onSkip={tour.skip}
+          nextLabel={tour.currentIndex === tour.total - 1 ? 'Go to Queue' : undefined}
+        />
+      )}
     </div>
   )
 }
