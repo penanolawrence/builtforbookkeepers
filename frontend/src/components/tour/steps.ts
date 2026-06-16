@@ -45,3 +45,44 @@ export const QUEUE_TOUR_STEPS: TourStep[] = [
     body: 'Select Green items with the checkboxes, then approve them all at once with this button.',
   },
 ]
+
+export const CLIENT_DASHBOARD_TOUR_STEPS: TourStep[] = [
+  {
+    targetId: 'client-dash-mascot',
+    title: 'Meet your AI co-pilot',
+    body: "This is your AI co-pilot. It keeps you posted on what's parked, what's posted, and what needs your attention.",
+  },
+  {
+    targetId: 'client-dash-stats',
+    title: 'Your numbers at a glance',
+    body: 'See how many documents you sent this month, how many were returned, and your income and expenses from posted entries.',
+  },
+  {
+    targetId: 'client-dash-recent',
+    title: 'Track what you sent',
+    body: "Every document you upload shows up here, with its current status — Processing, Parked, Posted, or Returned.",
+  },
+  {
+    targetId: 'client-dash-upload-btn',
+    title: "Let's upload something",
+    body: "This button takes you to the Upload page, where you'll send receipts and invoices to your bookkeeper. Let's go take a look.",
+  },
+]
+
+export const CLIENT_UPLOAD_TOUR_STEPS: TourStep[] = [
+  {
+    targetId: 'upload-summary-cards',
+    title: 'Your month at a glance',
+    body: "See how many income and expense files you've uploaded this month, and how many are still in progress.",
+  },
+  {
+    targetId: 'upload-drop-zones',
+    title: 'Drop it where it belongs',
+    body: "Drop income receipts on the left, expenses on the right. No physical receipt? Use the manual entry button below instead.",
+  },
+  {
+    targetId: 'upload-in-progress',
+    title: 'Watch it move',
+    body: 'This list shows documents that are still processing, parked, or returned. Once a document is posted, it disappears from this list automatically.',
+  },
+]
