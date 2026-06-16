@@ -1,18 +1,25 @@
 'use client'
 
+import type { Role } from '@/types/auth'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { setTourContinueFlag } from '@/components/tour/tourSession'
+
+const REPLAY_TARGET: Partial<Record<Role, string>> = {
+  accountant: '/accountant/dashboard',
+  client: '/client/dashboard',
+}
 
 export function ReplayTutorialButton() {
   const router = useRouter()
   const { user } = useAuth()
 
-  if (user?.role !== 'accountant') return null
+  const target = user?.role ? REPLAY_TARGET[user.role] : undefined
+  if (!target) return null
 
   const replayTutorial = () => {
     setTourContinueFlag('dashboard')
-    router.push('/accountant/dashboard')
+    router.push(target)
   }
 
   return (

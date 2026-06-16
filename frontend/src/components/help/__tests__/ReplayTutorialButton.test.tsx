@@ -25,22 +25,31 @@ describe('ReplayTutorialButton', () => {
     expect(screen.getByRole('button', { name: 'Replay tutorial' })).toBeInTheDocument()
   })
 
+  it('renders for a client', () => {
+    mockUser = { role: 'client' }
+    render(<ReplayTutorialButton />)
+    expect(screen.getByRole('button', { name: 'Replay tutorial' })).toBeInTheDocument()
+  })
+
   it('does not render for an admin', () => {
     mockUser = { role: 'admin' }
     render(<ReplayTutorialButton />)
     expect(screen.queryByRole('button', { name: 'Replay tutorial' })).not.toBeInTheDocument()
   })
 
-  it('does not render for a client', () => {
-    mockUser = { role: 'client' }
-    render(<ReplayTutorialButton />)
-    expect(screen.queryByRole('button', { name: 'Replay tutorial' })).not.toBeInTheDocument()
-  })
-
-  it('sets the dashboard continue flag and navigates on click', () => {
+  it('sets the dashboard continue flag and navigates to the accountant dashboard for an accountant', () => {
+    mockUser = { role: 'accountant' }
     render(<ReplayTutorialButton />)
     fireEvent.click(screen.getByRole('button', { name: 'Replay tutorial' }))
     expect(getTourContinueFlag()).toBe('dashboard')
     expect(mockPush).toHaveBeenCalledWith('/accountant/dashboard')
+  })
+
+  it('sets the dashboard continue flag and navigates to the client dashboard for a client', () => {
+    mockUser = { role: 'client' }
+    render(<ReplayTutorialButton />)
+    fireEvent.click(screen.getByRole('button', { name: 'Replay tutorial' }))
+    expect(getTourContinueFlag()).toBe('dashboard')
+    expect(mockPush).toHaveBeenCalledWith('/client/dashboard')
   })
 })
