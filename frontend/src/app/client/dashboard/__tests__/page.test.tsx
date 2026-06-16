@@ -1,5 +1,8 @@
 import { render, screen } from '@testing-library/react'
+import type { User } from '@/types/auth'
+import type { TourStep } from '@/components/tour/types'
 import ClientDashboard from '../page'
+import { setTourContinueFlag } from '@/components/tour/tourSession'
 
 jest.mock('@/components/layout/ThemeProvider', () => ({
   useTheme: () => ({ theme: 'sofia', setTheme: jest.fn() }),
@@ -7,8 +10,13 @@ jest.mock('@/components/layout/ThemeProvider', () => ({
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }))
+let mockUser: Partial<User> = { name: 'Maria Santos', hasSeenTutorial: true }
+const mockMarkTutorialSeen = jest.fn()
 jest.mock('@/lib/hooks/useAuth', () => ({
-  useAuth: () => ({ user: { name: 'Maria Santos' } }),
+  useAuth: () => ({ user: mockUser, markTutorialSeen: mockMarkTutorialSeen }),
+}))
+jest.mock('@/components/tour/TourOverlay', () => ({
+  TourOverlay: ({ step }: { step: TourStep }) => <div data-testid="tour-overlay">{step.title}</div>,
 }))
 jest.mock('@/components/dashboard/MascotCompanion', () => ({
   MascotCompanion: ({ brief }: { brief?: string }) => (
@@ -54,6 +62,11 @@ jest.mock('@tanstack/react-query', () => ({
   }),
 }))
 
+afterEach(() => {
+  mockUser = { name: 'Maria Santos', hasSeenTutorial: true }
+  sessionStorage.clear()
+})
+
 function wrap() {
   return render(
     <div data-theme="sofia">
@@ -72,7 +85,6 @@ describe('ClientDashboard', () => {
     wrap()
     expect(screen.getByText('Total Documents')).toBeInTheDocument()
     expect(screen.getByText('Returned')).toBeInTheDocument()
-    // Income and Expenses labels include the month name
     expect(screen.getByText(/Income \(/)).toBeInTheDocument()
     expect(screen.getByText(/Expenses \(/)).toBeInTheDocument()
   })
@@ -102,7 +114,6 @@ describe('ClientDashboard', () => {
   it('renders mascot companion with brief mentioning parked count', () => {
     wrap()
     const mascot = screen.getByTestId('mascot')
-    // 1 PARKED doc → brief mentions "1 document"
     expect(mascot.textContent).toMatch(/\b1 document/)
   })
 
@@ -114,5 +125,24 @@ describe('ClientDashboard', () => {
   it('renders status chip for APPROVED document as Posted', () => {
     wrap()
     expect(screen.getByText('Posted')).toBeInTheDocument()
+  })
+
+  it('auto-starts the tour when the user has not seen it', () => {
+    mockUser = { name: 'Maria Santos', hasSeenTutorial: false }
+    wrap()
+    expect(screen.getByTestId('tour-overlay')).toBeInTheDocument()
+  })
+
+  it('does not start the tour when the user has already seen it', () => {
+    mockUser = { name: 'Maria Santos', hasSeenTutorial: true }
+    wrap()
+    expect(screen.queryByTestId('tour-overlay')).not.toBeInTheDocument()
+  })
+
+  it('starts the tour when the sessionStorage continue flag is set to dashboard, even if already seen', () => {
+    mockUser = { name: 'Maria Santos', hasSeenTutorial: true }
+    setTourContinueFlag('dashboard')
+    wrap()
+    expect(screen.getByTestId('tour-overlay')).toBeInTheDocument()
   })
 })

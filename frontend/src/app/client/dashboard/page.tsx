@@ -8,6 +8,11 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { useTheme } from '@/components/layout/ThemeProvider'
 import { MascotCompanion } from '@/components/dashboard/MascotCompanion'
 import type { Document, DocumentStatus } from '@/types/document'
+import { useRouter } from 'next/navigation'
+import { TourOverlay } from '@/components/tour/TourOverlay'
+import { useTour } from '@/components/tour/useTour'
+import { CLIENT_DASHBOARD_TOUR_STEPS } from '@/components/tour/steps'
+import { getTourContinueFlag, setTourContinueFlag, clearTourContinueFlag } from '@/components/tour/tourSession'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -102,12 +107,33 @@ function activityFromDoc(doc: Document): {
 // ── component ─────────────────────────────────────────────────────────────────
 
 export default function ClientDashboard() {
-  const { user }    = useAuth()
+  const router      = useRouter()
+  const { user, markTutorialSeen } = useAuth()
   const { theme }   = useTheme()
   const { data: docsPage, isLoading } = useQuery({
     queryKey: ['client-docs-all'],
     queryFn:  () => getDocuments({ per_page: 500 }),
   })
+
+  const tour = useTour(CLIENT_DASHBOARD_TOUR_STEPS, {
+    onFinish: () => {
+      setTourContinueFlag('client-upload')
+      router.push('/client/upload')
+    },
+    onSkip: () => {
+      clearTourContinueFlag()
+      if (!user?.hasSeenTutorial) markTutorialSeen()
+    },
+  })
+
+  useEffect(() => {
+    if (!user) return
+    if (!user.hasSeenTutorial || getTourContinueFlag() === 'dashboard') {
+      clearTourContinueFlag()
+      tour.start()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.hasSeenTutorial])
 
   const [greeting,   setGreeting]   = useState('')
   const [thisMonth,  setThisMonth]  = useState('')
@@ -205,13 +231,13 @@ export default function ClientDashboard() {
             {parkedCount} parked
           </p>
         </div>
-        <div className="dashboard-mascot" style={{ width: 430, flexShrink: 0 }}>
+        <div className="dashboard-mascot" data-tour="client-dash-mascot" style={{ width: 430, flexShrink: 0 }}>
           <MascotCompanion theme={theme} brief={mascotBrief} />
         </div>
       </div>
 
       {/* Stat cards */}
-      <div className="dashboard-stats" style={{ display: 'flex', gap: 16 }}>
+      <div className="dashboard-stats" data-tour="client-dash-stats" style={{ display: 'flex', gap: 16 }}>
         {statCards.map((card) => (
           <div key={card.label} style={{
             flex: 1, background: 'var(--t-card)', border: '1px solid var(--t-line)',
@@ -253,7 +279,7 @@ export default function ClientDashboard() {
       }}>
 
         {/* Recent Documents */}
-        <div style={{
+        <div data-tour="client-dash-recent" style={{
           background: 'var(--t-card)', border: '1px solid var(--t-line)',
           borderRadius: 20, overflow: 'hidden', boxShadow: 'var(--t-shadow)',
         }}>
@@ -386,7 +412,7 @@ export default function ClientDashboard() {
           </div>
 
           {/* Upload button */}
-          <Link href="/client/upload" style={{
+          <Link href="/client/upload" data-tour="client-dash-upload-btn" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             width: '100%', padding: '12px 20px', borderRadius: 12,
             fontFamily: 'inherit', fontWeight: 700, fontSize: 14,
@@ -398,6 +424,19 @@ export default function ClientDashboard() {
           </Link>
         </div>
       </div>
+
+      {tour.isActive && tour.currentStep && (
+        <TourOverlay
+          step={tour.currentStep}
+          stepNumber={tour.currentIndex + 1}
+          totalSteps={tour.total}
+          theme={theme}
+          onNext={tour.next}
+          onBack={tour.back}
+          onSkip={tour.skip}
+          nextLabel={tour.currentIndex === tour.total - 1 ? 'Go to Upload' : undefined}
+        />
+      )}
     </div>
   )
 }
