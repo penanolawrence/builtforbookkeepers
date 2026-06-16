@@ -51,6 +51,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
   })
 
   useEffect(() => {
+    if (showAccountant) return
     if (getTourContinueFlag() === 'queue') {
       clearTourContinueFlag()
       tour.start()
@@ -529,7 +530,7 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
         />
       )}
 
-      {tour.isActive && tour.currentStep && (
+      {!showAccountant && tour.isActive && tour.currentStep && (
         <TourOverlay
           step={tour.currentStep}
           stepNumber={tour.currentIndex + 1}

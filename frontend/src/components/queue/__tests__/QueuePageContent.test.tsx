@@ -42,4 +42,10 @@ describe('QueuePageContent tour', () => {
     render(<QueuePageContent reviewBasePath="/accountant/queue" />)
     expect(getTourContinueFlag()).toBeNull()
   })
+
+  it('does not start the queue tour for the admin (showAccountant) view even if the continue flag is set', () => {
+    setTourContinueFlag('queue')
+    render(<QueuePageContent reviewBasePath="/admin/queue" showAccountant />)
+    expect(screen.queryByTestId('tour-overlay')).not.toBeInTheDocument()
+  })
 })
