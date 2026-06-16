@@ -77,4 +77,36 @@ describe('TourOverlay', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onSkip).toHaveBeenCalledTimes(1)
   })
+
+  it('renders the tooltip card with dialog ARIA semantics', () => {
+    render(
+      <TourOverlay step={step} stepNumber={1} totalSteps={3} theme="sofia" onNext={jest.fn()} onBack={jest.fn()} onSkip={jest.fn()} />
+    )
+    expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
+  })
+
+  it('clamps the tooltip to the viewport when the target is near the right edge', () => {
+    const originalRect = Element.prototype.getBoundingClientRect
+    Element.prototype.getBoundingClientRect = jest.fn(() => ({
+      top: 100,
+      left: window.innerWidth - 50,
+      right: window.innerWidth,
+      bottom: 150,
+      width: 50,
+      height: 50,
+      x: window.innerWidth - 50,
+      y: 100,
+      toJSON: () => {},
+    }))
+
+    render(
+      <TourOverlay step={step} stepNumber={1} totalSteps={3} theme="sofia" onNext={jest.fn()} onBack={jest.fn()} onSkip={jest.fn()} />
+    )
+
+    const dialog = screen.getByRole('dialog')
+    const left = parseFloat(dialog.style.left)
+    expect(left).toBeLessThanOrEqual(window.innerWidth - 340 - 16)
+
+    Element.prototype.getBoundingClientRect = originalRect
+  })
 })

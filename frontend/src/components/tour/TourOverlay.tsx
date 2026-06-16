@@ -79,19 +79,24 @@ export function TourOverlay({ step, stepNumber, totalSteps, theme, onNext, onBac
         zIndex: 1001,
       }
 
+  const tooltipMaxWidth = 340
   const tooltipTop = rect ? rect.bottom + pad + 12 : '50%'
-  const tooltipLeft = rect ? Math.max(16, rect.left) : '50%'
+  const tooltipLeft = rect
+    ? Math.min(Math.max(16, rect.left), window.innerWidth - tooltipMaxWidth - 16)
+    : '50%'
 
   return createPortal(
     <>
       <div style={{ position: 'fixed', inset: 0, zIndex: 1000, pointerEvents: 'auto' }} />
       <div style={spotlightStyle} />
       <div
+        role="dialog"
+        aria-modal="true"
         style={{
           position: 'fixed',
           top: tooltipTop,
           left: tooltipLeft,
-          maxWidth: 340,
+          maxWidth: tooltipMaxWidth,
           zIndex: 1002,
           background: 'var(--t-card)',
           border: '1px solid var(--t-line)',
