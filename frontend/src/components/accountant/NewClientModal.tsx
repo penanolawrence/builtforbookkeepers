@@ -12,6 +12,15 @@ interface Props {
 
 type Field = keyof CreateClientPayload
 
+const INDUSTRY_OPTIONS = [
+  { value: 'retail',                label: 'Retail' },
+  { value: 'services',              label: 'Services' },
+  { value: 'restaurant',            label: 'Restaurant / F&B' },
+  { value: 'construction',          label: 'Construction' },
+  { value: 'professional_services', label: 'Professional Services' },
+  { value: 'manufacturing',         label: 'Manufacturing' },
+]
+
 const EMPTY: CreateClientPayload = {
   businessName:  '',
   mobile:        '',
@@ -20,6 +29,7 @@ const EMPTY: CreateClientPayload = {
   tin:           '',
   email:         '',
   contactPerson: '',
+  industryType:  '',
 }
 
 export function NewClientModal({ onClose }: Props) {
@@ -178,6 +188,23 @@ export function NewClientModal({ onClose }: Props) {
                       <option value="non_vat">Non-VAT</option>
                       <option value="vat">VAT</option>
                     </select>
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Industry Type</label>
+                    <select
+                      className={inputCls('industryType')}
+                      value={form.industryType ?? ''}
+                      onChange={(e) => set('industryType', e.target.value)}
+                    >
+                      <option value="">Select industry… (optional)</option>
+                      {INDUSTRY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <div style={{ fontSize: 10.5, color: 'var(--t-faint)', marginTop: 3 }}>
+                      Client can also set this during account setup.
+                    </div>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>

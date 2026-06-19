@@ -28,8 +28,18 @@ const createSchema = z.object({
   tin:          z.string().optional(),
   email:        z.string().email().optional().or(z.literal('')),
   contactPerson: z.string().optional(),
+  industryType: z.string().optional(),
 })
 type CreateForm = z.infer<typeof createSchema>
+
+const INDUSTRY_OPTIONS = [
+  { value: 'retail',                label: 'Retail' },
+  { value: 'services',              label: 'Services' },
+  { value: 'restaurant',            label: 'Restaurant / F&B' },
+  { value: 'construction',          label: 'Construction' },
+  { value: 'professional_services', label: 'Professional Services' },
+  { value: 'manufacturing',         label: 'Manufacturing' },
+]
 
 // ─── CreateMode ───────────────────────────────────────────────────────────────
 
@@ -180,6 +190,23 @@ function CreateMode({ onClose, onCreated }: { onClose: () => void; onCreated?: (
                     <option value="non_vat">Non-VAT</option>
                     <option value="vat">VAT</option>
                   </select>
+                </div>
+
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Industry Type</label>
+                  <select
+                    value={watch('industryType') ?? ''}
+                    onChange={(e) => setValue('industryType', e.target.value || undefined)}
+                    className={inputCls()}
+                  >
+                    <option value="">Select industry… (optional)</option>
+                    {INDUSTRY_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: 10.5, color: 'var(--t-faint)', marginTop: 3 }}>
+                    Client can also set this during account setup.
+                  </div>
                 </div>
 
                 <div style={{ gridColumn: '1 / -1' }}>

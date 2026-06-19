@@ -27,6 +27,7 @@ export async function createClient(data: {
   tin?: string
   email?: string
   contactPerson?: string
+  industryType?: string
 }): Promise<{ companyId: string; inviteLink: string; username: string }> {
   const { data: result } = await api.post('/admin/clients', data)
   return result

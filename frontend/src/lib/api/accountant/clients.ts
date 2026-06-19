@@ -10,6 +10,7 @@ export interface CreateClientPayload {
   tin?:          string
   email?:        string
   contactPerson?: string
+  industryType?: string
 }
 
 export interface CreateClientResult {
