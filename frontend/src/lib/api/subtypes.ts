@@ -5,8 +5,8 @@ export interface Subtype {
   name: string
 }
 
-export async function searchSubtypes(q: string): Promise<Subtype[]> {
-  const { data } = await api.get<Subtype[]>('/subtypes', { params: { q } })
+export async function searchSubtypes(q?: string): Promise<Subtype[]> {
+  const { data } = await api.get<Subtype[]>('/subtypes', { params: q ? { q } : undefined })
   return data
 }
 
