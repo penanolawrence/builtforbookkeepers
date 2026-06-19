@@ -354,6 +354,20 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
   const primaryLines   = visibleLines.filter((l) => { const t = accountTypeOf(l); return !t || t === 'expense' || t === 'income' })
   const counterLines   = visibleLines.filter((l) => { const t = accountTypeOf(l); return t === 'liability' || t === 'vat' })
 
+  const primaryTotal   = primaryLines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
+  const vatTotal       = counterLines
+    .filter((l) => accountTypeOf(l) === 'vat')
+    .reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
+  const liabilityTotal = counterLines
+    .filter((l) => accountTypeOf(l) === 'liability')
+    .reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
+  const invoiceTotal   = primaryTotal + vatTotal
+  const netCash        = invoiceTotal - liabilityTotal
+
+  function fmtPeso(n: number) {
+    return '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
   function aiHint(current: string, original: string | null | undefined) {
     if (!original || current === original) return null
     return <div className="text-[10px] text-amber-500 mt-0.5">AI: {original}</div>
@@ -639,6 +653,54 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                         />
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Cash Summary */}
+                {primaryLines.length > 0 && (
+                  <div
+                    data-testid="cash-summary"
+                    className="mt-4 border border-t-line rounded-lg p-4 bg-t-card-alt text-xs space-y-1.5"
+                  >
+                    <div className="flex justify-between">
+                      <span className="text-t-muted">
+                        Net {declaredType === 'expense' ? 'Expense' : 'Income'}
+                      </span>
+                      <span className="font-semibold text-t-ink tabular-nums">{fmtPeso(primaryTotal)}</span>
+                    </div>
+                    {vatTotal > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-t-muted">
+                          + {declaredType === 'expense' ? 'Input VAT' : 'Output VAT'}
+                        </span>
+                        <span className="font-semibold text-t-ink tabular-nums">{fmtPeso(vatTotal)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-t border-t-line pt-1.5">
+                      <span className="text-t-muted">Invoice Total</span>
+                      <span className="font-semibold text-t-ink tabular-nums">{fmtPeso(invoiceTotal)}</span>
+                    </div>
+                    {liabilityTotal > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-t-muted">− EWT Withheld</span>
+                        <span className="font-semibold text-t-ink tabular-nums">({fmtPeso(liabilityTotal)})</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center border-t-2 border-t-line pt-1.5">
+                      <span data-testid="net-cash-label" className="font-bold text-t-ink">
+                        {declaredType === 'expense' ? 'Net Cash Out' : 'Net Cash In'}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span data-testid="net-cash-value" className="font-bold text-t-ink tabular-nums">
+                          {fmtPeso(netCash)}
+                        </span>
+                        {paymentMethod && (
+                          <span className="text-[10px] text-t-faint bg-t-card border border-t-line rounded px-1.5 py-0.5 capitalize">
+                            {paymentMethod}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 

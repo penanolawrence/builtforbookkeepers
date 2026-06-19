@@ -245,6 +245,74 @@ describe('QueueReviewModal — counter entries grouping', () => {
   })
 })
 
+describe('QueueReviewModal — cash summary', () => {
+  afterEach(() => jest.clearAllMocks())
+
+  it('shows cash-summary with correct Net Cash Out for expense doc', () => {
+    const expLine = {
+      id: 'l-exp', type: 'expense' as const, accountId: 'a-exp', accountCode: '6160',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 30000, description: 'Professional Fees', date: '2026-06-19',
+    }
+    const vatLine = {
+      id: 'l-vat', type: 'expense' as const, accountId: 'a-vat', accountCode: '1101',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 3600, description: 'Input VAT', date: '2026-06-19',
+    }
+    const ewtLine = {
+      id: 'l-ewt', type: 'expense' as const, accountId: 'a-lib', accountCode: '2210',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 1500, description: 'EWT Payable', date: '2026-06-19',
+    }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'expense', transactionLines: [expLine, vatLine, ewtLine] }),
+      [expenseAccount, vatAccount, liabilityAccount],
+    )
+    wrap()
+    expect(screen.getByTestId('cash-summary')).toBeInTheDocument()
+    expect(screen.getByTestId('net-cash-label')).toHaveTextContent('Net Cash Out')
+    expect(screen.getByTestId('net-cash-value')).toHaveTextContent('₱32,100.00')
+  })
+
+  it('shows Net Cash In for income doc', () => {
+    const incLine = {
+      id: 'l-inc', type: 'income' as const, accountId: 'a-inc', accountCode: '4010',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 30000, description: 'Service Revenue', date: '2026-06-19',
+    }
+    const incomeAccount = { id: 'a-inc', code: '4010', name: 'Service Revenue', type: 'income', isSystemManaged: false, isActive: true }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'income', transactionLines: [incLine] }),
+      [incomeAccount],
+    )
+    wrap()
+    expect(screen.getByTestId('net-cash-label')).toHaveTextContent('Net Cash In')
+  })
+
+  it('hides cash-summary when there are no primary lines', () => {
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'expense', transactionLines: [] }),
+      [],
+    )
+    wrap()
+    expect(screen.queryByTestId('cash-summary')).not.toBeInTheDocument()
+  })
+
+  it('hides the VAT row when vatTotal is 0', () => {
+    const expLine = {
+      id: 'l-exp', type: 'expense' as const, accountId: 'a-exp', accountCode: '6160',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 30000, description: 'Expense', date: '2026-06-19',
+    }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'expense', transactionLines: [expLine] }),
+      [expenseAccount],
+    )
+    wrap()
+    expect(screen.queryByText(/Input VAT/)).not.toBeInTheDocument()
+  })
+})
+
 describe('QueueReviewModal — account validation', () => {
   afterEach(() => jest.clearAllMocks())
 
