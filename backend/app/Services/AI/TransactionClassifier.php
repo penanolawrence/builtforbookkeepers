@@ -57,8 +57,8 @@ class TransactionClassifier
             "    - Contractors / Subcontractors / Construction → 2214\n" .
             "    - Compensation / Payroll / Salary → 2220\n" .
             "  * This EWT line does NOT affect the sum constraint — do not subtract it from other line amounts.\n" .
-            "  * Example: invoice shows line items totaling ₱30,000, 'VAT ₱3,600', 'Total ₱33,600', 'Less: EWT 5% ₱1,500', 'Amount Due ₱32,100' →\n" .
-            "    Create: expense line(s) ₱30,000 + VAT line ₱3,600 (sum = ₱33,600 = total_amount ✓) + EWT Payable line ₱1,500 (extra, not in sum).\n";
+            "  * Example: invoice shows service lines summing to [S], 'VAT [V]', 'Total [S+V]', 'Less: EWT [W]', 'Amount Due [S+V-W]' →\n" .
+            "    Create: expense line(s) totaling [S] + VAT line [V] (sum = [S+V] = total_amount ✓) + EWT Payable line [W] (extra, not counted in sum).\n";
 
         if ($declaredType) {
             $opposite     = $declaredType === 'expense' ? 'income' : 'expense';
