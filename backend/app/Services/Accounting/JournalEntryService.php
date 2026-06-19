@@ -51,18 +51,22 @@ class JournalEntryService
                 'posted_at'   => now(),
             ]);
 
-            $lines = $doc->transactionLines;
+            $lines = $doc->transactionLines()->with('account')->get();
 
             $missing = $lines->firstWhere('account_id', null);
             if ($missing) {
                 throw new \RuntimeException("Transaction line is missing an account assignment (line id: {$missing->id}).");
             }
 
-            $totalIncome  = $lines->where('type', 'income')->sum('amount');
-            $totalExpense = $lines->where('type', 'expense')->sum('amount');
+            $totalIncome    = 0.0;
+            $totalExpense   = 0.0;
+            $totalLiability = 0.0;
 
             foreach ($lines as $line) {
+                $accountType = $line->account?->type ?? 'expense';
+
                 if ($line->type === 'income') {
+                    // Income lines → credit
                     JournalEntryLine::create([
                         'journal_entry_id'    => $entry->id,
                         'account_id'          => $line->account_id,
@@ -70,7 +74,19 @@ class JournalEntryService
                         'debit'               => null,
                         'credit'              => $line->amount,
                     ]);
+                    $totalIncome += (float) $line->amount;
+                } elseif ($accountType === 'liability') {
+                    // Liability lines (EWT Payable etc.) → credit, reduces cash paid
+                    JournalEntryLine::create([
+                        'journal_entry_id'    => $entry->id,
+                        'account_id'          => $line->account_id,
+                        'transaction_line_id' => $line->id,
+                        'debit'               => null,
+                        'credit'              => $line->amount,
+                    ]);
+                    $totalLiability += (float) $line->amount;
                 } else {
+                    // Expense, VAT, asset, equity lines → debit
                     JournalEntryLine::create([
                         'journal_entry_id'    => $entry->id,
                         'account_id'          => $line->account_id,
@@ -78,10 +94,13 @@ class JournalEntryService
                         'debit'               => $line->amount,
                         'credit'              => null,
                     ]);
+                    $totalExpense += (float) $line->amount;
                 }
             }
 
-            $netCash = (float) $totalIncome - (float) $totalExpense;
+            // netCash > 0 → debit cash (income received)
+            // netCash < 0 → credit cash (expense paid, reduced by any payable offsets)
+            $netCash = $totalIncome - $totalExpense + $totalLiability;
             if ($netCash > 0) {
                 JournalEntryLine::create([
                     'journal_entry_id' => $entry->id,
