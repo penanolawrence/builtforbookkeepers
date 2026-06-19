@@ -21,8 +21,16 @@ class ChartOfAccountsService
 
     public function seedDefaultAccounts(Company $company): void
     {
+        $industry = $company->industry_type;
+
         $coaEntries = ChartOfAccount::with('accountType')
             ->where('is_active', true)
+            ->where(function ($query) use ($industry) {
+                $query->whereDoesntHave('industryTags');
+                if ($industry) {
+                    $query->orWhereHas('industryTags', fn ($q) => $q->where('industry', $industry));
+                }
+            })
             ->orderBy('sort_order')
             ->get();
 

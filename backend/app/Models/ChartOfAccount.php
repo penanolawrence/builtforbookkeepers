@@ -25,4 +25,9 @@ class ChartOfAccount extends Model
     {
         return $this->hasMany(ChartOfAccountSubtype::class);
     }
+
+    public function industryTags(): HasMany
+    {
+        return $this->hasMany(ChartOfAccountIndustry::class);
+    }
 }

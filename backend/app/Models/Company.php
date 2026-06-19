@@ -19,6 +19,7 @@ class Company extends Model
         'tin',
         'contact_person',
         'bir_type',
+        'industry_type',
         'plan',
         'accountant_id',
     ];
