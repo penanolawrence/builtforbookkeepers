@@ -626,12 +626,14 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                 </div>
                 )}
 
-                {/* Counter Entries — rendered for both income and expense declaredType */}
-                {counterLines.length > 0 && (
+                {/* Withholdings & Payables — rendered for both income and expense declaredType */}
+                {(counterLines.length > 0 || true) && (
                   <div data-testid="counter-lines-section" className="mt-3">
                     <div className="text-xs font-semibold text-amber-700 mb-1">
-                      Counter Entries{' '}
-                      <span className="text-[10px] text-t-faint font-normal">· payables & tax</span>
+                      Withholdings & Payables{' '}
+                      <span className="text-[10px] text-t-faint font-normal">
+                        · reduces Net Cash {declaredType === 'expense' ? 'Out' : 'In'}
+                      </span>
                     </div>
                     <div className="flex gap-1.5 items-center mb-1">
                       <div className="w-44 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Account</div>
@@ -641,6 +643,9 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                       <div className="flex-1 text-[10px] font-semibold text-t-faint uppercase">Notes</div>
                       <div className="w-6 shrink-0" />
                     </div>
+                    {counterLines.length === 0 && (
+                      <div className="text-[11px] text-t-faint mb-2">No withholdings or payables.</div>
+                    )}
                     {counterLines.map((l) => (
                       <div key={l.id ?? `counter-${l.index}`} className="bg-t-surface rounded mb-1">
                         <LineRow
@@ -653,6 +658,12 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                         />
                       </div>
                     ))}
+                    <button
+                      onClick={() => addLine(declaredType)}
+                      className="text-[11px] text-t-primary hover:underline mt-1"
+                    >
+                      + Add deduction line
+                    </button>
                   </div>
                 )}
 

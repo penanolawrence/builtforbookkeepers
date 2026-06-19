@@ -221,16 +221,17 @@ describe('QueueReviewModal — counter entries grouping', () => {
     expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
   })
 
-  it('does not render counter-lines-section when all lines have expense accounts', () => {
+  it('always renders counter-lines-section even with no counter lines', () => {
     mockQueriesWithAccounts(
       makeItem({ declaredType: 'expense', transactionLines: [expenseLine] }),
       [expenseAccount],
     )
     wrap()
-    expect(screen.queryByTestId('counter-lines-section')).not.toBeInTheDocument()
+    expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
+    expect(screen.getByText('No withholdings or payables.')).toBeInTheDocument()
   })
 
-  it('does not render counter-lines-section when lines have no account selected', () => {
+  it('always renders counter-lines-section when lines have no account selected', () => {
     const emptyLine = {
       id: 'l-empty', type: 'expense' as const, accountId: '', accountCode: '',
       accountName: null, subtypeId: null, subtypeName: null,
@@ -241,7 +242,7 @@ describe('QueueReviewModal — counter entries grouping', () => {
       [],
     )
     wrap()
-    expect(screen.queryByTestId('counter-lines-section')).not.toBeInTheDocument()
+    expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
   })
 })
 
