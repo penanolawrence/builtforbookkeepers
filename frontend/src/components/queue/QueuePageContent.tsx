@@ -346,8 +346,8 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
                       ? 'var(--t-primary-soft)'
                       : gIdx % 2 === 1 ? 'var(--t-card-alt)' : 'transparent'
 
-                    const inflow  = item.declaredType === 'income'  ? item.amount : null
-                    const outflow = item.declaredType === 'expense' ? item.amount : null
+                    const inflow  = item.declaredType === 'income'  ? (item.netCash ?? item.amount) : null
+                    const outflow = item.declaredType === 'expense' ? (item.netCash ?? item.amount) : null
 
                     return (
                       <div
@@ -465,7 +465,8 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
                     const flagTier  = item.flag === 'RED' ? 'review' : item.flag === 'YELLOW' ? 'check' : 'ready'
                     const chipMap   = { RED: { label: '⚠ RED', tier: 'review' }, YELLOW: { label: '● YEL', tier: 'check' }, GREEN: { label: '✓ GRN', tier: 'ready' } }
                     const { label: flagLabel, tier: chipTier } = chipMap[item.flag]
-                    const amount    = item.amount != null && item.amount > 0 ? fmtAmount(item.amount) : null
+                    const cashAmt   = item.netCash ?? item.amount
+                    const amount    = cashAmt != null && cashAmt > 0 ? fmtAmount(cashAmt) : null
                     const amtColor  = item.declaredType === 'income' ? 'var(--t-tier-ready-fg)' : 'var(--t-tier-review-fg)'
                     const isGreen   = item.flag === 'GREEN'
 

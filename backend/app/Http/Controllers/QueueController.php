@@ -38,26 +38,46 @@ class QueueController extends Controller
             $query->where('company_id', $request->clientId);
         }
 
-        $documents = $query->get();
+        $documents = $query->with('transactionLines.account')->get();
 
-        return response()->json($documents->map(fn ($d) => [
-            'documentId'     => $d->id,
-            'clientId'       => $d->company_id,
-            'clientName'     => $d->company->name,
-            'accountantName' => $d->company->accountant?->name,
-            'flag'           => $d->flag,
-            'anomalyReasons' => $d->anomaly_reason ?? [],
-            'merchantName'   => $d->merchant_name,
-            'amount'         => $d->amount,
-            'vatAmount'      => $d->vat_amount,
-            'date'           => $d->document_date?->toDateString(),
-            'category'       => $d->category,
-            'paymentMethod'  => $d->payment_method,
-            'refNumber'      => $d->ref_number,
-            'isNoReceipt'    => $d->is_no_receipt,
-            'isOcrFailed'    => $d->is_ocr_failed,
-            'declaredType'   => $d->document_type,
-        ]));
+        return response()->json($documents->map(function ($d) {
+            $lines   = $d->transactionLines;
+            $netCash = null;
+
+            if ($lines->isNotEmpty()) {
+                if ($d->document_type === 'income') {
+                    // Exclude tax_credit lines (EWT withheld receivable) — those reduce cash received
+                    $netCash = (float) $lines
+                        ->filter(fn ($l) => ($l->account?->type ?? '') !== 'tax_credit')
+                        ->sum('amount');
+                } else {
+                    // Exclude liability lines (EWT payable) — those reduce cash paid
+                    $netCash = (float) $lines
+                        ->filter(fn ($l) => ($l->account?->type ?? '') !== 'liability')
+                        ->sum('amount');
+                }
+            }
+
+            return [
+                'documentId'     => $d->id,
+                'clientId'       => $d->company_id,
+                'clientName'     => $d->company->name,
+                'accountantName' => $d->company->accountant?->name,
+                'flag'           => $d->flag,
+                'anomalyReasons' => $d->anomaly_reason ?? [],
+                'merchantName'   => $d->merchant_name,
+                'amount'         => $d->amount,
+                'netCash'        => $netCash ?? $d->amount,
+                'vatAmount'      => $d->vat_amount,
+                'date'           => $d->document_date?->toDateString(),
+                'category'       => $d->category,
+                'paymentMethod'  => $d->payment_method,
+                'refNumber'      => $d->ref_number,
+                'isNoReceipt'    => $d->is_no_receipt,
+                'isOcrFailed'    => $d->is_ocr_failed,
+                'declaredType'   => $d->document_type,
+            ];
+        }));
     }
 
     public function show(string $id): JsonResponse

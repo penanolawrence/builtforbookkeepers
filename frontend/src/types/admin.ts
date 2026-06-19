@@ -7,6 +7,7 @@ export interface Company {
   email: string | null
   tin: string | null
   contactPerson: string | null
+  industry: string | null
   birType: 'vat' | 'non_vat'
   plan: 'starter' | 'growth' | 'premium'
   accountantId: string
@@ -19,6 +20,7 @@ export interface ClientProfile extends Company {
   accountantName: string
   lastPayment: { amount: number; dateReceived: string; referenceNumber: string } | null
   queueCounts?: { red: number; yellow: number; green: number }
+  coaReady: boolean
 }
 
 export interface Accountant {
@@ -48,7 +50,7 @@ export interface Account {
   id: string
   code: string
   name: string
-  type: 'income' | 'expense' | 'cash' | 'vat' | 'equity'
+  type: 'income' | 'expense' | 'cash' | 'vat' | 'equity' | 'liability' | 'tax_credit'
   chartOfAccountId?: string | null
   isSystemManaged: boolean
   isActive: boolean

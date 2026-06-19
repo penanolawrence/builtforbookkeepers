@@ -9,6 +9,7 @@ export interface QueueItem {
   anomalyReasons: string[]
   merchantName: string | null
   amount: number | null
+  netCash: number | null
   vatAmount: number | null
   date: string | null
   category: string | null
