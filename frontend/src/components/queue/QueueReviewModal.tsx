@@ -622,11 +622,11 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                 </div>
                 )}
 
-                {/* Withholdings & Payables — rendered for both income and expense declaredType */}
-                {(counterLines.length > 0 || true) && (
+                {/* Withholdings & Payables / Receivables — only shown when counter lines exist */}
+                {counterLines.length > 0 && (
                   <div data-testid="counter-lines-section" className="mt-3">
                     <div className="text-xs font-semibold text-amber-700 mb-1">
-                      Withholdings & Payables{' '}
+                      {declaredType === 'expense' ? 'Withholdings & Payables' : 'Withholdings & Receivables'}{' '}
                       <span className="text-[10px] text-t-faint font-normal">
                         · reduces Net Cash {declaredType === 'expense' ? 'Out' : 'In'}
                       </span>
@@ -639,9 +639,6 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                       <div className="flex-1 text-[10px] font-semibold text-t-faint uppercase">Notes</div>
                       <div className="w-6 shrink-0" />
                     </div>
-                    {counterLines.length === 0 && (
-                      <div className="text-[11px] text-t-faint mb-2">No withholdings or payables.</div>
-                    )}
                     {counterLines.map((l) => (
                       <div key={l.id ?? `counter-${l.index}`} className="bg-t-surface rounded mb-1">
                         <LineRow
@@ -654,14 +651,16 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                         />
                       </div>
                     ))}
-                    <button
-                      onClick={() => addLine(declaredType)}
-                      className="text-[11px] text-t-primary hover:underline mt-1"
-                    >
-                      + Add deduction line
-                    </button>
                   </div>
                 )}
+
+                {/* Add deduction line — always accessible regardless of whether counter section is visible */}
+                <button
+                  onClick={() => addLine(declaredType)}
+                  className="text-[11px] text-t-primary hover:underline mt-2"
+                >
+                  + Add {declaredType === 'expense' ? 'withholding / payable' : 'withholding / receivable'} line
+                </button>
 
                 {/* Cash Summary */}
                 {primaryLines.length > 0 && (

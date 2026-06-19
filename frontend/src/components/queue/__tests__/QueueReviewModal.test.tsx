@@ -207,7 +207,7 @@ describe('QueueReviewModal — counter entries grouping', () => {
     expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
   })
 
-  it('vat lines go to primary section, not counter', () => {
+  it('vat lines go to primary section — counter section hidden when only vat lines present', () => {
     const vatLine = {
       id: 'l-vat', type: 'expense' as const, accountId: 'a-vat', accountCode: '1101',
       accountName: null, subtypeId: null, subtypeName: null,
@@ -218,9 +218,8 @@ describe('QueueReviewModal — counter entries grouping', () => {
       [expenseAccount, vatAccount],
     )
     wrap()
-    // counter section is always shown but should be empty (no liability/tax_credit lines)
-    expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
-    expect(screen.getByText('No withholdings or payables.')).toBeInTheDocument()
+    // vat accounts go to primary — counter section should not render
+    expect(screen.queryByTestId('counter-lines-section')).not.toBeInTheDocument()
   })
 
   it('renders counter-lines-section with content when a line uses a tax_credit account', () => {
@@ -241,17 +240,16 @@ describe('QueueReviewModal — counter entries grouping', () => {
     expect(screen.queryByText('No withholdings or payables.')).not.toBeInTheDocument()
   })
 
-  it('always renders counter-lines-section even with no counter lines', () => {
+  it('hides counter-lines-section when no counter lines exist', () => {
     mockQueriesWithAccounts(
       makeItem({ declaredType: 'expense', transactionLines: [expenseLine] }),
       [expenseAccount],
     )
     wrap()
-    expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
-    expect(screen.getByText('No withholdings or payables.')).toBeInTheDocument()
+    expect(screen.queryByTestId('counter-lines-section')).not.toBeInTheDocument()
   })
 
-  it('always renders counter-lines-section when lines have no account selected', () => {
+  it('hides counter-lines-section when lines have no account selected', () => {
     const emptyLine = {
       id: 'l-empty', type: 'expense' as const, accountId: '', accountCode: '',
       accountName: null, subtypeId: null, subtypeName: null,
@@ -262,7 +260,30 @@ describe('QueueReviewModal — counter entries grouping', () => {
       [],
     )
     wrap()
-    expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
+    expect(screen.queryByTestId('counter-lines-section')).not.toBeInTheDocument()
+  })
+
+  it('shows Withholdings & Payables label for expense docs', () => {
+    const ewtLine = { id: 'l-ewt', type: 'expense' as const, accountId: 'a-lib', accountCode: '2210', accountName: null, subtypeId: null, subtypeName: null, amount: 1500, description: 'EWT', date: '2026-06-19' }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'expense', transactionLines: [expenseLine, ewtLine] }),
+      [expenseAccount, liabilityAccount],
+    )
+    wrap()
+    expect(screen.getByText(/Withholdings & Payables/)).toBeInTheDocument()
+  })
+
+  it('shows Withholdings & Receivables label for income docs', () => {
+    const taxCreditAccount = { id: 'a-tc', code: '1102', name: 'EWT Withheld', type: 'tax_credit', isSystemManaged: true, isActive: true }
+    const incomeAccount    = { id: 'a-inc', code: '4010', name: 'Service Revenue', type: 'income', isSystemManaged: false, isActive: true }
+    const incLine    = { id: 'l-inc', type: 'income' as const, accountId: 'a-inc', accountCode: '4010', accountName: null, subtypeId: null, subtypeName: null, amount: 10000, description: 'Revenue', date: '2026-06-19' }
+    const ewtRecLine = { id: 'l-tc',  type: 'income' as const, accountId: 'a-tc',  accountCode: '1102', accountName: null, subtypeId: null, subtypeName: null, amount: 1000,  description: 'EWT withheld', date: '2026-06-19' }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'income', transactionLines: [incLine, ewtRecLine] }),
+      [incomeAccount, taxCreditAccount],
+    )
+    wrap()
+    expect(screen.getByText(/Withholdings & Receivables/)).toBeInTheDocument()
   })
 })
 
