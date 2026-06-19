@@ -43,7 +43,22 @@ class TransactionClassifier
             "- Each line must use an account_code from the Chart of Accounts above.\n" .
             "- Each line's category MUST be an exact name from the Available Subtypes list above. " .
             "Pick the closest match. Do not invent new category names.\n" .
-            "- sum(lines[].amount) MUST equal document.total_amount.\n";
+            "- sum(lines[].amount) MUST equal document.total_amount.\n" .
+            "  EXCEPTION: EWT (Withholding Tax) payable lines are EXCLUDED from this sum. " .
+            "  The sum of all non-EWT lines must equal total_amount. " .
+            "  EWT lines are additional entries on top of that sum.\n" .
+            "- EWT (Withholding Tax) rule: when the document shows a Withholding Tax deduction (labelled 'EWT', 'Withholding Tax', 'Less: EWT', etc.):\n" .
+            "  * Create a SEPARATE line for the EWT amount (the withheld amount, e.g. ₱1,500).\n" .
+            "  * Assign to the matching EWT Payable account using this lookup:\n" .
+            "    - Professional Fees / CPA / Lawyer / Consultant → 2210\n" .
+            "    - Rental / Lease / Rent → 2211\n" .
+            "    - Services (generic, not professional) → 2212\n" .
+            "    - Goods / Supplies / Merchandise → 2213\n" .
+            "    - Contractors / Subcontractors / Construction → 2214\n" .
+            "    - Compensation / Payroll / Salary → 2220\n" .
+            "  * This EWT line does NOT affect the sum constraint — do not subtract it from other line amounts.\n" .
+            "  * Example: invoice shows line items totaling ₱30,000, 'VAT ₱3,600', 'Total ₱33,600', 'Less: EWT 5% ₱1,500', 'Amount Due ₱32,100' →\n" .
+            "    Create: expense line(s) ₱30,000 + VAT line ₱3,600 (sum = ₱33,600 = total_amount ✓) + EWT Payable line ₱1,500 (extra, not in sum).\n";
 
         if ($declaredType) {
             $opposite     = $declaredType === 'expense' ? 'income' : 'expense';
