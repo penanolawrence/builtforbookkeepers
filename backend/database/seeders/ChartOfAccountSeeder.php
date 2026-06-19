@@ -15,6 +15,16 @@ class ChartOfAccountSeeder extends Seeder
             ['type' => 'Assets',             'code' => '1010', 'name' => 'Cash on Hand',                          'sort_order' => 1],
             ['type' => 'Assets',             'code' => '1020', 'name' => 'Cash in Bank',                          'sort_order' => 2],
 
+            // Assets — Inventory (industry-specific, tagged via pivot)
+            ['type' => 'Assets', 'code' => '1030', 'name' => 'Merchandise Inventory',            'sort_order' => 3],
+            ['type' => 'Assets', 'code' => '1031', 'name' => 'Food Inventory',                   'sort_order' => 4],
+            ['type' => 'Assets', 'code' => '1032', 'name' => 'Beverage Inventory',               'sort_order' => 5],
+            ['type' => 'Assets', 'code' => '1033', 'name' => 'Construction Materials Inventory', 'sort_order' => 6],
+            ['type' => 'Assets', 'code' => '1034', 'name' => 'Retention Receivable',             'sort_order' => 7],
+            ['type' => 'Assets', 'code' => '1035', 'name' => 'Raw Materials Inventory',          'sort_order' => 8],
+            ['type' => 'Assets', 'code' => '1036', 'name' => 'Work-in-Progress Inventory',       'sort_order' => 9],
+            ['type' => 'Assets', 'code' => '1037', 'name' => 'Finished Goods Inventory',         'sort_order' => 10],
+
             // Liabilities (2000s) — Withholding Tax Payable (universal)
             ['type' => 'Liabilities', 'code' => '2210', 'name' => 'EWT Payable — Professional Fees (10%/15%)', 'sort_order' => 1],
             ['type' => 'Liabilities', 'code' => '2211', 'name' => 'EWT Payable — Rental (5%)',                 'sort_order' => 2],
@@ -40,12 +50,28 @@ class ChartOfAccountSeeder extends Seeder
             ['type' => 'Revenue / Income',   'code' => '4090', 'name' => 'Government Grants / Subsidies',         'sort_order' => 9],
             ['type' => 'Revenue / Income',   'code' => '4099', 'name' => 'Other Operating Income',                'sort_order' => 10],
 
+            // Revenue — industry-specific
+            ['type' => 'Revenue / Income', 'code' => '4021', 'name' => 'Contract Revenue', 'sort_order' => 11],
+            ['type' => 'Revenue / Income', 'code' => '4041', 'name' => 'Deferred Revenue',  'sort_order' => 12],
+            ['type' => 'Revenue / Income', 'code' => '4042', 'name' => 'Unbilled Revenue',  'sort_order' => 13],
+
             // Cost of Goods Sold (5000s)
             ['type' => 'Cost of Goods Sold', 'code' => '5010', 'name' => 'Purchases',                             'sort_order' => 1],
             ['type' => 'Cost of Goods Sold', 'code' => '5020', 'name' => 'Freight-in',                            'sort_order' => 2],
             ['type' => 'Cost of Goods Sold', 'code' => '5030', 'name' => 'Direct Labor',                          'sort_order' => 3],
             ['type' => 'Cost of Goods Sold', 'code' => '5040', 'name' => 'Purchase Returns',                      'sort_order' => 4],
             ['type' => 'Cost of Goods Sold', 'code' => '5050', 'name' => 'Direct Materials',                      'sort_order' => 5],
+
+            // COGS — industry-specific
+            ['type' => 'Cost of Goods Sold', 'code' => '5060', 'name' => 'COGS — Merchandise',            'sort_order' => 6],
+            ['type' => 'Cost of Goods Sold', 'code' => '5061', 'name' => 'COGS — Food Cost',              'sort_order' => 7],
+            ['type' => 'Cost of Goods Sold', 'code' => '5062', 'name' => 'COGS — Beverage Cost',          'sort_order' => 8],
+            ['type' => 'Cost of Goods Sold', 'code' => '5063', 'name' => 'COGS — Materials',              'sort_order' => 9],
+            ['type' => 'Cost of Goods Sold', 'code' => '5064', 'name' => 'COGS — Labor (Subcontractors)', 'sort_order' => 10],
+            ['type' => 'Cost of Goods Sold', 'code' => '5065', 'name' => 'COGS — Equipment Rental',       'sort_order' => 11],
+            ['type' => 'Cost of Goods Sold', 'code' => '5066', 'name' => 'COGS — Raw Materials',          'sort_order' => 12],
+            ['type' => 'Cost of Goods Sold', 'code' => '5067', 'name' => 'COGS — Direct Labor',           'sort_order' => 13],
+            ['type' => 'Cost of Goods Sold', 'code' => '5068', 'name' => 'COGS — Manufacturing Overhead', 'sort_order' => 14],
 
             // Expenses (6000s)
             ['type' => 'Expenses',           'code' => '6010', 'name' => 'Salaries and Wages',                    'sort_order' => 1],
