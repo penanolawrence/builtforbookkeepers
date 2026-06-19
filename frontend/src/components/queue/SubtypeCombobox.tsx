@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { searchSubtypes, createSubtype, type Subtype } from '@/lib/api/subtypes'
+import { localCache } from '@/lib/localCache'
+
+const TTL_24H = 24 * 60 * 60 * 1000
 
 interface Props {
   subtypeId: string | null
@@ -21,6 +24,15 @@ export function SubtypeCombobox({ subtypeId: _subtypeId, subtypeName, onChange }
       setOptions([])
       return
     }
+
+    const cached = localCache.get<Subtype[]>('subtypes')
+    if (cached && cached.length > 0) {
+      const q = query.toLowerCase()
+      setOptions(cached.filter((s) => s.name.toLowerCase().includes(q)))
+      return
+    }
+
+    // cache miss — fall back to debounced server search
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       const results = await searchSubtypes(query)
@@ -38,6 +50,9 @@ export function SubtypeCombobox({ subtypeId: _subtypeId, subtypeName, onChange }
     try {
       const created = await createSubtype(query)
       onChange(created.id, created.name)
+      // write-through to cache
+      const current = localCache.get<Subtype[]>('subtypes') ?? []
+      localCache.set('subtypes', [...current, created], TTL_24H)
       setQuery('')
       setOpen(false)
     } finally {
