@@ -67,6 +67,9 @@ class TransactionClassifier
                     "    - Compensation / Payroll / Salary → 2220\n" .
                     "  * This EWT line is EXCLUDED from the sum(lines[].amount) = total_amount constraint.\n" .
                     "    The sum of all non-EWT lines must equal total_amount. EWT is an additional entry on top.\n" .
+                    "  * IMPORTANT — when EWT is present, document.total_amount MUST be the invoice GROSS TOTAL (before EWT deduction), " .
+                    "NOT the 'Amount Due' (which is after EWT). " .
+                    "Example: document shows 'Total ₱33,600', 'Less: EWT ₱1,500', 'Amount Due ₱32,100' → total_amount = ₱33,600.\n" .
                     "  * Example: invoice totals [S+V] with [S] in services and [V] in VAT, 'Less: EWT [W]', 'Amount Due [S+V-W]' →\n" .
                     "    Create: service line(s) totaling [S] + VAT line [V] (sum = [S+V] = total_amount ✓) + EWT Payable line [W] (extra, not in sum).\n";
             }
@@ -92,12 +95,12 @@ class TransactionClassifier
                 "    EXPLICIT-VAT INVOICE: the document shows individual line amounts AND a separately labeled VAT total\n" .
                 "    AND Total = sum(line amounts) + VAT. The line amounts are already NET — use them as-is.\n" .
                 "    Use the printed VAT figure as the VAT line amount.\n" .
-                "    Example: invoice shows 'Services ₱20,000', 'VAT ₱3,600', 'Total ₱23,600' →\n" .
-                "    NET line = ₱20,000 (as-is), VAT line = ₱3,600.\n" .
+                "    Example: invoice shows 'Services ₱30,000', 'VAT ₱3,600', 'Total ₱33,600' →\n" .
+                "    NET line = ₱30,000 (as-is), VAT line = ₱3,600.\n" .
                 "    EMBEDDED-VAT RECEIPT: the document shows only a grand total with no NET breakdown.\n" .
                 "    Each line's amount = printed AMOUNT column ÷ 1.12. VAT line = total_amount × 12/112.\n" .
                 "    Example: receipt AMOUNT shows ₱25.00 → NET line = 25.00 ÷ 1.12 = 22.32, VAT = 25.00 × 12/112 = 2.68.\n" .
-                "  * sum(lines[].amount) must still equal document.total_amount (the gross total).\n";
+                "  * sum(lines[].amount) must still equal document.total_amount (the invoice gross total, excluding any EWT lines).\n";
         } else {
             $systemPrompt .=
                 "- Non-VAT client: include any VAT in the relevant expense or income account — do not create a separate VAT line.\n";
