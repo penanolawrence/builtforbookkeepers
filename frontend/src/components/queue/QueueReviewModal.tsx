@@ -347,8 +347,12 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     }
   }
 
-  const incomeLines  = lines.map((l, i) => ({ ...l, index: i })).filter((l) => l.type === 'income')
-  const expenseLines = lines.map((l, i) => ({ ...l, index: i })).filter((l) => l.type === 'expense')
+  const accountTypeOf  = (line: LineState): string | undefined =>
+    accounts.find((a) => a.id === line.accountId)?.type
+
+  const visibleLines   = lines.map((l, i) => ({ ...l, index: i })).filter((l) => l.type === declaredType)
+  const primaryLines   = visibleLines.filter((l) => { const t = accountTypeOf(l); return !t || t === 'expense' || t === 'income' })
+  const counterLines   = visibleLines.filter((l) => { const t = accountTypeOf(l); return t === 'liability' || t === 'vat' })
 
   function aiHint(current: string, original: string | null | undefined) {
     if (!original || current === original) return null
@@ -550,10 +554,10 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                     <div className="flex-1 text-[10px] font-semibold text-t-faint uppercase">Notes</div>
                     <div className="w-6 shrink-0" />
                   </div>
-                  {incomeLines.length === 0 && (
+                  {primaryLines.length === 0 && (
                     <div className="text-[11px] text-t-faint mb-2">No income lines.</div>
                   )}
-                  {incomeLines.map((l) => (
+                  {primaryLines.map((l) => (
                     <LineRow
                       key={l.id ?? `new-${l.index}`}
                       line={l}
@@ -585,10 +589,10 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                     <div className="flex-1 text-[10px] font-semibold text-t-faint uppercase">Notes</div>
                     <div className="w-6 shrink-0" />
                   </div>
-                  {expenseLines.length === 0 && (
+                  {primaryLines.length === 0 && (
                     <div className="text-[11px] text-t-faint mb-2">No expense lines.</div>
                   )}
-                  {expenseLines.map((l) => (
+                  {primaryLines.map((l) => (
                     <LineRow
                       key={l.id ?? `new-${l.index}`}
                       line={l}
@@ -606,6 +610,36 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                     + Add expense line
                   </button>
                 </div>
+                )}
+
+                {/* Counter Entries — rendered for both income and expense declaredType */}
+                {counterLines.length > 0 && (
+                  <div data-testid="counter-lines-section" className="mt-3">
+                    <div className="text-xs font-semibold text-amber-700 mb-1">
+                      Counter Entries{' '}
+                      <span className="text-[10px] text-t-faint font-normal">· payables & tax</span>
+                    </div>
+                    <div className="flex gap-1.5 items-center mb-1">
+                      <div className="w-44 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Account</div>
+                      <div className="w-40 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Category</div>
+                      <div className="w-24 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Amount</div>
+                      <div className="w-32 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Date</div>
+                      <div className="flex-1 text-[10px] font-semibold text-t-faint uppercase">Notes</div>
+                      <div className="w-6 shrink-0" />
+                    </div>
+                    {counterLines.map((l) => (
+                      <div key={l.id ?? `counter-${l.index}`} className="bg-t-surface rounded mb-1">
+                        <LineRow
+                          line={l}
+                          accounts={declaredType === 'expense' ? expenseAccounts : incomeAccounts}
+                          isNew={!l.id}
+                          onChange={(patch) => updateLine(l.index, patch)}
+                          onRemove={() => removeLine(l.index)}
+                          disabled={submitting}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 {/* Anomaly reasons */}

@@ -177,6 +177,74 @@ describe('QueueReviewModal — receipt lightbox', () => {
   })
 })
 
+const expenseAccount  = { id: 'a-exp', code: '6160', name: 'Professional Fees',    type: 'expense',   isSystemManaged: false, isActive: true }
+const liabilityAccount = { id: 'a-lib', code: '2210', name: 'EWT Payable',          type: 'liability', isSystemManaged: true,  isActive: true }
+const vatAccount       = { id: 'a-vat', code: '1101', name: 'Input VAT',            type: 'vat',       isSystemManaged: true,  isActive: true }
+
+function mockQueriesWithAccounts(item = makeItem(), accts: typeof expenseAccount[] = []) {
+  const { useQuery } = require('@tanstack/react-query')
+  ;(useQuery as jest.Mock).mockImplementation(({ queryKey }: { queryKey: unknown[] }) => {
+    if (queryKey[0] === 'queue-item') return { data: item, isLoading: false }
+    if (queryKey[0] === 'accounts')   return { data: accts, isLoading: false }
+    return { data: undefined, isLoading: false }
+  })
+}
+
+describe('QueueReviewModal — counter entries grouping', () => {
+  afterEach(() => jest.clearAllMocks())
+
+  it('renders counter-lines-section when a line uses a liability account', () => {
+    const ewtLine = {
+      id: 'l-ewt', type: 'expense' as const, accountId: 'a-lib', accountCode: '2210',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 1500, description: 'EWT Payable', date: '2026-06-19',
+    }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'expense', transactionLines: [expenseLine, ewtLine] }),
+      [expenseAccount, liabilityAccount],
+    )
+    wrap()
+    expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
+  })
+
+  it('renders counter-lines-section when a line uses a vat account', () => {
+    const vatLine = {
+      id: 'l-vat', type: 'expense' as const, accountId: 'a-vat', accountCode: '1101',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 3600, description: 'Input VAT', date: '2026-06-19',
+    }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'expense', transactionLines: [expenseLine, vatLine] }),
+      [expenseAccount, vatAccount],
+    )
+    wrap()
+    expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
+  })
+
+  it('does not render counter-lines-section when all lines have expense accounts', () => {
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'expense', transactionLines: [expenseLine] }),
+      [expenseAccount],
+    )
+    wrap()
+    expect(screen.queryByTestId('counter-lines-section')).not.toBeInTheDocument()
+  })
+
+  it('does not render counter-lines-section when lines have no account selected', () => {
+    const emptyLine = {
+      id: 'l-empty', type: 'expense' as const, accountId: '', accountCode: '',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 100, description: 'Pending', date: '2026-06-19',
+    }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'expense', transactionLines: [emptyLine] }),
+      [],
+    )
+    wrap()
+    expect(screen.queryByTestId('counter-lines-section')).not.toBeInTheDocument()
+  })
+})
+
 describe('QueueReviewModal — account validation', () => {
   afterEach(() => jest.clearAllMocks())
 
