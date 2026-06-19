@@ -12,7 +12,7 @@ class ChartOfAccount extends Model
 {
     use HasUuids, HasFactory;
 
-    protected $fillable = ['account_type_id', 'code', 'name', 'is_active', 'sort_order'];
+    protected $fillable = ['account_type_id', 'code', 'name', 'atc_code', 'ewt_rate', 'is_active', 'sort_order'];
 
     protected $casts = ['is_active' => 'boolean'];
 
