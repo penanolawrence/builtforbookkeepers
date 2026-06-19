@@ -3,8 +3,13 @@
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { Topbar } from '@/components/layout/Topbar'
 import { BottomTabBar } from '@/components/layout/BottomTabBar'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { useAppPreloader } from '@/lib/hooks/useAppPreloader'
 
 export default function AccountantLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  useAppPreloader(user)
+
   return (
     <ThemeProvider>
       <div

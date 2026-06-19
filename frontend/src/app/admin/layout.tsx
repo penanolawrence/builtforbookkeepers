@@ -2,8 +2,13 @@
 
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { Topbar } from '@/components/layout/Topbar'
+import { useAuth } from '@/lib/hooks/useAuth'
+import { useAppPreloader } from '@/lib/hooks/useAppPreloader'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  useAppPreloader(user)
+
   return (
     <ThemeProvider>
       <div
