@@ -21,6 +21,7 @@ class CreateClientRequest extends FormRequest
             'tin'           => ['nullable', 'string', 'max:20'],
             'email'         => ['nullable', 'email', 'max:255'],
             'contactPerson' => ['nullable', 'string', 'max:255'],
+            'industryType'  => ['nullable', 'in:retail,services,restaurant,construction,professional_services,manufacturing'],
         ];
     }
 }

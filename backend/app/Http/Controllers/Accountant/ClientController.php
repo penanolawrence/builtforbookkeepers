@@ -11,7 +11,6 @@ use App\Models\Document;
 use App\Models\Merchant;
 use App\Models\Payment;
 use App\Models\User;
-use App\Services\Accounting\ChartOfAccountsService;
 use App\Services\Auth\InviteTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -149,6 +148,7 @@ class ClientController extends Controller
                     'tin'            => $request->tin,
                     'contact_person' => $request->contactPerson,
                     'bir_type'       => $request->birType,
+                    'industry_type'  => $request->industryType,
                     'plan'           => $request->planType,
                     'accountant_id'  => $accountant->id,
                 ]);
@@ -163,8 +163,6 @@ class ClientController extends Controller
                     'status'     => 'active',
                     'company_id' => $company->id,
                 ]);
-
-                (new ChartOfAccountsService())->seedDefaultAccounts($company);
 
                 $rawToken   = (new InviteTokenService())->generate($user);
                 $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
