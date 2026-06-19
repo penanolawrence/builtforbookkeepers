@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\SetupPasswordRequest;
 use App\Models\User;
+use App\Services\Accounting\ChartOfAccountsService;
 use App\Services\Auth\InviteTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -99,10 +100,17 @@ class AuthController extends Controller
         $inviteToken = $this->inviteTokenService->validate($rawToken);
 
         if (! $inviteToken) {
-            return response()->json(['valid' => false, 'role' => null, 'expired' => true]);
+            return response()->json(['valid' => false, 'role' => null, 'expired' => true, 'industryType' => null]);
         }
 
-        return response()->json(['valid' => true, 'role' => $inviteToken->role, 'expired' => false]);
+        $user = \App\Models\User::with('company')->find($inviteToken->user_id);
+
+        return response()->json([
+            'valid'        => true,
+            'role'         => $inviteToken->role,
+            'expired'      => false,
+            'industryType' => $user?->company?->industry_type,
+        ]);
     }
 
     public function setupPassword(SetupPasswordRequest $request): JsonResponse
@@ -114,7 +122,20 @@ class AuthController extends Controller
         }
 
         $user = User::findOrFail($inviteToken->user_id);
-        $user->name = $request->name;
+
+        if ($inviteToken->role === 'client') {
+            if (! $request->filled('industry_type')) {
+                return response()->json(['message' => 'Industry type is required.'], 422);
+            }
+
+            $company = $user->company;
+            if ($company) {
+                $company->update(['industry_type' => $request->industry_type]);
+                (new ChartOfAccountsService())->seedDefaultAccounts($company->fresh());
+            }
+        }
+
+        $user->name     = $request->name;
         $user->password = Hash::make($request->password);
         $user->save();
 
@@ -124,12 +145,12 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'role' => $user->role,
+            'user'  => [
+                'id'        => $user->id,
+                'name'      => $user->name,
+                'role'      => $user->role,
                 'companyId' => $user->company_id,
-                'status' => $user->status,
+                'status'    => $user->status,
             ],
         ]);
     }

@@ -18,6 +18,7 @@ class SetupPasswordRequest extends FormRequest
             'name'                  => ['required', 'string', 'max:255'],
             'password'              => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
+            'industry_type'         => ['nullable', 'in:retail,services,restaurant,construction,professional_services,manufacturing'],
         ];
     }
 }

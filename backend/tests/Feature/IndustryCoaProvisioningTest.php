@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\Accounting\ChartOfAccountsService;
+use App\Services\Auth\InviteTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -116,5 +117,91 @@ class IndustryCoaProvisioningTest extends TestCase
             'code'       => '2210',
             'type'       => 'liability',
         ]);
+    }
+
+    public function test_setup_endpoint_seeds_accounts_for_client(): void
+    {
+        $this->seed(\Database\Seeders\AdminSeeder::class);
+
+        // Create a company and client user
+        $company = Company::create([
+            'name'     => 'Setup Test Co',
+            'mobile'   => '09111111111',
+            'bir_type' => 'non_vat',
+            'plan'     => 'starter',
+        ]);
+
+        $user = User::create([
+            'name'       => 'Setup Test Co',
+            'username'   => 'setuptestco',
+            'password'   => bcrypt('temppass'),
+            'role'       => 'client',
+            'status'     => 'active',
+            'company_id' => $company->id,
+        ]);
+
+        // Generate invite token
+        $tokenService = new InviteTokenService();
+        $rawToken = $tokenService->generate($user);
+
+        $response = $this->postJson('/api/auth/setup', [
+            'token'                 => $rawToken,
+            'name'                  => 'Test Owner',
+            'password'              => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'industry_type'         => 'retail',
+        ]);
+
+        $response->assertStatus(200);
+
+        // Company industry_type was saved
+        $this->assertDatabaseHas('companies', [
+            'id'            => $company->id,
+            'industry_type' => 'retail',
+        ]);
+
+        // Accounts were seeded — retail-specific account exists
+        $this->assertDatabaseHas('accounts', [
+            'company_id' => $company->id,
+            'code'       => '1030',
+        ]);
+
+        // Non-retail account was NOT seeded
+        $this->assertDatabaseMissing('accounts', [
+            'company_id' => $company->id,
+            'code'       => '1031',
+        ]);
+    }
+
+    public function test_setup_endpoint_returns_422_for_client_without_industry_type(): void
+    {
+        $company = Company::create([
+            'name'     => 'No Industry Co',
+            'mobile'   => '09222222222',
+            'bir_type' => 'non_vat',
+            'plan'     => 'starter',
+        ]);
+
+        $user = User::create([
+            'name'       => 'No Industry Co',
+            'username'   => 'noindustryco',
+            'password'   => bcrypt('temppass'),
+            'role'       => 'client',
+            'status'     => 'active',
+            'company_id' => $company->id,
+        ]);
+
+        $tokenService = new InviteTokenService();
+        $rawToken = $tokenService->generate($user);
+
+        $response = $this->postJson('/api/auth/setup', [
+            'token'                 => $rawToken,
+            'name'                  => 'Test Owner',
+            'password'              => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            // industry_type intentionally omitted
+        ]);
+
+        $response->assertStatus(422);
     }
 }
