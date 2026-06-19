@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Subtype;
+use App\Models\ChartOfAccountSubtype;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -11,25 +11,28 @@ class SubtypeController extends Controller
     public function index(Request $request): JsonResponse
     {
         $q = $request->query('q', '');
-        if (strlen($q) < 3) {
+
+        $query = ChartOfAccountSubtype::whereNull('chart_of_account_id')
+            ->orderBy('name');
+
+        if (strlen($q) >= 3) {
+            $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+            $query->where('name', $operator, "%{$q}%");
+        } elseif (strlen($q) > 0) {
             return response()->json([]);
         }
 
-        $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-
-        $subtypes = Subtype::where('name', $operator, "%{$q}%")
-            ->orderBy('name')
-            ->limit(20)
-            ->get(['id', 'name']);
-
-        return response()->json($subtypes);
+        return response()->json($query->get(['id', 'name']));
     }
 
     public function store(Request $request): JsonResponse
     {
         $request->validate(['name' => ['required', 'string', 'max:255']]);
 
-        $subtype = Subtype::firstOrCreate(['name' => $request->name]);
+        $subtype = ChartOfAccountSubtype::firstOrCreate(
+            ['name' => $request->name, 'chart_of_account_id' => null],
+            ['code' => null, 'sort_order' => 0]
+        );
 
         return response()->json(['id' => $subtype->id, 'name' => $subtype->name], 201);
     }
