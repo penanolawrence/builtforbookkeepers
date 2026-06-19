@@ -555,7 +555,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                 {/* Income */}
                 {declaredType === 'income' && (
                 <div data-testid="income-lines-section">
-                  <div className="text-xs font-semibold text-green-700 mb-1">Income</div>
+                  <div className="text-xs font-semibold text-green-700 mb-1">Invoice Lines</div>
                   <div className="flex gap-1.5 items-center mb-1">
                     <div className="w-44 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Account</div>
                     <div className="w-40 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Category</div>
@@ -590,7 +590,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                 {/* Expense */}
                 {declaredType === 'expense' && (
                 <div data-testid="expense-lines-section">
-                  <div className="text-xs font-semibold text-red-700 mb-1">Expense</div>
+                  <div className="text-xs font-semibold text-red-700 mb-1">Invoice Lines</div>
                   <div className="flex gap-1.5 items-center mb-1">
                     <div className="w-44 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Account</div>
                     <div className="w-40 shrink-0 text-[10px] font-semibold text-t-faint uppercase">Category</div>

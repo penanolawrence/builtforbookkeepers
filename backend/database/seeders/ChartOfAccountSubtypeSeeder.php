@@ -242,6 +242,40 @@ class ChartOfAccountSubtypeSeeder extends Seeder
             '6210' => [
                 ['code' => '6210-01', 'name' => 'Miscellaneous Expense — General', 'sort_order' => 1],
             ],
+            // 1101 — Input VAT
+            '1101' => [
+                ['code' => '1101-01', 'name' => 'Input VAT', 'sort_order' => 1],
+            ],
+            // 1102 — EWT Withheld by Customers
+            '1102' => [
+                ['code' => '1102-01', 'name' => 'EWT Withheld by Customers', 'sort_order' => 1],
+            ],
+            // 2101 — Output VAT
+            '2101' => [
+                ['code' => '2101-01', 'name' => 'Output VAT', 'sort_order' => 1],
+            ],
+            // 2210-2215, 2220 — EWT Payable accounts
+            '2210' => [
+                ['code' => '2210-01', 'name' => 'EWT — Professional Fees', 'sort_order' => 1],
+            ],
+            '2211' => [
+                ['code' => '2211-01', 'name' => 'EWT — Rental', 'sort_order' => 1],
+            ],
+            '2212' => [
+                ['code' => '2212-01', 'name' => 'EWT — Services', 'sort_order' => 1],
+            ],
+            '2213' => [
+                ['code' => '2213-01', 'name' => 'EWT — Goods & Supplies', 'sort_order' => 1],
+            ],
+            '2214' => [
+                ['code' => '2214-01', 'name' => 'EWT — Contractors', 'sort_order' => 1],
+            ],
+            '2215' => [
+                ['code' => '2215-01', 'name' => 'EWT — Commissions', 'sort_order' => 1],
+            ],
+            '2220' => [
+                ['code' => '2220-01', 'name' => 'Withholding Tax on Compensation', 'sort_order' => 1],
+            ],
             // 7010 — Interest Income
             '7010' => [
                 ['code' => '7010-01', 'name' => 'Bank Interest',           'sort_order' => 1],

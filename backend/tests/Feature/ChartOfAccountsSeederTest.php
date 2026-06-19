@@ -25,9 +25,9 @@ class ChartOfAccountsSeederTest extends TestCase
         $this->assertDatabaseCount('account_types', 8);
     }
 
-    public function test_seeds_78_chart_of_accounts(): void
+    public function test_seeds_80_chart_of_accounts(): void
     {
-        $this->assertDatabaseCount('chart_of_accounts', 78);
+        $this->assertDatabaseCount('chart_of_accounts', 80);
     }
 
     public function test_ewt_withheld_by_customers_account_exists(): void
@@ -38,9 +38,9 @@ class ChartOfAccountsSeederTest extends TestCase
         ]);
     }
 
-    public function test_seeds_121_subtypes(): void
+    public function test_seeds_131_subtypes(): void
     {
-        $this->assertDatabaseCount('chart_of_account_subtypes', 121);
+        $this->assertDatabaseCount('chart_of_account_subtypes', 131);
     }
 
     public function test_assets_type_has_debit_normal_balance(): void
@@ -138,7 +138,7 @@ class ChartOfAccountsSeederTest extends TestCase
         $this->seed(\Database\Seeders\ChartOfAccountSubtypeSeeder::class);
 
         $this->assertDatabaseCount('account_types', 8);
-        $this->assertDatabaseCount('chart_of_accounts', 78);
-        $this->assertDatabaseCount('chart_of_account_subtypes', 121);
+        $this->assertDatabaseCount('chart_of_accounts', 80);
+        $this->assertDatabaseCount('chart_of_account_subtypes', 131);
     }
 }

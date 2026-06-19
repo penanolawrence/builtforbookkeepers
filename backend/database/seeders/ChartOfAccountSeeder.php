@@ -15,8 +15,9 @@ class ChartOfAccountSeeder extends Seeder
             ['type' => 'Assets',             'code' => '1010', 'name' => 'Cash on Hand',                          'sort_order' => 1],
             ['type' => 'Assets',             'code' => '1020', 'name' => 'Cash in Bank',                          'sort_order' => 2],
 
-            // Assets — Tax Credits (universal)
-            ['type' => 'Assets', 'code' => '1102', 'name' => 'EWT Withheld by Customers (Tax Credit)', 'sort_order' => 3],
+            // Assets — VAT & Tax Credits (VAT-registered clients only; seedDefaultAccounts skips for non-VAT)
+            ['type' => 'Assets', 'code' => '1101', 'name' => 'Input VAT',                               'sort_order' => 3],
+            ['type' => 'Assets', 'code' => '1102', 'name' => 'EWT Withheld by Customers (Tax Credit)',  'sort_order' => 4],
 
             // Assets — Inventory (industry-specific, tagged via pivot)
             ['type' => 'Assets', 'code' => '1030', 'name' => 'Merchandise Inventory',            'sort_order' => 3],
@@ -27,6 +28,9 @@ class ChartOfAccountSeeder extends Seeder
             ['type' => 'Assets', 'code' => '1035', 'name' => 'Raw Materials Inventory',          'sort_order' => 8],
             ['type' => 'Assets', 'code' => '1036', 'name' => 'Work-in-Progress Inventory',       'sort_order' => 9],
             ['type' => 'Assets', 'code' => '1037', 'name' => 'Finished Goods Inventory',         'sort_order' => 10],
+
+            // Liabilities (2000s) — VAT (VAT-registered clients only)
+            ['type' => 'Liabilities', 'code' => '2101', 'name' => 'Output VAT',                          'sort_order' => 0],
 
             // Liabilities (2000s) — Withholding Tax Payable (universal)
             ['type' => 'Liabilities', 'code' => '2210', 'name' => 'EWT Payable — Professional Fees (5%/10%)',  'sort_order' => 1],

@@ -34,13 +34,21 @@ class ChartOfAccountsService
             ->orderBy('sort_order')
             ->get();
 
+        // VAT-only account codes — skip for non-VAT companies
+        $vatOnlyCodes = ['1101', '2101'];
+
         foreach ($coaEntries as $coa) {
+            if (in_array($coa->code, $vatOnlyCodes) && $company->bir_type !== 'vat') {
+                continue;
+            }
+
             $typeName    = $coa->accountType->name ?? '';
             $accountType = self::COA_TYPE_TO_ACCOUNT_TYPE[$typeName] ?? 'expense';
 
             // Account-level overrides for codes that need a type distinct from their COA category.
-            if ($coa->code === '1102') {
-                $accountType = 'tax_credit';
+            $typeOverrides = ['1101' => 'vat', '1102' => 'tax_credit', '2101' => 'vat'];
+            if (isset($typeOverrides[$coa->code])) {
+                $accountType = $typeOverrides[$coa->code];
             }
 
             Account::firstOrCreate(
@@ -49,30 +57,7 @@ class ChartOfAccountsService
                     'chart_of_account_id' => $coa->id,
                     'name'                => $coa->name,
                     'type'                => $accountType,
-                    'is_system_managed'   => in_array($accountType, ['cash', 'liability', 'tax_credit']),
-                    'is_active'           => true,
-                ]
-            );
-        }
-
-        if ($company->bir_type === 'vat') {
-            Account::firstOrCreate(
-                ['company_id' => $company->id, 'code' => '1101'],
-                [
-                    'chart_of_account_id' => null,
-                    'name'                => 'Input VAT',
-                    'type'                => 'vat',
-                    'is_system_managed'   => true,
-                    'is_active'           => true,
-                ]
-            );
-            Account::firstOrCreate(
-                ['company_id' => $company->id, 'code' => '2101'],
-                [
-                    'chart_of_account_id' => null,
-                    'name'                => 'Output VAT',
-                    'type'                => 'vat',
-                    'is_system_managed'   => true,
+                    'is_system_managed'   => in_array($accountType, ['cash', 'vat', 'liability', 'tax_credit']),
                     'is_active'           => true,
                 ]
             );

@@ -58,7 +58,7 @@ class TransactionClassifier
                     "- EWT Withheld by Buyer rule — income documents only: when the invoice or payment shows the buyer deducting EWT " .
                     "(labelled 'Less: EWT', 'EWT Withheld', 'Withholding Tax', etc.):\n" .
                     "  * Create a SEPARATE line for the EWT amount deducted by the buyer.\n" .
-                    "  * Always assign to account code 1102 (EWT Withheld by Customers — Tax Credit).\n" .
+                    "  * Always assign to account code 1102, category 'EWT Withheld by Customers'.\n" .
                     "  * This EWT line is EXCLUDED from the sum(lines[].amount) = total_amount constraint.\n" .
                     "    The sum of all non-EWT lines must equal total_amount. EWT is an additional entry on top.\n" .
                     "  * document.total_amount MUST be the invoice GROSS TOTAL (before EWT deduction), NOT the 'Amount Due'.\n" .
@@ -71,15 +71,15 @@ class TransactionClassifier
                     "- EWT (Withholding Tax) rule — expense documents only: when the document shows a Withholding Tax deduction " .
                     "(labelled 'EWT', 'Withholding Tax', 'Less: EWT', etc.):\n" .
                     "  * Create a SEPARATE line for the EWT amount (the amount withheld).\n" .
-                    "  * Assign to the matching EWT Payable account using the NATURE of the expense (what was purchased), " .
+                    "  * Assign to the matching EWT Payable account and category using the NATURE of the expense, " .
                     "NOT the EWT rate printed on the document — the printed rate may be wrong:\n" .
-                    "    - Professional Fees / CPA / Lawyer / Doctor / Engineer / Architect / Consultant → 2210\n" .
-                    "    - Rental / Lease / Rent (equipment, space, vehicle) → 2211\n" .
-                    "    - Generic Services (security, janitorial, maintenance, IT support, pest control, courier, advertising) → 2212\n" .
-                    "    - Goods / Supplies / Merchandise / Inventory purchases → 2213\n" .
-                    "    - Contractors / Subcontractors / Construction / Renovation → 2214\n" .
-                    "    - Commissions / Sales Agent fees / Referral fees / Brokerage → 2215\n" .
-                    "    - Compensation / Payroll / Salary → 2220\n" .
+                    "    - Professional Fees / CPA / Lawyer / Doctor / Engineer / Architect / Consultant → account 2210, category 'EWT — Professional Fees'\n" .
+                    "    - Rental / Lease / Rent (equipment, space, vehicle) → account 2211, category 'EWT — Rental'\n" .
+                    "    - Generic Services (security, janitorial, maintenance, IT support, pest control, courier, advertising) → account 2212, category 'EWT — Services'\n" .
+                    "    - Goods / Supplies / Merchandise / Inventory purchases → account 2213, category 'EWT — Goods & Supplies'\n" .
+                    "    - Contractors / Subcontractors / Construction / Renovation → account 2214, category 'EWT — Contractors'\n" .
+                    "    - Commissions / Sales Agent fees / Referral fees / Brokerage → account 2215, category 'EWT — Commissions'\n" .
+                    "    - Compensation / Payroll / Salary → account 2220, category 'Withholding Tax on Compensation'\n" .
                     "  * This EWT line is EXCLUDED from the sum(lines[].amount) = total_amount constraint.\n" .
                     "    The sum of all non-EWT lines must equal total_amount. EWT is an additional entry on top.\n" .
                     "  * IMPORTANT — when EWT is present, document.total_amount MUST be the invoice GROSS TOTAL (before EWT deduction), " .
@@ -101,8 +101,8 @@ class TransactionClassifier
             $systemPrompt .=
                 "- VAT line rule (client is VAT-Registered): when a VAT amount is visible on the document:\n" .
                 "  * Always create a SEPARATE line for the VAT amount.\n" .
-                "  * For expense documents: assign the VAT line to account code 1101 (Input VAT).\n" .
-                "  * For income documents: assign the VAT line to account code 2101 (Output VAT).\n" .
+                "  * For expense documents: assign the VAT line to account code 1101, category 'Input VAT'.\n" .
+                "  * For income documents: assign the VAT line to account code 2101, category 'Output VAT'.\n" .
                 "  * IMPORTANT — Philippine Sales Invoices are written from the SELLER's perspective and may use the term 'Output VAT'.\n" .
                 "    When the document is an EXPENSE in the client's books, that VAT is Input VAT for the buyer.\n" .
                 "    Always use account 1101 on expense documents regardless of what the invoice calls the VAT.\n" .
