@@ -58,13 +58,14 @@ class TransactionClassifier
                     "- EWT (Withholding Tax) rule — expense documents only: when the document shows a Withholding Tax deduction " .
                     "(labelled 'EWT', 'Withholding Tax', 'Less: EWT', etc.):\n" .
                     "  * Create a SEPARATE line for the EWT amount (the amount withheld).\n" .
-                    "  * Assign to the matching EWT Payable account using this lookup:\n" .
-                    "    - Professional Fees / CPA / Lawyer / Consultant → 2210\n" .
-                    "    - Rental / Lease / Rent → 2211\n" .
-                    "    - Services (generic, not professional) → 2212\n" .
-                    "    - Goods / Supplies / Merchandise → 2213\n" .
-                    "    - Contractors / Subcontractors / Construction → 2214\n" .
-                    "    - Commissions / Sales Agent fees / Referral fees → 2215\n" .
+                    "  * Assign to the matching EWT Payable account using the NATURE of the expense (what was purchased), " .
+                    "NOT the EWT rate printed on the document — the printed rate may be wrong:\n" .
+                    "    - Professional Fees / CPA / Lawyer / Doctor / Engineer / Architect / Consultant → 2210\n" .
+                    "    - Rental / Lease / Rent (equipment, space, vehicle) → 2211\n" .
+                    "    - Generic Services (security, janitorial, maintenance, IT support, pest control, courier, advertising) → 2212\n" .
+                    "    - Goods / Supplies / Merchandise / Inventory purchases → 2213\n" .
+                    "    - Contractors / Subcontractors / Construction / Renovation → 2214\n" .
+                    "    - Commissions / Sales Agent fees / Referral fees / Brokerage → 2215\n" .
                     "    - Compensation / Payroll / Salary → 2220\n" .
                     "  * This EWT line is EXCLUDED from the sum(lines[].amount) = total_amount constraint.\n" .
                     "    The sum of all non-EWT lines must equal total_amount. EWT is an additional entry on top.\n" .
@@ -113,7 +114,7 @@ class TransactionClassifier
             "- Use multiple lines when the document covers multiple categories, multiple dates, or has an expenses breakdown.\n" .
             "- For each line, always try to assign a date (YYYY-MM-DD). " .
             "For multi-date documents (e.g. daily sales records), each row has its own date. " .
-            "For manual entries, extract any date mentioned in the description text " .
+            "For manual entries, extract any date mentioned in the description text. " .
             "Return null only if you truly cannot determine the date for that specific line.\n" .
             "- Today's date is " . now()->format('Y-m-d') . ". Dates must never be in the future — transactions cannot be dated after today. " .
             "If an extracted date is in the future, it is likely a misread (e.g. month and day swapped). " .

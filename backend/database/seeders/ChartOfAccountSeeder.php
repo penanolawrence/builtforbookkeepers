@@ -26,7 +26,7 @@ class ChartOfAccountSeeder extends Seeder
             ['type' => 'Assets', 'code' => '1037', 'name' => 'Finished Goods Inventory',         'sort_order' => 10],
 
             // Liabilities (2000s) — Withholding Tax Payable (universal)
-            ['type' => 'Liabilities', 'code' => '2210', 'name' => 'EWT Payable — Professional Fees (10%/15%)', 'sort_order' => 1],
+            ['type' => 'Liabilities', 'code' => '2210', 'name' => 'EWT Payable — Professional Fees (5%/10%)',  'sort_order' => 1],
             ['type' => 'Liabilities', 'code' => '2211', 'name' => 'EWT Payable — Rental (5%)',                 'sort_order' => 2],
             ['type' => 'Liabilities', 'code' => '2212', 'name' => 'EWT Payable — Services (2%)',               'sort_order' => 3],
             ['type' => 'Liabilities', 'code' => '2213', 'name' => 'EWT Payable — Goods & Supplies (1%)',       'sort_order' => 4],

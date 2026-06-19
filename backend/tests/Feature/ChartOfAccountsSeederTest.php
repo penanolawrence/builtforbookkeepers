@@ -110,7 +110,7 @@ class ChartOfAccountsSeederTest extends TestCase
     {
         $this->assertDatabaseHas('chart_of_accounts', [
             'code' => '2210',
-            'name' => 'EWT Payable — Professional Fees (10%/15%)',
+            'name' => 'EWT Payable — Professional Fees (5%/10%)',
         ]);
     }
 
