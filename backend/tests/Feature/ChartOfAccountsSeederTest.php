@@ -25,9 +25,17 @@ class ChartOfAccountsSeederTest extends TestCase
         $this->assertDatabaseCount('account_types', 8);
     }
 
-    public function test_seeds_77_chart_of_accounts(): void
+    public function test_seeds_78_chart_of_accounts(): void
     {
-        $this->assertDatabaseCount('chart_of_accounts', 77);
+        $this->assertDatabaseCount('chart_of_accounts', 78);
+    }
+
+    public function test_ewt_withheld_by_customers_account_exists(): void
+    {
+        $this->assertDatabaseHas('chart_of_accounts', [
+            'code' => '1102',
+            'name' => 'EWT Withheld by Customers (Tax Credit)',
+        ]);
     }
 
     public function test_seeds_121_subtypes(): void
@@ -130,7 +138,7 @@ class ChartOfAccountsSeederTest extends TestCase
         $this->seed(\Database\Seeders\ChartOfAccountSubtypeSeeder::class);
 
         $this->assertDatabaseCount('account_types', 8);
-        $this->assertDatabaseCount('chart_of_accounts', 77);
+        $this->assertDatabaseCount('chart_of_accounts', 78);
         $this->assertDatabaseCount('chart_of_account_subtypes', 121);
     }
 }

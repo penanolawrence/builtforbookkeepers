@@ -53,6 +53,19 @@ class TransactionClassifier
                 "Even if the document contains figures that look like {$opposite}, " .
                 "ignore them completely. Do not create any lines for the opposite type.\n";
 
+            if ($declaredType === 'income') {
+                $systemPrompt .=
+                    "- EWT Withheld by Buyer rule — income documents only: when the invoice or payment shows the buyer deducting EWT " .
+                    "(labelled 'Less: EWT', 'EWT Withheld', 'Withholding Tax', etc.):\n" .
+                    "  * Create a SEPARATE line for the EWT amount deducted by the buyer.\n" .
+                    "  * Always assign to account code 1102 (EWT Withheld by Customers — Tax Credit).\n" .
+                    "  * This EWT line is EXCLUDED from the sum(lines[].amount) = total_amount constraint.\n" .
+                    "    The sum of all non-EWT lines must equal total_amount. EWT is an additional entry on top.\n" .
+                    "  * document.total_amount MUST be the invoice GROSS TOTAL (before EWT deduction), NOT the 'Amount Due'.\n" .
+                    "  * Example: invoice shows 'Total [T]', 'Less: EWT [W]', 'Amount Due [T-W]' →\n" .
+                    "    Create: income line(s) totaling [T] = total_amount ✓ + EWT Withheld line [W] (extra, not in sum).\n";
+            }
+
             if ($declaredType === 'expense') {
                 $systemPrompt .=
                     "- EWT (Withholding Tax) rule — expense documents only: when the document shows a Withholding Tax deduction " .

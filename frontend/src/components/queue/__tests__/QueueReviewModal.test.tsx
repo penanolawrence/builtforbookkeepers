@@ -207,7 +207,7 @@ describe('QueueReviewModal — counter entries grouping', () => {
     expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
   })
 
-  it('renders counter-lines-section when a line uses a vat account', () => {
+  it('vat lines go to primary section, not counter', () => {
     const vatLine = {
       id: 'l-vat', type: 'expense' as const, accountId: 'a-vat', accountCode: '1101',
       accountName: null, subtypeId: null, subtypeName: null,
@@ -218,7 +218,27 @@ describe('QueueReviewModal — counter entries grouping', () => {
       [expenseAccount, vatAccount],
     )
     wrap()
+    // counter section is always shown but should be empty (no liability/tax_credit lines)
     expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
+    expect(screen.getByText('No withholdings or payables.')).toBeInTheDocument()
+  })
+
+  it('renders counter-lines-section with content when a line uses a tax_credit account', () => {
+    const taxCreditAccount = { id: 'a-tc', code: '1102', name: 'EWT Withheld by Customers', type: 'tax_credit', isSystemManaged: true, isActive: true }
+    const ewtRecLine = {
+      id: 'l-tc', type: 'income' as const, accountId: 'a-tc', accountCode: '1102',
+      accountName: null, subtypeId: null, subtypeName: null,
+      amount: 1500, description: 'EWT withheld by buyer', date: '2026-06-19',
+    }
+    const incomeAccount = { id: 'a-inc', code: '4010', name: 'Service Revenue', type: 'income', isSystemManaged: false, isActive: true }
+    const incLine = { id: 'l-inc', type: 'income' as const, accountId: 'a-inc', accountCode: '4010', accountName: null, subtypeId: null, subtypeName: null, amount: 30000, description: 'Revenue', date: '2026-06-19' }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'income', transactionLines: [incLine, ewtRecLine] }),
+      [incomeAccount, taxCreditAccount],
+    )
+    wrap()
+    expect(screen.getByTestId('counter-lines-section')).toBeInTheDocument()
+    expect(screen.queryByText('No withholdings or payables.')).not.toBeInTheDocument()
   })
 
   it('always renders counter-lines-section even with no counter lines', () => {
@@ -299,7 +319,7 @@ describe('QueueReviewModal — cash summary', () => {
     expect(screen.queryByTestId('cash-summary')).not.toBeInTheDocument()
   })
 
-  it('hides the VAT row when vatTotal is 0', () => {
+  it('hides the withholdings row when there are no counter lines', () => {
     const expLine = {
       id: 'l-exp', type: 'expense' as const, accountId: 'a-exp', accountCode: '6160',
       accountName: null, subtypeId: null, subtypeName: null,
@@ -310,7 +330,22 @@ describe('QueueReviewModal — cash summary', () => {
       [expenseAccount],
     )
     wrap()
-    expect(screen.queryByText(/Input VAT/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/EWT Payable/)).not.toBeInTheDocument()
+    expect(screen.getByTestId('net-cash-value')).toHaveTextContent('₱30,000.00')
+  })
+
+  it('shows correct Net Cash In for income doc with EWT withheld by buyer', () => {
+    const taxCreditAccount = { id: 'a-tc', code: '1102', name: 'EWT Withheld by Customers', type: 'tax_credit', isSystemManaged: true, isActive: true }
+    const incomeAccount    = { id: 'a-inc', code: '4010', name: 'Service Revenue', type: 'income', isSystemManaged: false, isActive: true }
+    const incLine    = { id: 'l-inc', type: 'income' as const, accountId: 'a-inc', accountCode: '4010', accountName: null, subtypeId: null, subtypeName: null, amount: 33600, description: 'Revenue incl. VAT', date: '2026-06-19' }
+    const ewtRecLine = { id: 'l-tc',  type: 'income' as const, accountId: 'a-tc',  accountCode: '1102', accountName: null, subtypeId: null, subtypeName: null, amount: 1500,  description: 'EWT withheld', date: '2026-06-19' }
+    mockQueriesWithAccounts(
+      makeItem({ declaredType: 'income', transactionLines: [incLine, ewtRecLine] }),
+      [incomeAccount, taxCreditAccount],
+    )
+    wrap()
+    expect(screen.getByTestId('net-cash-label')).toHaveTextContent('Net Cash In')
+    expect(screen.getByTestId('net-cash-value')).toHaveTextContent('₱32,100.00')
   })
 })
 

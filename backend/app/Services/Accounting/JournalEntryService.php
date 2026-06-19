@@ -65,8 +65,8 @@ class JournalEntryService
             foreach ($lines as $line) {
                 $accountType = $line->account?->type ?? 'expense';
 
-                if ($line->type === 'income') {
-                    // Income lines → credit
+                if ($line->type === 'income' && $accountType !== 'tax_credit') {
+                    // Revenue and output VAT → credit
                     JournalEntryLine::create([
                         'journal_entry_id'    => $entry->id,
                         'account_id'          => $line->account_id,

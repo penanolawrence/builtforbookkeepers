@@ -15,6 +15,9 @@ class ChartOfAccountSeeder extends Seeder
             ['type' => 'Assets',             'code' => '1010', 'name' => 'Cash on Hand',                          'sort_order' => 1],
             ['type' => 'Assets',             'code' => '1020', 'name' => 'Cash in Bank',                          'sort_order' => 2],
 
+            // Assets — Tax Credits (universal)
+            ['type' => 'Assets', 'code' => '1102', 'name' => 'EWT Withheld by Customers (Tax Credit)', 'sort_order' => 3],
+
             // Assets — Inventory (industry-specific, tagged via pivot)
             ['type' => 'Assets', 'code' => '1030', 'name' => 'Merchandise Inventory',            'sort_order' => 3],
             ['type' => 'Assets', 'code' => '1031', 'name' => 'Food Inventory',                   'sort_order' => 4],

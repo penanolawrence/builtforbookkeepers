@@ -351,18 +351,14 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     accounts.find((a) => a.id === line.accountId)?.type
 
   const visibleLines   = lines.map((l, i) => ({ ...l, index: i })).filter((l) => l.type === declaredType)
-  const primaryLines   = visibleLines.filter((l) => { const t = accountTypeOf(l); return !t || t === 'expense' || t === 'income' })
-  const counterLines   = visibleLines.filter((l) => { const t = accountTypeOf(l); return t === 'liability' || t === 'vat' })
+  // VAT (input/output) is cash — paid or received with the invoice — so it belongs in primary.
+  // Only liability (EWT Payable) and tax_credit (EWT Withheld by Buyer) reduce actual cash flow.
+  const primaryLines      = visibleLines.filter((l) => { const t = accountTypeOf(l); return !t || t === 'expense' || t === 'income' || t === 'vat' })
+  const counterLines      = visibleLines.filter((l) => { const t = accountTypeOf(l); return t === 'liability' || t === 'tax_credit' })
 
-  const primaryTotal   = primaryLines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
-  const vatTotal       = counterLines
-    .filter((l) => accountTypeOf(l) === 'vat')
-    .reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
-  const liabilityTotal = counterLines
-    .filter((l) => accountTypeOf(l) === 'liability')
-    .reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
-  const invoiceTotal   = primaryTotal + vatTotal
-  const netCash        = invoiceTotal - liabilityTotal
+  const primaryTotal      = primaryLines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
+  const withholdingsTotal = counterLines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
+  const netCash           = primaryTotal - withholdingsTotal
 
   function fmtPeso(n: number) {
     return '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -379,8 +375,8 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     GREEN:  'bg-green-100 text-green-700',
   }
 
-  const incomeAccounts  = accounts.filter((a) => a.type === 'income'  || a.type === 'vat' || a.type === 'liability')
-  const expenseAccounts = accounts.filter((a) => a.type === 'expense' || a.type === 'vat' || a.type === 'liability')
+  const incomeAccounts  = accounts.filter((a) => a.type === 'income'  || a.type === 'vat' || a.type === 'liability' || a.type === 'tax_credit')
+  const expenseAccounts = accounts.filter((a) => a.type === 'expense' || a.type === 'vat' || a.type === 'liability' || a.type === 'tax_credit')
 
   const hasEmptyAccount = lines.some((l) => !l.accountId)
 
@@ -674,27 +670,15 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                     className="mt-4 border border-t-line rounded-lg p-4 bg-t-card-alt text-xs space-y-1.5"
                   >
                     <div className="flex justify-between">
-                      <span className="text-t-muted">
-                        Net {declaredType === 'expense' ? 'Expense' : 'Income'}
-                      </span>
+                      <span className="text-t-muted">Invoice Total (incl. VAT)</span>
                       <span className="font-semibold text-t-ink tabular-nums">{fmtPeso(primaryTotal)}</span>
                     </div>
-                    {vatTotal > 0 && (
+                    {withholdingsTotal > 0 && (
                       <div className="flex justify-between">
                         <span className="text-t-muted">
-                          + {declaredType === 'expense' ? 'Input VAT' : 'Output VAT'}
+                          − {declaredType === 'expense' ? 'EWT Payable (withheld)' : 'EWT Withheld by Buyer'}
                         </span>
-                        <span className="font-semibold text-t-ink tabular-nums">{fmtPeso(vatTotal)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between border-t border-t-line pt-1.5">
-                      <span className="text-t-muted">Invoice Total</span>
-                      <span className="font-semibold text-t-ink tabular-nums">{fmtPeso(invoiceTotal)}</span>
-                    </div>
-                    {liabilityTotal > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-t-muted">− EWT Withheld</span>
-                        <span className="font-semibold text-t-ink tabular-nums">({fmtPeso(liabilityTotal)})</span>
+                        <span className="font-semibold text-t-ink tabular-nums">({fmtPeso(withholdingsTotal)})</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center border-t-2 border-t-line pt-1.5">
