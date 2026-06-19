@@ -5,10 +5,11 @@ import { QueueReviewModal } from '../QueueReviewModal'
 
 jest.mock('@tanstack/react-query', () => ({ useQuery: jest.fn() }))
 jest.mock('@/lib/api/queue', () => ({
-  getQueueItem: jest.fn(),
-  approveItem:  jest.fn().mockResolvedValue(undefined),
-  rejectItem:   jest.fn().mockResolvedValue(undefined),
-  returnItem:   jest.fn().mockResolvedValue(undefined),
+  getQueueItem:    jest.fn(),
+  approveItem:     jest.fn().mockResolvedValue(undefined),
+  rejectItem:      jest.fn().mockResolvedValue(undefined),
+  returnItem:      jest.fn().mockResolvedValue(undefined),
+  reclassifyItem:  jest.fn().mockResolvedValue(undefined),
 }))
 jest.mock('@/lib/api/documents', () => ({
   getSignedUrl: jest.fn().mockResolvedValue({ url: 'https://example.com/receipt.jpg' }),
@@ -20,6 +21,7 @@ jest.mock('@/components/queue/SubtypeCombobox', () => ({
 jest.mock('@/components/ui/dialog', () => ({
   Dialog:        ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle:   ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
 const expenseLine = {
@@ -172,5 +174,40 @@ describe('QueueReviewModal — receipt lightbox', () => {
     mockQueries(makeItem({ isNoReceipt: true }))
     wrap()
     expect(screen.queryByTestId('receipt-viewer')).not.toBeInTheDocument()
+  })
+})
+
+describe('QueueReviewModal — account validation', () => {
+  afterEach(() => jest.clearAllMocks())
+
+  it('approve button is disabled when a line has no accountId', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    const emptyItem = makeItem({
+      declaredType: 'expense',
+      transactionLines: [{
+        id: 'l-empty', type: 'expense', accountId: '', accountCode: '',
+        accountName: null, subtypeId: null, subtypeName: null,
+        amount: 100, description: 'Test', date: '2026-06-19',
+      }],
+    })
+    ;(useQuery as jest.Mock).mockImplementation(({ queryKey }: { queryKey: unknown[] }) => {
+      if (queryKey[0] === 'queue-item') return { data: emptyItem, isLoading: false }
+      if (queryKey[0] === 'accounts') return { data: [], isLoading: false }
+      return { data: undefined, isLoading: false }
+    })
+    wrap()
+    expect(screen.getByText('Approve').closest('button')).toBeDisabled()
+  })
+
+  it('approve button is enabled when all lines have accountId', () => {
+    const { useQuery } = require('@tanstack/react-query')
+    const filledItem = makeItem({ declaredType: 'expense', transactionLines: [expenseLine] })
+    ;(useQuery as jest.Mock).mockImplementation(({ queryKey }: { queryKey: unknown[] }) => {
+      if (queryKey[0] === 'queue-item') return { data: filledItem, isLoading: false }
+      if (queryKey[0] === 'accounts') return { data: [], isLoading: false }
+      return { data: undefined, isLoading: false }
+    })
+    wrap()
+    expect(screen.getByText('Approve').closest('button')).not.toBeDisabled()
   })
 })

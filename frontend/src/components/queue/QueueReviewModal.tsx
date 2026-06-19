@@ -36,10 +36,14 @@ function AccountSelect({
   value,
   accounts,
   onChange,
+  disabled,
+  hasError,
 }: {
   value: string
   accounts: Account[]
   onChange: (accountId: string, accountCode: string) => void
+  disabled?: boolean
+  hasError?: boolean
 }) {
   const [search, setSearch]           = useState('')
   const [open, setOpen]               = useState(false)
@@ -54,6 +58,7 @@ function AccountSelect({
   )
 
   function handleFocus() {
+    if (disabled) return
     setOpen(true)
     setSearch('')
     if (inputRef.current) {
@@ -67,11 +72,12 @@ function AccountSelect({
       <input
         ref={inputRef}
         type="text"
+        disabled={disabled}
         value={open ? search : selected ? `${selected.code} — ${selected.name}` : ''}
         onFocus={handleFocus}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full border border-t-line rounded px-2 py-1 text-xs"
+        className={`w-full border rounded px-2 py-1 text-xs ${hasError ? 'border-red-400' : 'border-t-line'}`}
         placeholder="Search accounts…"
       />
       {open && filtered.length > 0 && createPortal(
@@ -103,12 +109,14 @@ function LineRow({
   isNew,
   onChange,
   onRemove,
+  disabled,
 }: {
   line: LineState & { index: number }
   accounts: Account[]
   isNew: boolean
   onChange: (patch: Partial<LineState>) => void
   onRemove: () => void
+  disabled?: boolean
 }) {
   return (
     <div className={`flex gap-1.5 items-center mb-1.5 ${isNew ? 'border-l-2 border-t-primary pl-2' : ''}`}>
@@ -117,7 +125,12 @@ function LineRow({
           value={line.accountId}
           accounts={accounts}
           onChange={(accountId, accountCode) => onChange({ accountId, accountCode })}
+          disabled={disabled}
+          hasError={!line.accountId}
         />
+        {!line.accountId && (
+          <div className="text-[10px] text-red-500 mt-0.5">Account required</div>
+        )}
       </div>
       <div className="w-40 shrink-0">
         <SubtypeCombobox
@@ -133,25 +146,29 @@ function LineRow({
           value={line.amount}
           onChange={(e) => onChange({ amount: e.target.value })}
           placeholder="0"
-          className="border border-t-line rounded pl-5 pr-2 py-1 text-xs w-full"
+          disabled={disabled}
+          className="border border-t-line rounded pl-5 pr-2 py-1 text-xs w-full disabled:opacity-50"
         />
       </div>
       <input
         type="date"
         value={line.date}
         onChange={(e) => onChange({ date: e.target.value })}
-        className="border border-t-line rounded px-2 py-1 text-xs w-32"
+        disabled={disabled}
+        className="border border-t-line rounded px-2 py-1 text-xs w-32 disabled:opacity-50"
       />
       <input
         type="text"
         value={line.description}
         onChange={(e) => onChange({ description: e.target.value })}
         placeholder="Description"
-        className="border border-t-line rounded px-2 py-1 text-xs flex-1"
+        disabled={disabled}
+        className="border border-t-line rounded px-2 py-1 text-xs flex-1 disabled:opacity-50"
       />
       <button
         onClick={onRemove}
-        className="text-t-faint hover:text-red-500 transition-colors text-sm px-1 shrink-0"
+        disabled={disabled}
+        className="text-t-faint hover:text-red-500 transition-colors text-sm px-1 shrink-0 disabled:opacity-50"
         title="Remove line"
       >
         ✕
@@ -344,8 +361,10 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     GREEN:  'bg-green-100 text-green-700',
   }
 
-  const incomeAccounts  = accounts.filter((a) => a.type === 'income' || a.type === 'vat')
-  const expenseAccounts = accounts.filter((a) => a.type === 'expense' || a.type === 'vat')
+  const incomeAccounts  = accounts.filter((a) => a.type === 'income'  || a.type === 'vat' || a.type === 'liability')
+  const expenseAccounts = accounts.filter((a) => a.type === 'expense' || a.type === 'vat' || a.type === 'liability')
+
+  const hasEmptyAccount = lines.some((l) => !l.accountId)
 
   return (
     <>
@@ -542,6 +561,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                       isNew={!l.id}
                       onChange={(patch) => updateLine(l.index, patch)}
                       onRemove={() => removeLine(l.index)}
+                      disabled={submitting}
                     />
                   ))}
                   <button
@@ -576,6 +596,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                       isNew={!l.id}
                       onChange={(patch) => updateLine(l.index, patch)}
                       onRemove={() => removeLine(l.index)}
+                      disabled={submitting}
                     />
                   ))}
                   <button
@@ -625,7 +646,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                   </button>
                   <button
                     onClick={handleApprove}
-                    disabled={submitting}
+                    disabled={submitting || hasEmptyAccount}
                     className="bg-t-primary hover:bg-t-primary-deep text-white text-xs font-semibold px-5 py-2 rounded-lg transition-colors disabled:opacity-50"
                   >
                     {submitting ? 'Approving…' : 'Approve'}
