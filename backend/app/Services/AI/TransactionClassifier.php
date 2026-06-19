@@ -63,12 +63,22 @@ class TransactionClassifier
 
         if ($company->bir_type === 'vat') {
             $systemPrompt .=
-                "- VAT line rule (client is VAT-Registered): when a VAT amount is explicitly printed on the document:\n" .
-                "  * Create a SEPARATE line for the VAT amount.\n" .
+                "- VAT line rule (client is VAT-Registered): when a VAT amount is visible on the document:\n" .
+                "  * Always create a SEPARATE line for the VAT amount.\n" .
                 "  * For expense documents: assign the VAT line to account code 1101 (Input VAT).\n" .
                 "  * For income documents: assign the VAT line to account code 2101 (Output VAT).\n" .
-                "  * All other expense/income lines must use NET amounts: each line's amount = (the printed AMOUNT column value for that line) ÷ 1.12. Do NOT use the full line total without dividing.\n" .
-                "  * Example: receipt AMOUNT column shows ₱25.00 for an item → net expense line = 25.00 ÷ 1.12 = 22.32.\n" .
+                "  * IMPORTANT — Philippine Sales Invoices are written from the SELLER's perspective and may use the term 'Output VAT'.\n" .
+                "    When the document is an EXPENSE in the client's books, that VAT is Input VAT for the buyer.\n" .
+                "    Always use account 1101 on expense documents regardless of what the invoice calls the VAT.\n" .
+                "  * Determine line amounts using the document structure:\n" .
+                "    EXPLICIT-VAT INVOICE: the document shows individual line amounts AND a separately labeled VAT total\n" .
+                "    AND Total = sum(line amounts) + VAT. The line amounts are already NET — use them as-is.\n" .
+                "    Use the printed VAT figure as the VAT line amount.\n" .
+                "    Example: invoice shows 'Services ₱20,000', 'VAT ₱3,600', 'Total ₱23,600' →\n" .
+                "    NET line = ₱20,000 (as-is), VAT line = ₱3,600.\n" .
+                "    EMBEDDED-VAT RECEIPT: the document shows only a grand total with no NET breakdown.\n" .
+                "    Each line's amount = printed AMOUNT column ÷ 1.12. VAT line = total_amount × 12/112.\n" .
+                "    Example: receipt AMOUNT shows ₱25.00 → NET line = 25.00 ÷ 1.12 = 22.32, VAT = 25.00 × 12/112 = 2.68.\n" .
                 "  * sum(lines[].amount) must still equal document.total_amount (the gross total).\n";
         } else {
             $systemPrompt .=
@@ -321,7 +331,7 @@ class TransactionClassifier
                                 'description'  => ['type' => 'string',
                                                    'description' => 'What this line covers'],
                                 'amount'       => ['type' => 'number', 'minimum' => 0.01,
-                                                   'description' => 'The net amount for this line after VAT split (for VAT-registered clients) or the gross amount (for non-VAT clients). For VAT-registered clients: take the printed AMOUNT column value and divide by 1.12. For itemized receipts with an AMOUNT or TOTAL column: use only that column — it is already QTY × UNIT PRICE, so disregard QTY.'],
+                                                   'description' => 'For non-VAT clients: the gross amount. For VAT-registered clients: the net amount for this line. For explicit-VAT invoices (individual line amounts + separate VAT total shown), use the printed line amount as-is. For embedded-VAT receipts (only a grand total shown), divide the printed amount by 1.12. For itemized receipts: use only the AMOUNT column — it is already QTY × UNIT PRICE, so disregard QTY.'],
                                 'account_code' => ['type' => 'string',
                                                    'description' => 'Code from the Chart of Accounts'],
                                 'type'         => ['type' => 'string', 'enum' => ['income', 'expense']],
