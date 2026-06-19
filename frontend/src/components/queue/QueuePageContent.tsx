@@ -11,6 +11,7 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb'
 import { SummaryCard } from '@/components/shared/SummaryCard'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { localCache } from '@/lib/localCache'
 import { TourOverlay } from '@/components/tour/TourOverlay'
 import { useTour } from '@/components/tour/useTour'
 import { QUEUE_TOUR_STEPS } from '@/components/tour/steps'
@@ -72,11 +73,23 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
     queryKey: ['admin-clients', {}],
     queryFn: () => getClients(),
     enabled: showAccountant,
+    initialData: () => {
+      if (!user) return undefined
+      const cached = localCache.get<ClientProfile[]>(`clients_${user.id}`)
+      return cached ? { data: cached, pagination: { total: cached.length, perPage: 100, currentPage: 1 } } : undefined
+    },
+    staleTime: 30 * 60 * 1000,
   })
   const { data: accountantClientsData } = useQuery({
     queryKey: ['accountant-clients'],
     queryFn: () => getAccountantClients({ per_page: 100 }),
     enabled: !showAccountant,
+    initialData: () => {
+      if (!user) return undefined
+      const cached = localCache.get<ClientProfile[]>(`clients_${user.id}`)
+      return cached ? { data: cached, total: cached.length, perPage: 100, currentPage: 1, lastPage: 1, summary: { needAttention: 0, pendingReview: 0, allClear: 0 } } : undefined
+    },
+    staleTime: 30 * 60 * 1000,
   })
   const clients: ClientProfile[] = showAccountant
     ? (adminClientsData?.data ?? [])
@@ -86,6 +99,8 @@ export function QueuePageContent({ showAccountant = false, reviewBasePath }: Pro
     queryKey: ['admin-accountants'],
     queryFn: () => getAccountants(),
     enabled: showAccountant,
+    initialData: () => localCache.get('accountants') ?? undefined,
+    staleTime: 60 * 60 * 1000,
   })
   const accountants = accountantsData ?? []
 

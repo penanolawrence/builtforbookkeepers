@@ -12,6 +12,7 @@ import type { Account } from '@/types/admin'
 import type { LinePayload } from '@/lib/api/queue'
 import { SubtypeCombobox } from './SubtypeCombobox'
 import { useToast } from '@/hooks/use-toast'
+import { localCache } from '@/lib/localCache'
 
 interface LineState {
   id?: string
@@ -170,6 +171,11 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     queryKey: ['accounts', item?.clientId],
     queryFn:  () => getAccounts(item!.clientId),
     enabled:  !!item?.clientId,
+    initialData: () => {
+      if (!item?.clientId) return undefined
+      return localCache.get<Account[]>(`accounts_${item.clientId}`) ?? undefined
+    },
+    staleTime: 24 * 60 * 60 * 1000,
   })
 
   const [imageUrl, setImageUrl] = useState<string | null>(null)
