@@ -10,6 +10,7 @@ class ChartOfAccountsService
 {
     private const COA_TYPE_TO_ACCOUNT_TYPE = [
         'Assets'             => 'cash',
+        'Liabilities'        => 'liability',
         "Owner's Equity"     => 'equity',
         'Revenue / Income'   => 'income',
         'Cost of Goods Sold' => 'expense',

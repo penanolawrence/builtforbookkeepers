@@ -15,6 +15,14 @@ class ChartOfAccountSeeder extends Seeder
             ['type' => 'Assets',             'code' => '1010', 'name' => 'Cash on Hand',                          'sort_order' => 1],
             ['type' => 'Assets',             'code' => '1020', 'name' => 'Cash in Bank',                          'sort_order' => 2],
 
+            // Liabilities (2000s) — Withholding Tax Payable (universal)
+            ['type' => 'Liabilities', 'code' => '2210', 'name' => 'EWT Payable — Professional Fees (10%/15%)', 'sort_order' => 1],
+            ['type' => 'Liabilities', 'code' => '2211', 'name' => 'EWT Payable — Rental (5%)',                 'sort_order' => 2],
+            ['type' => 'Liabilities', 'code' => '2212', 'name' => 'EWT Payable — Services (2%)',               'sort_order' => 3],
+            ['type' => 'Liabilities', 'code' => '2213', 'name' => 'EWT Payable — Goods & Supplies (1%)',       'sort_order' => 4],
+            ['type' => 'Liabilities', 'code' => '2214', 'name' => 'EWT Payable — Contractors (2%)',            'sort_order' => 5],
+            ['type' => 'Liabilities', 'code' => '2220', 'name' => 'Withholding Tax on Compensation Payable',   'sort_order' => 6],
+
             // Owner's Equity (3000s)
             ['type' => "Owner's Equity",     'code' => '3010', 'name' => "Owner's Capital",                       'sort_order' => 1],
             ['type' => "Owner's Equity",     'code' => '3020', 'name' => "Owner's Drawings",                      'sort_order' => 2],

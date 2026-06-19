@@ -20,14 +20,14 @@ class ChartOfAccountsSeederTest extends TestCase
         $this->seed(\Database\Seeders\ChartOfAccountSubtypeSeeder::class);
     }
 
-    public function test_seeds_7_account_types(): void
+    public function test_seeds_8_account_types(): void
     {
-        $this->assertDatabaseCount('account_types', 7);
+        $this->assertDatabaseCount('account_types', 8);
     }
 
-    public function test_seeds_50_chart_of_accounts(): void
+    public function test_seeds_76_chart_of_accounts(): void
     {
-        $this->assertDatabaseCount('chart_of_accounts', 50);
+        $this->assertDatabaseCount('chart_of_accounts', 76);
     }
 
     public function test_seeds_121_subtypes(): void
@@ -97,6 +97,31 @@ class ChartOfAccountsSeederTest extends TestCase
         $this->assertDatabaseHas('chart_of_account_subtypes', ['code' => '6030-03', 'name' => 'Pag-IBIG Contribution']);
     }
 
+    public function test_liabilities_type_exists(): void
+    {
+        $this->assertDatabaseHas('account_types', [
+            'name'           => 'Liabilities',
+            'code_prefix'    => 2000,
+            'normal_balance' => 'credit',
+        ]);
+    }
+
+    public function test_ewt_professional_fees_account_exists(): void
+    {
+        $this->assertDatabaseHas('chart_of_accounts', [
+            'code' => '2210',
+            'name' => 'EWT Payable — Professional Fees (10%/15%)',
+        ]);
+    }
+
+    public function test_wtc_payable_account_exists(): void
+    {
+        $this->assertDatabaseHas('chart_of_accounts', [
+            'code' => '2220',
+            'name' => 'Withholding Tax on Compensation Payable',
+        ]);
+    }
+
     public function test_seeders_are_idempotent(): void
     {
         // Run all three seeders a second time — counts must not change
@@ -104,8 +129,8 @@ class ChartOfAccountsSeederTest extends TestCase
         $this->seed(\Database\Seeders\ChartOfAccountSeeder::class);
         $this->seed(\Database\Seeders\ChartOfAccountSubtypeSeeder::class);
 
-        $this->assertDatabaseCount('account_types', 7);
-        $this->assertDatabaseCount('chart_of_accounts', 50);
+        $this->assertDatabaseCount('account_types', 8);
+        $this->assertDatabaseCount('chart_of_accounts', 76);
         $this->assertDatabaseCount('chart_of_account_subtypes', 121);
     }
 }
