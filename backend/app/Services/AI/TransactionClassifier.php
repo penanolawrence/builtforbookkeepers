@@ -63,8 +63,7 @@ class TransactionClassifier
 
         if ($company->bir_type === 'vat') {
             $systemPrompt .=
-                "- VAT line rule (client is VAT-Registered): when a VAT amount is present on the document " .
-                "(either explicitly printed, or because the total is VAT-inclusive):\n" .
+                "- VAT line rule (client is VAT-Registered): when a VAT amount is explicitly printed on the document:\n" .
                 "  * Create a SEPARATE line for the VAT amount.\n" .
                 "  * For expense documents: assign the VAT line to account code 1101 (Input VAT).\n" .
                 "  * For income documents: assign the VAT line to account code 2101 (Output VAT).\n" .
@@ -300,7 +299,7 @@ class TransactionClassifier
                             'vat_amount'     => [
                                 'type'        => ['number', 'null'],
                                 'minimum'     => 0,
-                                'description' => 'VAT amount for this document. Use these rules in order: (1) If a VAT figure is explicitly printed, use that value. (2) If the document or user note says it is VAT-inclusive (e.g. "inclusive of VAT", "VAT inclusive", "inc. VAT"), calculate as total_amount × 12/112. (3) If the merchant/seller on the receipt is identified as VAT-registered — shown by text such as "VAT Reg. TIN", "VAT Registration No.", "VAT REG No.", or a TIN labeled as VAT-registered — the total is VAT-inclusive under Philippine tax law even if no VAT amount is printed; calculate as total_amount × 12/112. Return null only if none of the above apply.',
+                                'description' => 'VAT amount explicitly printed on the document (e.g. labelled "VAT", "Output VAT", "VAT amount"). Return null if no VAT figure is explicitly shown.',
                             ],
                             'or_number'      => ['type' => ['string', 'null'],
                                                 'description' => 'Official Receipt or invoice number'],
