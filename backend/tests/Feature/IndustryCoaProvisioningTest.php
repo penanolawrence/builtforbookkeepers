@@ -173,6 +173,31 @@ class IndustryCoaProvisioningTest extends TestCase
         ]);
     }
 
+    public function test_services_client_gets_no_cogs_accounts(): void
+    {
+        $company = $this->makeCompany('services');
+        (new ChartOfAccountsService())->seedDefaultAccounts($company);
+
+        // Services businesses have no COGS accounts
+        $cogsCodesUniversallyRemoved = ['5010', '5020', '5030', '5040', '5050'];
+        foreach ($cogsCodesUniversallyRemoved as $code) {
+            $this->assertDatabaseMissing('accounts', [
+                'company_id' => $company->id,
+                'code'       => $code,
+            ]);
+        }
+
+        // Professional services also gets no COGS
+        $company2 = $this->makeCompany('professional_services');
+        (new ChartOfAccountsService())->seedDefaultAccounts($company2);
+        foreach ($cogsCodesUniversallyRemoved as $code) {
+            $this->assertDatabaseMissing('accounts', [
+                'company_id' => $company2->id,
+                'code'       => $code,
+            ]);
+        }
+    }
+
     public function test_setup_endpoint_returns_422_for_client_without_industry_type(): void
     {
         $company = Company::create([

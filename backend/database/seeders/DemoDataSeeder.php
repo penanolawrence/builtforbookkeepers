@@ -39,6 +39,7 @@ class DemoDataSeeder extends Seeder
                 'contact_person' => 'Juan dela Cruz',
                 'bir_type'       => 'vat',
                 'plan'           => 'growth',
+                'industry_type'  => 'retail',
                 'accountant_id'  => $accountant->id,
             ]
         );
