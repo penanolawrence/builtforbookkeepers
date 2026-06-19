@@ -10,6 +10,7 @@ import {
   updateAccountant, resetAccountantPassword, deactivateAccountant,
 } from '@/lib/api/admin/accountants'
 import type { Accountant } from '@/types/admin'
+import { localCache } from '@/lib/localCache'
 
 export type AccountantModalProps =
   | { mode: 'detail'; accountantId: string; onClose: () => void }
@@ -59,6 +60,7 @@ function InviteMode({ onClose }: { onClose: () => void }) {
     setSubmitError(null)
     try {
       const result = await createAccountant(data)
+      localCache.invalidate('accountants')
       setSuccess(result)
     } catch {
       setSubmitError('Failed to send invite. Please try again.')

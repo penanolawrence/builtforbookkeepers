@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createAccountantClient } from '@/lib/api/accountant/clients'
 import type { CreateClientPayload, CreateClientResult } from '@/lib/api/accountant/clients'
 import { useToast } from '@/hooks/use-toast'
+import { localCache } from '@/lib/localCache'
 
 interface Props {
   onClose: () => void
@@ -46,6 +47,7 @@ export function NewClientModal({ onClose }: Props) {
     onSuccess: (data) => {
       setResult(data)
       queryClient.invalidateQueries({ queryKey: ['accountant-clients'] })
+      localCache.invalidatePrefix('clients_')
     },
     onError: (err: unknown) => {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
