@@ -20,7 +20,7 @@ return new class extends Migration
         Schema::table('chart_of_account_subtypes', function (Blueprint $table) {
             $table->uuid('chart_of_account_id')->nullable(false)->change();
             $table->string('code', 10)->nullable(false)->change();
-            $table->unsignedSmallInteger('sort_order')->default(null)->change();
+            $table->unsignedSmallInteger('sort_order')->change();
         });
     }
 };
