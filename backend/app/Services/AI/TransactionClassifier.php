@@ -64,6 +64,7 @@ class TransactionClassifier
                     "    - Services (generic, not professional) → 2212\n" .
                     "    - Goods / Supplies / Merchandise → 2213\n" .
                     "    - Contractors / Subcontractors / Construction → 2214\n" .
+                    "    - Commissions / Sales Agent fees / Referral fees → 2215\n" .
                     "    - Compensation / Payroll / Salary → 2220\n" .
                     "  * This EWT line is EXCLUDED from the sum(lines[].amount) = total_amount constraint.\n" .
                     "    The sum of all non-EWT lines must equal total_amount. EWT is an additional entry on top.\n" .
