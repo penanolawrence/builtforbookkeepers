@@ -1,8 +1,9 @@
 <?php
+// backend/database/seeders/SubtypeSeeder.php
 
 namespace Database\Seeders;
 
-use App\Models\Subtype;
+use App\Models\ChartOfAccountSubtype;
 use Illuminate\Database\Seeder;
 
 class SubtypeSeeder extends Seeder
@@ -37,9 +38,12 @@ class SubtypeSeeder extends Seeder
         ];
 
         foreach ($names as $name) {
-            Subtype::firstOrCreate(['name' => $name]);
+            ChartOfAccountSubtype::firstOrCreate(
+                ['name' => $name, 'chart_of_account_id' => null],
+                ['code' => null, 'sort_order' => 0]
+            );
         }
 
-        $this->command->info('Subtypes: ' . count($names) . ' canonical subtypes seeded.');
+        $this->command->info('Subtypes: ' . count($names) . ' canonical subtypes seeded into chart_of_account_subtypes.');
     }
 }
