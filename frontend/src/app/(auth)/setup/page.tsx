@@ -13,15 +13,27 @@ import axios from 'axios'
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
+const INDUSTRY_OPTIONS = [
+  { value: 'retail',                label: 'Retail' },
+  { value: 'services',              label: 'Services' },
+  { value: 'restaurant',            label: 'Restaurant / F&B' },
+  { value: 'construction',          label: 'Construction' },
+  { value: 'professional_services', label: 'Professional Services' },
+  { value: 'manufacturing',         label: 'Manufacturing' },
+] as const
+
+type IndustryValue = typeof INDUSTRY_OPTIONS[number]['value']
+
 const schema = z
   .object({
-    name: z.string().min(2, 'Full name required'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    name:            z.string().min(2, 'Full name required'),
+    password:        z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Required'),
+    industryType:    z.string().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: 'Passwords do not match',
-    path: ['confirmPassword'],
+    path:    ['confirmPassword'],
   })
 
 type FormValues = z.infer<typeof schema>
@@ -59,9 +71,10 @@ function SetupForm() {
   const token        = searchParams.get('token')
 
   // Token state
-  const [tokenState, setTokenState] = useState<TokenState>('loading')
-  const [role,       setRole]       = useState<Role | null>(null)
-  const [apiError,   setApiError]   = useState<string | null>(null)
+  const [tokenState,      setTokenState]      = useState<TokenState>('loading')
+  const [role,            setRole]            = useState<Role | null>(null)
+  const [apiError,        setApiError]        = useState<string | null>(null)
+  const [prefillIndustry, setPrefillIndustry] = useState<string | null>(null)
 
   // Mascot + theme state
   const [mascot,       setMascot]       = useState<Mascot>('sofia')
@@ -111,7 +124,11 @@ function SetupForm() {
       .then((result) => {
         if (!result.valid)       setTokenState('invalid')
         else if (result.expired) setTokenState('expired')
-        else { setRole(result.role); setTokenState('form') }
+        else {
+          setRole(result.role)
+          setPrefillIndustry(result.industryType)
+          setTokenState('form')
+        }
       })
       .catch(() => setTokenState('invalid'))
   }, [token, router])
@@ -121,11 +138,19 @@ function SetupForm() {
     return () => { if (redirectTimer.current) clearTimeout(redirectTimer.current) }
   }, [])
 
+  const isClient = role === 'client'
+
   const onSubmit = async (values: FormValues) => {
     if (!token) return
     setApiError(null)
+
+    if (isClient && !values.industryType) {
+      setApiError('Please select your industry type.')
+      return
+    }
+
     try {
-      const { user } = await setupPassword(token, values.name, values.password)
+      const { user } = await setupPassword(token, values.name, values.password, values.industryType)
       setSubmitStatus('success')
       redirectTimer.current = setTimeout(() => router.push(`/${user.role}/dashboard`), 1500)
     } catch (err) {
@@ -137,7 +162,6 @@ function SetupForm() {
     }
   }
 
-  const isClient = role === 'client'
   const subtitle = isClient
     ? 'Welcome! Set your name and a password to get started.'
     : 'Welcome to Built for Bookkeepers. Set your name and choose a password.'
@@ -298,6 +322,42 @@ function SetupForm() {
               <div className="field-error">{errors.confirmPassword.message}</div>
             )}
           </div>
+
+          {/* Industry Type — clients only */}
+          {isClient && (
+            <div className="lv2-field">
+              <label className="lv2-label" htmlFor="su-industry">
+                Industry Type <span className="form-req">*</span>
+              </label>
+              <div className="lv2-input" style={{ padding: 0, overflow: 'hidden' }}>
+                <select
+                  id="su-industry"
+                  disabled={isSubmitting || submitStatus === 'success'}
+                  defaultValue={prefillIndustry ?? ''}
+                  {...register('industryType')}
+                  style={{
+                    width: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                    padding: '10px 14px',
+                    fontSize: 14,
+                    color: 'inherit',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="" disabled>Select your industry…</option>
+                  {INDUSTRY_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              {errors.industryType && (
+                <div className="field-error">{errors.industryType.message}</div>
+              )}
+              <p className="lv2-hint">Used to set up your chart of accounts.</p>
+            </div>
+          )}
 
           <button
             type="submit"

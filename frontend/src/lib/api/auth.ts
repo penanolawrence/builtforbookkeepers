@@ -51,8 +51,8 @@ export async function markTutorialSeen(): Promise<{ hasSeenTutorial: boolean }> 
 
 export async function validateSetupToken(
   token: string
-): Promise<{ valid: boolean; role: Role; expired: boolean }> {
-  const { data } = await api.get<{ valid: boolean; role: Role; expired: boolean }>(
+): Promise<{ valid: boolean; role: Role; expired: boolean; industryType: string | null }> {
+  const { data } = await api.get<{ valid: boolean; role: Role; expired: boolean; industryType: string | null }>(
     `/auth/validate-token?token=${token}`
   )
   return data
@@ -61,13 +61,15 @@ export async function validateSetupToken(
 export async function setupPassword(
   token: string,
   name: string,
-  password: string
+  password: string,
+  industryType?: string
 ): Promise<{ token: string; user: User }> {
   const { data } = await api.post<{ token: string; user: User }>('/auth/setup', {
     token,
     name,
     password,
     password_confirmation: password,
+    ...(industryType ? { industry_type: industryType } : {}),
   })
   localStorage.setItem('b4b_token', data.token)
   localStorage.setItem('b4b_user', JSON.stringify(data.user))
