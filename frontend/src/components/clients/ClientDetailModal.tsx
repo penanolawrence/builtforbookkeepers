@@ -18,6 +18,8 @@ import {
   createMerchant as createMerchantAdmin,
   updateMerchant as updateMerchantAdmin,
   deleteMerchant as deleteMerchantAdmin,
+  getClientNotes as getClientNotesAdmin,
+  saveClientNotes as saveClientNotesAdmin,
 } from '@/lib/api/admin/clients'
 import {
   getAccountantClient, getAccountantClientDocuments, updateAccountantClient,
@@ -25,6 +27,8 @@ import {
   createMerchant as createMerchantAccountant,
   updateMerchant as updateMerchantAccountant,
   deleteMerchant as deleteMerchantAccountant,
+  getClientNotes as getClientNotesAccountant,
+  saveClientNotes as saveClientNotesAccountant,
 } from '@/lib/api/accountant/clients'
 import { AssignAccountantModal } from '@/components/admin/AssignAccountantModal'
 import { ReceivePaymentModal } from '@/components/admin/ReceivePaymentModal'
@@ -35,7 +39,7 @@ import type { PagedDocs } from '@/types/document'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Role = 'admin' | 'accountant'
-type Tab  = 'overview' | 'submit' | 'documents' | 'merchants' | 'coa'
+type Tab  = 'overview' | 'submit' | 'documents' | 'merchants' | 'coa' | 'notes'
 
 interface MerchantRow {
   id: string
@@ -162,11 +166,13 @@ function CoaSection({ title, accounts, system, hint, onAdd, onRemove, onRename, 
 
 // ─── CoaTab ──────────────────────────────────────────────────────────────────
 
+const EMPTY_ACCOUNTS: Account[] = []
+
 function CoaTab({ clientId, isVat }: { clientId: string; isVat: boolean }) {
   const queryClient = useQueryClient()
   const { toast }   = useToast()
 
-  const { data: accounts = [], isLoading } = useQuery({
+  const { data: accounts = EMPTY_ACCOUNTS, isLoading } = useQuery({
     queryKey: ['client-coa', clientId],
     queryFn:  () => getChartOfAccounts(clientId),
   })
@@ -203,6 +209,7 @@ function CoaTab({ clientId, isVat }: { clientId: string; isVat: boolean }) {
   const income    = draft.filter((a) => a.type === 'income'  && !a.isSystemManaged)
   const expense   = draft.filter((a) => a.type === 'expense' && !a.isSystemManaged)
   const cash      = draft.filter((a) => a.type === 'cash')
+  const liability = draft.filter((a) => a.type === 'liability')
   const vat       = draft.filter((a) => a.type === 'vat')
   const globalIdx = (a: Account) => draft.indexOf(a)
 
@@ -214,6 +221,7 @@ function CoaTab({ clientId, isVat }: { clientId: string; isVat: boolean }) {
         <CoaSection title="Income Accounts"  accounts={income}  onAdd={() => addAccount('income')}  onRemove={removeDraftAccount} onRename={renameDraftAccount} getIdx={globalIdx} />
         <CoaSection title="Expense Accounts" accounts={expense} onAdd={() => addAccount('expense')} onRemove={removeDraftAccount} onRename={renameDraftAccount} getIdx={globalIdx} />
         <CoaSection title="Cash / Payment Accounts" accounts={cash} system hint="System managed" getIdx={globalIdx} />
+        {liability.length > 0 && <CoaSection title="Payable Accounts" accounts={liability} system hint="System managed" getIdx={globalIdx} />}
         {isVat && <CoaSection title="VAT Accounts" accounts={vat} system hint="System managed · VAT clients only" getIdx={globalIdx} />}
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 28px 24px' }}>
@@ -557,6 +565,87 @@ function MerchantsTab({ clientId, role }: { clientId: string; role: Role }) {
   )
 }
 
+// ─── NotesTab ─────────────────────────────────────────────────────────────────
+
+function NotesTab({ clientId, role }: { clientId: string; role: Role }) {
+  const { toast }  = useToast()
+  const [draft,     setDraft]     = useState('')
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+
+  const getFn  = role === 'admin' ? getClientNotesAdmin  : getClientNotesAccountant
+  const saveFn = role === 'admin' ? saveClientNotesAdmin : saveClientNotesAccountant
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['client-notes', clientId],
+    queryFn:  () => getFn(clientId),
+  })
+
+  useEffect(() => {
+    if (data !== undefined) setDraft(data.notes ?? '')
+  }, [data])
+
+  const { mutate: save, isPending: saving } = useMutation({
+    mutationFn: () => saveFn(clientId, draft),
+    onSuccess: () => {
+      setLastSaved(new Date())
+      toast({ title: 'Notes saved.' })
+    },
+    onError: (err: unknown) => {
+      toast({ title: (err as any)?.response?.data?.message ?? 'Failed to save notes.', variant: 'destructive' })
+    },
+  })
+
+  if (isLoading) return (
+    <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>Loading…</div>
+  )
+
+  return (
+    <div style={{ padding: '24px 28px' }}>
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-faint)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>
+          AI Context Notes
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--t-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+          These notes are sent to the AI on every classification for this client. Describe the business, flag recurring patterns, or clarify how certain transactions should be treated.
+        </div>
+      </div>
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        maxLength={5000}
+        rows={10}
+        style={{
+          width: '100%', border: '1.5px solid var(--t-line)', borderRadius: 12,
+          padding: '12px 14px', fontSize: 13.5, color: 'var(--t-ink)',
+          background: 'var(--t-card)', fontFamily: 'inherit', fontWeight: 500,
+          outline: 'none', resize: 'vertical', lineHeight: 1.6, boxSizing: 'border-box',
+        }}
+        placeholder="e.g. Rice and grocery retailer. Main income is over-the-counter sales. Primary expenses: rice supplier (Magsaysay Trading), utilities, and monthly rent to Lim Properties."
+      />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+        <span style={{ fontSize: 12, color: 'var(--t-faint)' }}>
+          {lastSaved
+            ? `Last saved ${lastSaved.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+            : ' '}
+        </span>
+        <button
+          type="button"
+          onClick={() => save()}
+          disabled={saving}
+          style={{
+            border: 0, borderRadius: 12, cursor: saving ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit', fontWeight: 700, fontSize: 14, padding: '10px 22px',
+            color: '#fff', background: 'linear-gradient(150deg, var(--t-primary), var(--t-primary-deep))',
+            boxShadow: '0 12px 22px -12px var(--t-primary)', opacity: saving ? 0.7 : 1,
+          }}
+        >
+          {saving ? 'Saving…' : 'Save Notes'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── OverviewTab ─────────────────────────────────────────────────────────────
 
 function OverviewTab({
@@ -728,6 +817,15 @@ function OverviewTab({
                 <label className={labelCls}>TIN</label>
                 <input className={inputCls} {...register('tin')} />
               </div>
+            </div>
+            <div>
+              <label className={labelCls}>Industry</label>
+              <input
+                className="w-full border border-t-line rounded-lg px-3 py-1.5 text-[13px] text-t-faint bg-t-surface outline-none cursor-default"
+                value={client.industry ?? ''}
+                readOnly
+                disabled
+              />
             </div>
             <div>
               <label className={labelCls}>Username</label>
@@ -920,6 +1018,9 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
     { id: 'documents',  label: 'Documents' },
     { id: 'merchants',  label: 'Merchants' },
     { id: 'coa',        label: 'Chart of Accounts' },
+    ...(role === 'accountant' || role === 'admin'
+      ? [{ id: 'notes' as Tab, label: 'Notes' }]
+      : []),
   ]
 
   const statusTier = client ? (STATUS_TIER[client.clientStatus] ?? 'pending') : 'pending'
@@ -1012,6 +1113,7 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
                   clientId={clientId}
                   docsQueryKey={[role === 'admin' ? 'admin-client-docs' : 'client-modal-docs', clientId]}
                   role={role}
+                  coaReady={client.coaReady}
                 />
               )}
               {tab === 'documents' && (
@@ -1026,6 +1128,9 @@ export function ClientDetailModal({ clientId, role, onClose }: ClientDetailModal
               )}
               {tab === 'coa' && (
                 <CoaTab clientId={clientId} isVat={client.birType === 'vat'} />
+              )}
+              {tab === 'notes' && (
+                <NotesTab clientId={clientId} role={role} />
               )}
             </>
           )}
