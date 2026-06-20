@@ -149,6 +149,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/admin/clients/{id}/merchants', [Admin\ClientController::class, 'storeMerchant']);
         Route::patch('/admin/merchants/{id}',        [Admin\ClientController::class, 'updateMerchant']);
         Route::delete('/admin/merchants/{id}',       [Admin\ClientController::class, 'destroyMerchant']);
+        Route::get('/admin/clients/{id}/notes',   [Admin\ClientController::class, 'notes']);
+        Route::patch('/admin/clients/{id}/notes', [Admin\ClientController::class, 'updateNotes']);
 
         Route::get('/admin/accountants',                       [Admin\AccountantController::class, 'index']);
         Route::post('/admin/accountants',                      [Admin\AccountantController::class, 'store']);

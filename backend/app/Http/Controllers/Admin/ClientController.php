@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateClientRequest;
 use App\Mail\ClientInviteMail;
+use App\Models\Account;
 use App\Models\AccountantAssignmentLog;
 use App\Models\Company;
 use App\Models\Document;
@@ -12,6 +13,7 @@ use App\Models\JournalEntry;
 use App\Models\Merchant;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Accounting\ChartOfAccountsService;
 use App\Services\Auth\InviteTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -87,6 +89,10 @@ class ClientController extends Controller
                 'company_id' => $company->id,
             ]);
 
+            if ($company->industry_type) {
+                (new ChartOfAccountsService())->seedDefaultAccounts($company);
+            }
+
             $rawToken   = (new InviteTokenService())->generate($user);
             $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
 
@@ -134,6 +140,7 @@ class ClientController extends Controller
             'email'          => $company->email,
             'tin'            => $company->tin,
             'contactPerson'  => $company->contact_person,
+            'industry'       => $company->industry_type,
             'birType'        => $company->bir_type,
             'plan'           => $company->plan,
             'accountantId'   => $company->accountant_id,
@@ -147,6 +154,7 @@ class ClientController extends Controller
                 'referenceNumber' => $lastPayment->reference_number,
             ] : null,
             'createdAt'      => $company->created_at?->toIso8601String(),
+            'coaReady'       => Account::where('company_id', $company->id)->exists(),
         ]);
     }
 
@@ -409,6 +417,22 @@ class ClientController extends Controller
         $merchant->delete();
 
         return response()->json(['message' => 'Merchant deleted.']);
+    }
+
+    public function notes(string $id): JsonResponse
+    {
+        $company = Company::findOrFail($id);
+        return response()->json(['notes' => $company->accountant_notes]);
+    }
+
+    public function updateNotes(Request $request, string $id): JsonResponse
+    {
+        $request->validate(['notes' => 'nullable|string|max:5000']);
+
+        $company = Company::findOrFail($id);
+        $company->update(['accountant_notes' => $request->notes]);
+
+        return response()->json(['message' => 'Saved.']);
     }
 
     private function toListItem(Company $c): array
