@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\AlphaListController;
 use App\Http\Controllers\AdjustingEntryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BIRController;
@@ -73,6 +74,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/non-vat/2551q/pdf', [NonVatReportController::class, 'quarterly2551qPdf']);
         Route::get('/bir/{book}',     [BIRController::class, 'getBook']);
         Route::get('/bir/{book}/pdf', [BIRController::class, 'exportPDF']);
+        Route::get('/reports/alpha-list',     [AlphaListController::class, 'index']);
+        Route::get('/reports/alpha-list/csv', [AlphaListController::class, 'exportCsv']);
+        Route::get('/reports/alpha-list/pdf', [AlphaListController::class, 'exportPdf']);
     });
 
     // Accountant-only routes
