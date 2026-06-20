@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BillingController extends Controller
 {
@@ -70,7 +71,7 @@ class BillingController extends Controller
                 'users.id as userId',
                 'users.name',
                 'users.email',
-                'payments.date_received as lastPaymentDate',
+                DB::raw('DATE(payments.date_received) as lastPaymentDate'),
                 'payments.amount as lastPaymentAmount'
             )
             ->get();
