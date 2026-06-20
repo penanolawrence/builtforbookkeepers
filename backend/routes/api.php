@@ -155,9 +155,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/admin/accountants/{id}/deactivate',      [Admin\AccountantController::class, 'deactivate']);
         Route::put('/admin/accountants/{id}',                  [Admin\AccountantController::class, 'update']);
 
-        Route::get('/admin/billing',            [Admin\BillingController::class, 'index']);
-        Route::get('/admin/billing/{clientId}', [Admin\BillingController::class, 'clientPayments']);
-        Route::post('/admin/billing/{clientId}',[Admin\BillingController::class, 'receivePayment']);
+        Route::get('/admin/billing',                              [Admin\BillingController::class, 'index']);
+        Route::get('/admin/billing/accountants',                  [Admin\BillingController::class, 'accountantIndex']);
+        Route::get('/admin/billing/accountants/{userId}',         [Admin\BillingController::class, 'accountantPayments']);
+        Route::post('/admin/billing/accountants/{userId}',        [Admin\BillingController::class, 'receiveAccountantPayment']);
+        Route::get('/admin/billing/{clientId}',                   [Admin\BillingController::class, 'clientPayments']);
+        Route::post('/admin/billing/{clientId}',                  [Admin\BillingController::class, 'receivePayment']);
 
         Route::post('/adjusting-entries/{id}/approve', [AdjustingEntryController::class, 'approve']);
         Route::post('/adjusting-entries/{id}/reject',  [AdjustingEntryController::class, 'rejectEntry']);
