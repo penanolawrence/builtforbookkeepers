@@ -99,6 +99,8 @@ class BillingController extends Controller
     {
         $user = User::findOrFail($userId);
 
+        abort_if($user->role !== 'accountant', 422, 'User is not an accountant.');
+
         $payment = Payment::create([
             'user_id'          => $user->id,
             'amount'           => $request->amount,
