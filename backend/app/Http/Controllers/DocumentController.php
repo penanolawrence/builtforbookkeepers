@@ -8,6 +8,7 @@ use App\Http\Requests\Document\ManualEntryRequest;
 use App\Http\Requests\Document\UploadDocumentRequest;
 use App\Jobs\ClassifyWithAI;
 use App\Jobs\PrepareDocumentForAI;
+use App\Models\Account;
 use App\Models\Company;
 use App\Models\Document;
 use App\Services\Ref\RefSequenceService;
@@ -33,6 +34,10 @@ class DocumentController extends Controller
             }
         } else {
             $company = Company::findOrFail($user->company_id);
+        }
+
+        if (! Account::where('company_id', $company->id)->exists()) {
+            return response()->json(['message' => 'Chart of accounts is not set up yet. Please complete the account setup first.'], 422);
         }
 
         $hash = hash_file('sha256', $request->file('file')->getRealPath());
@@ -275,6 +280,10 @@ class DocumentController extends Controller
             }
         } else {
             $company = Company::findOrFail($user->company_id);
+        }
+
+        if (! Account::where('company_id', $company->id)->exists()) {
+            return response()->json(['message' => 'Chart of accounts is not set up yet. Please complete the account setup first.'], 422);
         }
 
         $refService = new RefSequenceService();

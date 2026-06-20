@@ -113,6 +113,7 @@ export interface VatSlsRow {
   ref_number: string | null
   buyer_name: string | null
   buyer_tin: string | null
+  buyer_address: string | null
   taxable_amount: number
   vat_amount: number
   total_amount: number
@@ -123,6 +124,7 @@ export interface VatSlpRow {
   ref_number: string | null
   supplier_name: string | null
   supplier_tin: string | null
+  supplier_address: string | null
   taxable_amount: number
   input_vat: number
   total_amount: number

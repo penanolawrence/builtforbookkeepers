@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\SetupPasswordRequest;
+use App\Models\Account;
 use App\Models\User;
 use App\Services\Accounting\ChartOfAccountsService;
 use App\Services\Auth\InviteTokenService;
@@ -40,16 +41,24 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
+        $userData = [
+            'id'              => $user->id,
+            'name'            => $user->name,
+            'role'            => $user->role,
+            'companyId'       => $user->company_id,
+            'status'          => $user->status,
+            'hasSeenTutorial' => $user->has_seen_tutorial,
+        ];
+
+        if ($user->role === 'client') {
+            $user->loadMissing('company');
+            $userData['tin']     = $user->company?->tin;
+            $userData['birType'] = $user->company?->bir_type;
+        }
+
         return response()->json([
             'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'role' => $user->role,
-                'companyId' => $user->company_id,
-                'status' => $user->status,
-                'hasSeenTutorial' => $user->has_seen_tutorial,
-            ],
+            'user'  => $userData,
         ]);
     }
 
@@ -103,13 +112,18 @@ class AuthController extends Controller
             return response()->json(['valid' => false, 'role' => null, 'expired' => true, 'industryType' => null]);
         }
 
-        $user = \App\Models\User::with('company')->find($inviteToken->user_id);
+        $user     = \App\Models\User::with('company')->find($inviteToken->user_id);
+        $coaReady = $user?->company
+            ? Account::where('company_id', $user->company->id)->exists()
+            : false;
 
         return response()->json([
             'valid'        => true,
             'role'         => $inviteToken->role,
             'expired'      => false,
+            'name'         => $user?->company?->contact_person ?? $user?->name,
             'industryType' => $user?->company?->industry_type,
+            'coaReady'     => $coaReady,
         ]);
     }
 
@@ -124,14 +138,20 @@ class AuthController extends Controller
         $user = User::findOrFail($inviteToken->user_id);
 
         if ($inviteToken->role === 'client') {
-            if (! $request->filled('industry_type')) {
-                return response()->json(['message' => 'Industry type is required.'], 422);
-            }
+            $company  = $user->company;
+            $coaReady = $company
+                ? Account::where('company_id', $company->id)->exists()
+                : false;
 
-            $company = $user->company;
-            if ($company) {
-                $company->update(['industry_type' => $request->industry_type]);
-                (new ChartOfAccountsService())->seedDefaultAccounts($company->fresh());
+            if (! $coaReady) {
+                if (! $request->filled('industry_type')) {
+                    return response()->json(['message' => 'Industry type is required.'], 422);
+                }
+
+                if ($company) {
+                    $company->update(['industry_type' => $request->industry_type]);
+                    (new ChartOfAccountsService())->seedDefaultAccounts($company->fresh());
+                }
             }
         }
 
@@ -143,15 +163,24 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
+        $userData = [
+            'id'              => $user->id,
+            'name'            => $user->name,
+            'role'            => $user->role,
+            'companyId'       => $user->company_id,
+            'status'          => $user->status,
+            'hasSeenTutorial' => $user->has_seen_tutorial,
+        ];
+
+        if ($user->role === 'client') {
+            $user->loadMissing('company');
+            $userData['tin']     = $user->company?->tin;
+            $userData['birType'] = $user->company?->bir_type;
+        }
+
         return response()->json([
             'token' => $token,
-            'user'  => [
-                'id'        => $user->id,
-                'name'      => $user->name,
-                'role'      => $user->role,
-                'companyId' => $user->company_id,
-                'status'    => $user->status,
-            ],
+            'user'  => $userData,
         ]);
     }
 

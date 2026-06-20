@@ -95,15 +95,16 @@ export function TourOverlay({ step, stepNumber, totalSteps, theme, onNext, onBac
       }
 
   const tooltipMaxWidth = 340
-  const estimatedTooltipHeight = 180
+  const estimatedTooltipHeight = 220
+  const gap = pad + 12
   const spaceBelow = rect ? window.innerHeight - rect.bottom : 0
-  const shouldFlipAbove = rect
-    ? spaceBelow < estimatedTooltipHeight + pad + 12 && rect.top > estimatedTooltipHeight + pad + 12
-    : false
-  const tooltipTop = rect
-    ? shouldFlipAbove
-      ? Math.max(16, rect.top - pad - 12 - estimatedTooltipHeight)
-      : rect.bottom + pad + 12
+  const spaceAbove = rect ? rect.top : 0
+  const tooltipTop: number | string = rect
+    ? spaceBelow >= estimatedTooltipHeight + gap
+      ? rect.bottom + gap
+      : spaceAbove >= estimatedTooltipHeight + gap
+      ? rect.top - gap - estimatedTooltipHeight
+      : Math.max(16, window.innerHeight - estimatedTooltipHeight - 16)
     : '50%'
   const tooltipLeft = rect
     ? Math.min(Math.max(16, rect.left), window.innerWidth - tooltipMaxWidth - 16)

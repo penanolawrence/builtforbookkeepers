@@ -26,7 +26,7 @@ export function VatSlsTable({ clientId, quarter, year }: Props) {
     n.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })
 
   const headers = [
-    'Date', 'OR/Invoice No.', 'Buyer Name', 'Buyer TIN',
+    'Date', 'OR/Invoice No.', 'Buyer Name', 'Buyer TIN', 'Buyer Address',
     'Taxable Amount', 'VAT Amount', 'Total Amount',
   ]
   const thCls  = 'px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wide text-t-muted border-b border-t-line whitespace-nowrap'
@@ -54,7 +54,7 @@ export function VatSlsTable({ clientId, quarter, year }: Props) {
           <tbody>
             {data.rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-[13px] text-t-muted">
+                <td colSpan={8} className="px-6 py-8 text-center text-[13px] text-t-muted">
                   No sales found for this period.
                 </td>
               </tr>
@@ -66,13 +66,14 @@ export function VatSlsTable({ clientId, quarter, year }: Props) {
                     <td className={tdCls}>{row.ref_number ?? '—'}</td>
                     <td className={tdCls}>{row.buyer_name ?? '—'}</td>
                     <td className={tdCls}>{row.buyer_tin ?? '—'}</td>
+                    <td className={tdCls}>{row.buyer_address ?? '—'}</td>
                     <td className={tdRCls}>{fmt(row.taxable_amount)}</td>
                     <td className={tdRCls}>{fmt(row.vat_amount ?? 0)}</td>
                     <td className={tdRCls}>{fmt(row.total_amount)}</td>
                   </tr>
                 ))}
                 <tr className="bg-t-surface">
-                  <td colSpan={4} className="px-4 py-3 text-[13px] font-bold text-t-ink">
+                  <td colSpan={5} className="px-4 py-3 text-[13px] font-bold text-t-ink">
                     Grand Total
                   </td>
                   <td className="px-4 py-3 text-[13px] font-bold text-right text-t-ink">

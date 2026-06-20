@@ -23,7 +23,9 @@ class GJService
         foreach ($entries as $entry) {
             $ref = $entry->document?->ref_number ?? $entry->adjustingEntry?->ref_number;
 
-            foreach ($entry->lines as $line) {
+            $sortedLines = $entry->lines->sortByDesc(fn($l) => $l->debit > 0 ? 1 : 0);
+
+            foreach ($sortedLines as $line) {
                 $account = $line->account;
                 $rows[]  = [
                     'date'        => $entry->entry_date?->toDateString(),

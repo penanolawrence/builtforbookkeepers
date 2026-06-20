@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { getQueueItem, approveItem, returnItem, rejectItem, reclassifyItem } from '@/lib/api/queue'
@@ -17,6 +16,7 @@ import { localCache } from '@/lib/localCache'
 interface LineState {
   id?: string
   type: 'income' | 'expense'
+  lineGroup: 'invoice' | 'counter'
   accountId: string
   accountCode: string
   subtypeId: string | null
@@ -209,9 +209,14 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
 
   useEffect(() => {
     if (!lightboxOpen) return
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightboxOpen(false) }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        setLightboxOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
   }, [lightboxOpen])
 
   const [merchantName, setMerchantName]     = useState('')
@@ -234,6 +239,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
       item.transactionLines.map((l) => ({
         id:          l.id,
         type:        l.type,
+        lineGroup:   'invoice',
         accountId:   l.accountId ?? '',
         accountCode: l.accountCode ?? '',
         subtypeId:   l.subtypeId ?? null,
@@ -261,10 +267,10 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     setLines((prev) => prev.filter((_, i) => i !== index))
   }
 
-  function addLine(type: 'income' | 'expense') {
+  function addLine(type: 'income' | 'expense', lineGroup: 'invoice' | 'counter' = 'invoice') {
     setLines((prev) => [
       ...prev,
-      { type, accountId: '', accountCode: '', subtypeId: null, subtypeName: null, amount: '', description: '', date: '' },
+      { type, lineGroup, accountId: '', accountCode: '', subtypeId: null, subtypeName: null, amount: '', description: '', date: '' },
     ])
   }
 
@@ -351,10 +357,18 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
     accounts.find((a) => a.id === line.accountId)?.type
 
   const visibleLines   = lines.map((l, i) => ({ ...l, index: i })).filter((l) => l.type === declaredType)
-  // VAT (input/output) is cash — paid or received with the invoice — so it belongs in primary.
-  // Only liability (EWT Payable) and tax_credit (EWT Withheld by Buyer) reduce actual cash flow.
-  const primaryLines      = visibleLines.filter((l) => { const t = accountTypeOf(l); return !t || t === 'expense' || t === 'income' || t === 'vat' })
-  const counterLines      = visibleLines.filter((l) => { const t = accountTypeOf(l); return t === 'liability' || t === 'tax_credit' })
+  // For new lines (no accountId yet) use lineGroup; for existing lines use accountTypeOf so existing counter
+  // lines (liability / tax_credit) continue to appear in the right section without needing accountType on the wire.
+  const primaryLines   = visibleLines.filter((l) => {
+    if (!l.accountId) return l.lineGroup === 'invoice'
+    const t = accountTypeOf(l)
+    return !t || t === 'expense' || t === 'income' || t === 'vat'
+  })
+  const counterLines   = visibleLines.filter((l) => {
+    if (!l.accountId) return l.lineGroup === 'counter'
+    const t = accountTypeOf(l)
+    return t === 'liability' || t === 'tax_credit'
+  })
 
   const primaryTotal      = primaryLines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
   const withholdingsTotal = counterLines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
@@ -414,13 +428,13 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
           {isLoading ? (
             <div className="flex-1 flex items-center justify-center text-sm text-t-faint p-8">Loading…</div>
           ) : (
-            <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="flex flex-col flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
 
-              {/* TOP: receipt (left) | document fields (right) */}
-              <div className="grid grid-cols-2 divide-x divide-t-line border-b border-t-line">
+              {/* TOP: receipt (full-width on mobile) | document fields (full-width below on mobile, right col on desktop) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x divide-t-line border-b border-t-line md:shrink-0">
 
-                {/* Left: receipt */}
-                <div className="p-5 overflow-y-auto max-h-[350px]">
+                {/* Receipt */}
+                <div className="p-5 md:overflow-y-auto md:max-h-[350px] border-b border-t-line md:border-b-0">
                 {item?.isNoReceipt ? (
                   <div className="bg-t-surface border border-dashed border-t-line rounded-lg py-10 text-center">
                     <div className="text-3xl mb-2">📋</div>
@@ -461,8 +475,8 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                 )}
                 </div>
 
-                {/* Right: document fields */}
-                <div className="p-5 overflow-y-auto space-y-3">
+                {/* Document fields */}
+                <div className="p-5 md:overflow-y-auto space-y-3">
                   <div className="text-[10px] font-bold text-t-faint uppercase tracking-wide">Document Fields</div>
 
                   <div>
@@ -548,7 +562,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
               </div>
 
               {/* BOTTOM: transaction lines + anomalies */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
+              <div className="md:flex-1 md:overflow-y-auto p-5 space-y-4 md:min-h-0">
 
                 <div className="text-[10px] font-bold text-t-faint uppercase tracking-wide">Transaction Lines</div>
 
@@ -582,7 +596,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                     onClick={() => addLine('income')}
                     className="text-[11px] text-t-primary hover:underline mt-1"
                   >
-                    + Add income line
+                    + Add invoice line
                   </button>
                 </div>
                 )}
@@ -617,7 +631,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
                     onClick={() => addLine('expense')}
                     className="text-[11px] text-t-primary hover:underline mt-1"
                   >
-                    + Add expense line
+                    + Add invoice line
                   </button>
                 </div>
                 )}
@@ -656,7 +670,7 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
 
                 {/* Add deduction line — always accessible regardless of whether counter section is visible */}
                 <button
-                  onClick={() => addLine(declaredType)}
+                  onClick={() => addLine(declaredType, 'counter')}
                   className="text-[11px] text-t-primary hover:underline mt-2"
                 >
                   + Add {declaredType === 'expense' ? 'withholding / payable' : 'withholding / receivable'} line
@@ -804,30 +818,28 @@ export function QueueReviewModal({ documentId, onClose, onRemoved }: Props) {
 
         </DialogContent>
 
-        {lightboxOpen && imageUrl && (
-          <DialogPrimitive.Root open onOpenChange={(open) => { if (!open) setLightboxOpen(false) }}>
-            <DialogPrimitive.Portal>
-              <DialogPrimitive.Overlay className="fixed inset-0 z-[400] bg-[rgba(10,8,18,0.82)] backdrop-blur-[8px]" />
-              <DialogPrimitive.Content
-                data-testid="receipt-lightbox"
-                className="fixed inset-0 z-[401] flex items-center justify-center outline-none"
-              >
-                <DialogPrimitive.Title className="sr-only">Receipt image</DialogPrimitive.Title>
-                <button
-                  className="absolute top-5 right-6 w-10 h-10 rounded-[11px] bg-white/[0.12] border border-white/[0.2] text-white flex items-center justify-center text-lg hover:bg-white/20 transition-colors cursor-pointer"
-                  onClick={() => setLightboxOpen(false)}
-                  aria-label="Close lightbox"
-                >
-                  ✕
-                </button>
-                <img
-                  src={imageUrl}
-                  alt="Receipt full view"
-                  className="max-w-[min(800px,92vw)] max-h-[90vh] object-contain rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
-                />
-              </DialogPrimitive.Content>
-            </DialogPrimitive.Portal>
-          </DialogPrimitive.Root>
+        {lightboxOpen && imageUrl && createPortal(
+          <div
+            data-testid="receipt-lightbox"
+            className="fixed inset-0 z-[400] bg-[rgba(10,8,18,0.82)] backdrop-blur-[8px] flex items-center justify-center"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <span className="sr-only">Receipt image</span>
+            <button
+              className="absolute top-5 right-6 w-10 h-10 rounded-[11px] bg-white/[0.12] border border-white/[0.2] text-white flex items-center justify-center text-lg hover:bg-white/20 transition-colors cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); setLightboxOpen(false) }}
+              aria-label="Close lightbox"
+            >
+              ✕
+            </button>
+            <img
+              src={imageUrl}
+              alt="Receipt full view"
+              className="max-w-[min(800px,92vw)] max-h-[90vh] object-contain rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>,
+          document.body
         )}
       </Dialog>
     </>

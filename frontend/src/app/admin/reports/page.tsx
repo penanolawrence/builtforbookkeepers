@@ -7,7 +7,7 @@ import { getClients } from '@/lib/api/admin/clients'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 
-type ReportType = 'income-statement' | 'expense-breakdown'
+type ReportType = 'income-statement' | 'expense-breakdown' | 'alpha-list'
 
 function defaultStart() {
   const d = new Date()
@@ -20,6 +20,7 @@ function defaultEnd() {
 const REPORT_LABELS: Record<ReportType, string> = {
   'income-statement':  'Income Statement',
   'expense-breakdown': 'Expense Breakdown',
+  'alpha-list':        'Alpha List (1604-E)',
 }
 
 export default function AdminReportsPage() {
@@ -104,6 +105,15 @@ export default function AdminReportsPage() {
           </div>
           <div className="mt-3.5 text-xs font-bold text-t-primary">Open Report →</div>
         </Link>
+
+        <div onClick={() => openModal('alpha-list')} className={cardCls}>
+          <div className="text-[28px] mb-3">📋</div>
+          <div className="text-sm font-bold text-t-ink mb-1">Alpha List (1604-E)</div>
+          <div className="text-xs text-t-muted leading-relaxed flex-1">
+            Summary of expanded withholding tax withheld per payee, for BIR 1604-E filing.
+          </div>
+          <div className="mt-3.5 text-xs font-bold text-t-primary">View Report →</div>
+        </div>
       </div>
 
       <Dialog open={!!pending} onOpenChange={(o) => { if (!o) setPending(null) }}>

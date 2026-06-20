@@ -65,6 +65,7 @@ export function NewClientModal({ onClose }: Props) {
     const e: Partial<Record<Field, string>> = {}
     if (!form.businessName.trim()) e.businessName = 'Required'
     if (!form.mobile.trim())       e.mobile        = 'Required'
+    if (!form.industryType)        e.industryType  = 'Required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -176,15 +177,6 @@ export function NewClientModal({ onClose }: Props) {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Plan</label>
-                    <select className={inputCls('planType')} value={form.planType} onChange={(e) => set('planType', e.target.value)}>
-                      <option value="starter">Starter</option>
-                      <option value="growth">Growth</option>
-                      <option value="premium">Premium</option>
-                    </select>
-                  </div>
-
-                  <div>
                     <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>VAT Type</label>
                     <select className={inputCls('birType')} value={form.birType} onChange={(e) => set('birType', e.target.value)}>
                       <option value="non_vat">Non-VAT</option>
@@ -192,21 +184,19 @@ export function NewClientModal({ onClose }: Props) {
                     </select>
                   </div>
 
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Industry Type</label>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 11, color: 'var(--t-muted)', marginBottom: 4 }}>Industry Type <span style={{ color: 'red' }}>*</span></label>
                     <select
                       className={inputCls('industryType')}
                       value={form.industryType ?? ''}
                       onChange={(e) => set('industryType', e.target.value)}
                     >
-                      <option value="">Select industry… (optional)</option>
+                      <option value="">Select industry…</option>
                       {INDUSTRY_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
-                    <div style={{ fontSize: 10.5, color: 'var(--t-faint)', marginTop: 3 }}>
-                      Client can also set this during account setup.
-                    </div>
+                    {errors.industryType && <div style={{ fontSize: 10.5, color: 'red', marginTop: 2 }}>{errors.industryType}</div>}
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>

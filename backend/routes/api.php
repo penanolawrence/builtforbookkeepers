@@ -161,6 +161,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/admin/billing',                              [Admin\BillingController::class, 'index']);
         Route::get('/admin/billing/accountants',                  [Admin\BillingController::class, 'accountantIndex']);
+        Route::get('/admin/billing/accountant-users',             [Admin\BillingController::class, 'accountantUsersList']);
         Route::get('/admin/billing/accountants/{userId}',         [Admin\BillingController::class, 'accountantPayments']);
         Route::post('/admin/billing/accountants/{userId}',        [Admin\BillingController::class, 'receiveAccountantPayment']);
         Route::get('/admin/billing/{clientId}',                   [Admin\BillingController::class, 'clientPayments']);

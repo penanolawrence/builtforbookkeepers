@@ -74,7 +74,9 @@ function SetupForm() {
   const [tokenState,      setTokenState]      = useState<TokenState>('loading')
   const [role,            setRole]            = useState<Role | null>(null)
   const [apiError,        setApiError]        = useState<string | null>(null)
+  const [prefillName,     setPrefillName]     = useState<string | null>(null)
   const [prefillIndustry, setPrefillIndustry] = useState<string | null>(null)
+  const [coaReady,        setCoaReady]        = useState(false)
 
   // Mascot + theme state
   const [mascot,       setMascot]       = useState<Mascot>('sofia')
@@ -89,6 +91,7 @@ function SetupForm() {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
@@ -126,7 +129,10 @@ function SetupForm() {
         else if (result.expired) setTokenState('expired')
         else {
           setRole(result.role)
+          setPrefillName(result.name)
           setPrefillIndustry(result.industryType)
+          setCoaReady(result.coaReady ?? false)
+          if (result.name) reset({ name: result.name })
           setTokenState('form')
         }
       })
@@ -139,12 +145,13 @@ function SetupForm() {
   }, [])
 
   const isClient = role === 'client'
+  const isReset  = prefillName !== null
 
   const onSubmit = async (values: FormValues) => {
     if (!token) return
     setApiError(null)
 
-    if (isClient && !values.industryType) {
+    if (isClient && !coaReady && !values.industryType) {
       setApiError('Please select your industry type.')
       return
     }
@@ -162,7 +169,9 @@ function SetupForm() {
     }
   }
 
-  const subtitle = isClient
+  const subtitle = isReset
+    ? 'Enter a new password for your account.'
+    : isClient
     ? 'Welcome! Set your name and a password to get started.'
     : 'Welcome to Built for Bookkeepers. Set your name and choose a password.'
 
@@ -217,7 +226,7 @@ function SetupForm() {
           </div>
         )}
 
-        <h1 className="lv2-headline">Set up your account</h1>
+        <h1 className="lv2-headline">{isReset ? 'Reset your password' : 'Set up your account'}</h1>
         <p className="lv2-subhead">{subtitle}</p>
 
         {apiError && (
@@ -228,27 +237,29 @@ function SetupForm() {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          {/* Full Name */}
-          <div className="lv2-field">
-            <label className="lv2-label" htmlFor="su-name">
-              Full Name <span className="form-req">*</span>
-            </label>
-            <div className="lv2-input">
-              <User size={18} className="lv2-input-ic" aria-hidden="true" />
-              <input
-                id="su-name"
-                type="text"
-                autoComplete="name"
-                placeholder="Your full name"
-                disabled={isSubmitting || submitStatus === 'success'}
-                {...register('name')}
-              />
+          {/* Full Name — hidden on reset (name already known) */}
+          {!isReset && (
+            <div className="lv2-field">
+              <label className="lv2-label" htmlFor="su-name">
+                Full Name <span className="form-req">*</span>
+              </label>
+              <div className="lv2-input">
+                <User size={18} className="lv2-input-ic" aria-hidden="true" />
+                <input
+                  id="su-name"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Your full name"
+                  disabled={isSubmitting || submitStatus === 'success'}
+                  {...register('name')}
+                />
+              </div>
+              {errors.name
+                ? <div className="field-error">{errors.name.message}</div>
+                : <p className="lv2-hint">How you&apos;ll appear in the system</p>
+              }
             </div>
-            {errors.name
-              ? <div className="field-error">{errors.name.message}</div>
-              : <p className="lv2-hint">How you&apos;ll appear in the system</p>
-            }
-          </div>
+          )}
 
           {/* New Password */}
           <div className="lv2-field">
@@ -327,12 +338,12 @@ function SetupForm() {
           {isClient && (
             <div className="lv2-field">
               <label className="lv2-label" htmlFor="su-industry">
-                Industry Type <span className="form-req">*</span>
+                Industry Type {!coaReady && <span className="form-req">*</span>}
               </label>
-              <div className="lv2-input" style={{ padding: 0, overflow: 'hidden' }}>
+              <div className="lv2-input" style={{ padding: 0, overflow: 'hidden', opacity: coaReady ? 0.6 : 1 }}>
                 <select
                   id="su-industry"
-                  disabled={isSubmitting || submitStatus === 'success'}
+                  disabled={coaReady || isSubmitting || submitStatus === 'success'}
                   defaultValue={prefillIndustry ?? ''}
                   {...register('industryType')}
                   style={{
@@ -343,7 +354,7 @@ function SetupForm() {
                     fontSize: 14,
                     color: 'inherit',
                     outline: 'none',
-                    cursor: 'pointer',
+                    cursor: coaReady ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <option value="" disabled>Select your industry…</option>
@@ -355,7 +366,11 @@ function SetupForm() {
               {errors.industryType && (
                 <div className="field-error">{errors.industryType.message}</div>
               )}
-              <p className="lv2-hint">Used to set up your chart of accounts.</p>
+              <p className="lv2-hint">
+                {coaReady
+                  ? 'Chart of accounts already set up — industry is locked.'
+                  : 'Used to set up your chart of accounts.'}
+              </p>
             </div>
           )}
 
@@ -365,10 +380,10 @@ function SetupForm() {
             className={`lv2-submit${isSubmitting ? ' loading' : submitStatus === 'success' ? ' success' : ''}`}
           >
             {isSubmitting
-              ? 'Setting up…'
+              ? (isReset ? 'Resetting…' : 'Setting up…')
               : submitStatus === 'success'
               ? "You're all set!"
-              : 'Create Account & Sign In'}
+              : isReset ? 'Reset Password & Sign In' : 'Create Account & Sign In'}
           </button>
         </form>
       </div>

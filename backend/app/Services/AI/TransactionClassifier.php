@@ -144,13 +144,22 @@ class TransactionClassifier
         $isOcrPath   = array_key_exists('raw_text', $inputData);
 
         if ($isImagePath) {
-            $messages = $this->buildImageMessages($inputData, $userNote, $declaredType);
+            $messages = $this->buildImageMessages($inputData, $userNote, $declaredType, $accountantNote);
         } elseif ($isOcrPath) {
-            $messages = [['role' => 'user', 'content' => $this->buildOcrPrompt($inputData, $userNote)]];
+            $messages = [['role' => 'user', 'content' => $this->buildOcrPrompt($inputData, $userNote, $accountantNote)]];
         } else {
             $vatIncome = $company->bir_type === 'vat' && $declaredType === 'income';
-            $messages  = [['role' => 'user', 'content' => $this->buildManualPrompt($inputData, $userNote, $vatIncome)]];
+            $messages  = [['role' => 'user', 'content' => $this->buildManualPrompt($inputData, $userNote, $vatIncome, $accountantNote)]];
         }
+
+        \Illuminate\Support\Facades\Log::debug('ClassifyWithAI: sending to AI', [
+            'company'         => $company->name,
+            'accountant_note' => $accountantNote,
+            'user_note'       => $userNote,
+            'declared_type'   => $declaredType,
+            'system_prompt'   => $systemPrompt,
+            'messages'        => $messages,
+        ]);
 
         try {
             $response = $this->callApi([
@@ -200,19 +209,29 @@ class TransactionClassifier
         );
     }
 
-    private function buildNoteBlock(?string $userNote): string
+    private function buildNoteBlock(?string $userNote, ?string $accountantNote = null): string
     {
-        return ($userNote !== null && trim($userNote) !== '')
-            ? "\n\nUser-provided context: \"{$userNote}\"\nUse this as additional context when classifying the document."
-            : '';
+        $block = '';
+        if ($accountantNote !== null && trim($accountantNote) !== '') {
+            $block .= "\n\nAccountant context for this client: \"{$accountantNote}\"\nUse this as standing background when classifying the document.";
+        }
+        if ($userNote !== null && trim($userNote) !== '') {
+            $block .= "\n\nUser-provided context: \"{$userNote}\"\nUse this as additional context when classifying the document.";
+        }
+        return $block;
     }
 
-    private function buildImageMessages(array $inputData, ?string $userNote = null, ?string $declaredType = null): array
+    private function buildImageMessages(array $inputData, ?string $userNote = null, ?string $declaredType = null, ?string $accountantNote = null): array
     {
         $parts = ["This is a document photographed by a Philippine SME client."];
 
         if ($declaredType) {
             $parts[] = "The client uploaded this as an {$declaredType} document.";
+        }
+
+        if ($accountantNote !== null && trim($accountantNote) !== '') {
+            $parts[] = "Accountant context for this client:\n\"{$accountantNote}\"\n" .
+                       "Use this as standing background about the client's business.";
         }
 
         if ($userNote !== null && trim($userNote) !== '') {
@@ -253,9 +272,9 @@ class TransactionClassifier
         ]];
     }
 
-    private function buildOcrPrompt(array $inputData, ?string $userNote = null): string
+    private function buildOcrPrompt(array $inputData, ?string $userNote = null, ?string $accountantNote = null): string
     {
-        $noteBlock = $this->buildNoteBlock($userNote);
+        $noteBlock = $this->buildNoteBlock($userNote, $accountantNote);
 
         $sections = [];
 
@@ -296,9 +315,9 @@ class TransactionClassifier
                $noteBlock;
     }
 
-    private function buildManualPrompt(array $inputData, ?string $userNote = null, bool $vatIncome = false): string
+    private function buildManualPrompt(array $inputData, ?string $userNote = null, bool $vatIncome = false, ?string $accountantNote = null): string
     {
-        $noteBlock = $this->buildNoteBlock($userNote);
+        $noteBlock = $this->buildNoteBlock($userNote, $accountantNote);
 
         $vatIncomeInstruction = '';
         if ($vatIncome) {

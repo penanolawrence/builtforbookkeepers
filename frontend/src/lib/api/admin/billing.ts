@@ -1,5 +1,5 @@
 import api from '../client'
-import type { PaymentRecord, AccountantBillingRow, AccountantPaymentRecord } from '@/types/admin'
+import type { PaymentRecord, AccountantPaymentRecord } from '@/types/admin'
 
 export interface ReceivePaymentData {
   amount: number
@@ -32,12 +32,21 @@ export async function receivePayment(
   return result
 }
 
-export async function getAccountantsList(): Promise<AccountantBillingRow[]> {
-  const { data } = await api.get<AccountantBillingRow[]>('/admin/billing/accountants')
+export async function getAccountantPayments(params?: {
+  userId?: string
+  start?: string
+  end?: string
+}): Promise<AccountantPaymentRecord[]> {
+  const { data } = await api.get<AccountantPaymentRecord[]>('/admin/billing/accountants', { params })
   return data
 }
 
-export async function getAccountantPayments(userId: string): Promise<AccountantPaymentRecord[]> {
+export async function getAccountantUsersList(): Promise<{ id: string; name: string }[]> {
+  const { data } = await api.get<{ id: string; name: string }[]>('/admin/billing/accountant-users')
+  return data
+}
+
+export async function getAccountantPaymentsByUser(userId: string): Promise<AccountantPaymentRecord[]> {
   const { data } = await api.get<AccountantPaymentRecord[]>(`/admin/billing/accountants/${userId}`)
   return data
 }

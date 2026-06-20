@@ -64,6 +64,7 @@ class VatReportService
                 'documents.ref_number',
                 'merchants.name as merchant_name',
                 'merchants.tin as merchant_tin',
+                'merchants.address as merchant_address',
                 'documents.amount',
                 'documents.vat_amount',
             ])
@@ -73,6 +74,7 @@ class VatReportService
                 'ref_number'     => $row->ref_number,
                 'buyer_name'     => $row->merchant_name,
                 'buyer_tin'      => $row->merchant_tin,
+                'buyer_address'  => $row->merchant_address,
                 'taxable_amount' => (float) $row->amount - (float) ($row->vat_amount ?? 0),
                 'vat_amount'     => (float) ($row->vat_amount ?? 0),
                 'total_amount'   => (float) $row->amount,
@@ -108,15 +110,17 @@ class VatReportService
                 'documents.ref_number',
                 'merchants.name as merchant_name',
                 'merchants.tin as merchant_tin',
+                'merchants.address as merchant_address',
                 'documents.amount',
                 'documents.vat_amount',
             ])
             ->get()
             ->map(fn($row) => [
-                'date'           => $row->document_date,
-                'ref_number'     => $row->ref_number,
-                'supplier_name'  => $row->merchant_name,
-                'supplier_tin'   => $row->merchant_tin,
+                'date'              => $row->document_date,
+                'ref_number'        => $row->ref_number,
+                'supplier_name'     => $row->merchant_name,
+                'supplier_tin'      => $row->merchant_tin,
+                'supplier_address'  => $row->merchant_address,
                 'taxable_amount' => (float) $row->amount - (float) ($row->vat_amount ?? 0),
                 'input_vat'      => (float) ($row->vat_amount ?? 0),
                 'total_amount'   => (float) $row->amount,

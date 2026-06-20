@@ -29,6 +29,7 @@
             <th>OR / Invoice No.</th>
             <th>Buyer Name</th>
             <th>Buyer TIN</th>
+            <th>Buyer Address</th>
             <th class="amount">Taxable Amount</th>
             <th class="amount">VAT (12%)</th>
             <th class="amount">Total</th>
@@ -41,15 +42,16 @@
             <td>{{ $row['ref_number'] ?? '—' }}</td>
             <td>{{ $row['buyer_name'] ?? '—' }}</td>
             <td>{{ $row['buyer_tin'] ?? '—' }}</td>
+            <td>{{ $row['buyer_address'] ?? '—' }}</td>
             <td class="amount">{{ number_format($row['taxable_amount'], 2) }}</td>
             <td class="amount">{{ number_format($row['vat_amount'], 2) }}</td>
             <td class="amount">{{ number_format($row['total_amount'], 2) }}</td>
         </tr>
         @empty
-        <tr><td colspan="7" style="text-align:center; color:#aaa; padding:16px;">No sales recorded for this period.</td></tr>
+        <tr><td colspan="8" style="text-align:center; color:#aaa; padding:16px;">No sales recorded for this period.</td></tr>
         @endforelse
         <tr class="total-row">
-            <td colspan="4">Total</td>
+            <td colspan="5">Total</td>
             <td class="amount">{{ number_format($totals['taxable_amount'], 2) }}</td>
             <td class="amount">{{ number_format($totals['vat_amount'], 2) }}</td>
             <td class="amount">{{ number_format($totals['total_amount'], 2) }}</td>

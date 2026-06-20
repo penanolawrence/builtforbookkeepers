@@ -29,6 +29,7 @@
             <th>Invoice No.</th>
             <th>Supplier Name</th>
             <th>Supplier TIN</th>
+            <th>Supplier Address</th>
             <th class="amount">Taxable Amount</th>
             <th class="amount">Input VAT (12%)</th>
             <th class="amount">Total</th>
@@ -41,15 +42,16 @@
             <td>{{ $row['ref_number'] ?? '—' }}</td>
             <td>{{ $row['supplier_name'] ?? '—' }}</td>
             <td>{{ $row['supplier_tin'] ?? '—' }}</td>
+            <td>{{ $row['supplier_address'] ?? '—' }}</td>
             <td class="amount">{{ number_format($row['taxable_amount'], 2) }}</td>
             <td class="amount">{{ number_format($row['input_vat'], 2) }}</td>
             <td class="amount">{{ number_format($row['total_amount'], 2) }}</td>
         </tr>
         @empty
-        <tr><td colspan="7" style="text-align:center; color:#aaa; padding:16px;">No purchases recorded for this period.</td></tr>
+        <tr><td colspan="8" style="text-align:center; color:#aaa; padding:16px;">No purchases recorded for this period.</td></tr>
         @endforelse
         <tr class="total-row">
-            <td colspan="4">Total</td>
+            <td colspan="5">Total</td>
             <td class="amount">{{ number_format($totals['taxable_amount'], 2) }}</td>
             <td class="amount">{{ number_format($totals['input_vat'], 2) }}</td>
             <td class="amount">{{ number_format($totals['total_amount'], 2) }}</td>

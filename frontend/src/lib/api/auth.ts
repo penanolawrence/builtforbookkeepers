@@ -51,8 +51,8 @@ export async function markTutorialSeen(): Promise<{ hasSeenTutorial: boolean }> 
 
 export async function validateSetupToken(
   token: string
-): Promise<{ valid: boolean; role: Role; expired: boolean; industryType: string | null }> {
-  const { data } = await api.get<{ valid: boolean; role: Role; expired: boolean; industryType: string | null }>(
+): Promise<{ valid: boolean; role: Role; expired: boolean; name: string | null; industryType: string | null; coaReady: boolean }> {
+  const { data } = await api.get<{ valid: boolean; role: Role; expired: boolean; name: string | null; industryType: string | null; coaReady: boolean }>(
     `/auth/validate-token?token=${token}`
   )
   return data

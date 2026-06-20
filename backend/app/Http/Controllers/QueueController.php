@@ -47,9 +47,13 @@ class QueueController extends Controller
             if ($lines->isNotEmpty()) {
                 // Mirror the frontend counterLines logic: both liability (EWT Payable)
                 // and tax_credit (EWT Withheld by Customers) reduce actual cash flow.
-                $netCash = (float) $lines
+                $primaryTotal     = (float) $lines
                     ->filter(fn ($l) => !in_array($l->account?->type ?? '', ['liability', 'tax_credit']))
                     ->sum('amount');
+                $withholdingTotal = (float) $lines
+                    ->filter(fn ($l) => in_array($l->account?->type ?? '', ['liability', 'tax_credit']))
+                    ->sum('amount');
+                $netCash = $primaryTotal - $withholdingTotal;
             }
 
             return [

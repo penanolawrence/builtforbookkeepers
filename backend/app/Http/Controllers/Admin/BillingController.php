@@ -8,7 +8,6 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class BillingController extends Controller
 {
@@ -55,34 +54,33 @@ class BillingController extends Controller
         return response()->json(['paymentId' => $payment->id], 201);
     }
 
-    public function accountantIndex(): JsonResponse
+    public function accountantIndex(Request $request): JsonResponse
     {
-        $accountants = User::where('role', 'accountant')
-            ->leftJoin('payments', function ($join) {
-                $join->on('payments.user_id', '=', 'users.id')
-                     ->whereIn('payments.id', function ($sub) {
-                         $sub->selectRaw('MAX(id)')
-                             ->from('payments')
-                             ->whereNotNull('user_id')
-                             ->groupBy('user_id');
-                     });
-            })
-            ->select(
-                'users.id as userId',
-                'users.name',
-                'users.email',
-                DB::raw('DATE(payments.date_received) as lastPaymentDate'),
-                'payments.amount as lastPaymentAmount'
-            )
-            ->get();
+        $query = Payment::with(['user', 'recorder'])
+            ->whereNotNull('user_id')
+            ->latest('date_received');
 
-        return response()->json($accountants->map(fn ($a) => [
-            'userId'            => $a->userId,
-            'name'              => $a->name,
-            'email'             => $a->email,
-            'lastPaymentDate'   => $a->lastPaymentDate,
-            'lastPaymentAmount' => $a->lastPaymentAmount ? number_format((float) $a->lastPaymentAmount, 2, '.', '') : null,
-        ]));
+        if ($request->filled('userId')) {
+            $query->where('user_id', $request->userId);
+        }
+        if ($request->filled('start')) {
+            $query->whereDate('date_received', '>=', $request->start);
+        }
+        if ($request->filled('end')) {
+            $query->whereDate('date_received', '<=', $request->end);
+        }
+
+        return response()->json($query->get()->map(fn ($p) => $this->toAccountantItem($p)));
+    }
+
+    public function accountantUsersList(): JsonResponse
+    {
+        return response()->json(
+            User::where('role', 'accountant')
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
+        );
     }
 
     public function accountantPayments(string $userId): JsonResponse

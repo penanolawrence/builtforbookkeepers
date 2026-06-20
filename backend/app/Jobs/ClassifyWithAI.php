@@ -92,9 +92,11 @@ class ClassifyWithAI implements ShouldQueue
         $this->document->transactionLines()->delete();
 
         // Prefer document_date already on the model; fall back to what Claude extracted
-        // from the receipt (OCR path sets document_date later, so we read it here first)
+        // from the receipt (OCR path sets document_date later, so we read it here first).
+        // Final fallback is today so lines are never left dateless.
         $docDate = $this->document->document_date?->format('Y-m-d')
-            ?? ($classification['document']['date'] ?? null);
+            ?? ($classification['document']['date'] ?? null)
+            ?? now()->format('Y-m-d');
 
         foreach ($classification['lines'] ?? [] as $line) {
             $accountId = Account::where('company_id', $company->id)

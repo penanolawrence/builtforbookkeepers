@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getPeriodClosingList } from '@/lib/api/period-closings'
 import { getAccountants } from '@/lib/api/admin/accountants'
 import { ClientClosingRow } from './ClientClosingRow'
 import { Breadcrumb } from '@/components/shared/Breadcrumb'
 import type { MonthStatus } from '@/types/period-closing'
+
+const PAGE_SIZE = 10
 
 interface MonthEndPageProps {
   showAccountantFilter: boolean
@@ -18,6 +20,7 @@ export function MonthEndPage({ showAccountantFilter }: MonthEndPageProps) {
   const [search, setSearch]             = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [accountantId, setAccountantId] = useState('')
+  const [page, setPage]                 = useState(0)
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['period-closings', { accountantId }],
@@ -37,6 +40,14 @@ export function MonthEndPage({ showAccountantFilter }: MonthEndPageProps) {
       return true
     })
   }, [clients, search, statusFilter])
+
+  useEffect(() => { setPage(0) }, [search, statusFilter, accountantId])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage   = Math.min(page, totalPages - 1)
+  const paginated  = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
+  const from       = filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1
+  const to         = Math.min((safePage + 1) * PAGE_SIZE, filtered.length)
 
   const STATUS_TABS: { value: StatusFilter; label: string }[] = [
     { value: 'all',        label: 'All'       },
@@ -152,11 +163,36 @@ export function MonthEndPage({ showAccountantFilter }: MonthEndPageProps) {
           ) : filtered.length === 0 ? (
             <div style={{ padding: 32, textAlign: 'center', fontSize: 14, color: 'var(--t-faint)' }}>No clients found.</div>
           ) : (
-            filtered.map((client) => (
+            paginated.map((client) => (
               <ClientClosingRow key={client.companyId} client={client} />
             ))
           )}
         </div>
+
+        {/* Pagination */}
+        {filtered.length > PAGE_SIZE && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', borderTop: '1px solid var(--t-line)' }}>
+            <span style={{ fontSize: 12.5, color: 'var(--t-faint)' }}>
+              {from}–{to} of {filtered.length}
+            </span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={safePage === 0}
+                style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid var(--t-line)', background: 'var(--t-card)', fontSize: 12.5, fontWeight: 600, color: 'var(--t-ink)', cursor: safePage === 0 ? 'not-allowed' : 'pointer', opacity: safePage === 0 ? 0.4 : 1, fontFamily: 'inherit' }}
+              >
+                ← Prev
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={safePage >= totalPages - 1}
+                style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid var(--t-line)', background: 'var(--t-card)', fontSize: 12.5, fontWeight: 600, color: 'var(--t-ink)', cursor: safePage >= totalPages - 1 ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages - 1 ? 0.4 : 1, fontFamily: 'inherit' }}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

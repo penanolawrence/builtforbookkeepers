@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   description:
     'AI-assisted bookkeeping software for Philippine accounting firms. Automates receipt classification, BIR book generation, and VAT auto-computation.',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.svg',
   },
 }
 

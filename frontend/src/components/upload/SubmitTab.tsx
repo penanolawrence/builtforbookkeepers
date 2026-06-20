@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/hooks/use-toast'
 import { TwoAreaUpload } from './TwoAreaUpload'
@@ -21,6 +21,7 @@ interface Props {
   clientId: string
   docsQueryKey: unknown[]
   role: Exclude<Role, 'client'>
+  coaReady?: boolean
 }
 
 const FLAG_ORDER: Record<string, number> = { RED: 0, YELLOW: 1, GREEN: 2 }
@@ -57,7 +58,7 @@ const tdStyle: React.CSSProperties = {
   verticalAlign: 'middle',
 }
 
-export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
+export function SubmitTab({ clientId, docsQueryKey, role: _role, coaReady = true }: Props) {
   const qc                              = useQueryClient()
   const { toast }                       = useToast()
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
@@ -65,6 +66,21 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
   const [reviewingId,  setReviewingId]  = useState<string | null>(null)
   const [selected,     setSelected]     = useState<Set<string>>(new Set())
   const [approving,    setApproving]    = useState(false)
+  const refreshTimer                    = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (refreshTimer.current) clearTimeout(refreshTimer.current) }, [])
+
+  function scheduleQueueRefresh() {
+    if (refreshTimer.current) clearTimeout(refreshTimer.current)
+    refreshTimer.current = setTimeout(() => {
+      qc.invalidateQueries({ queryKey: ['client-queue', clientId] })
+    }, 8000)
+  }
+
+  function handleManualRefresh() {
+    if (refreshTimer.current) { clearTimeout(refreshTimer.current); refreshTimer.current = null }
+    qc.invalidateQueries({ queryKey: ['client-queue', clientId] })
+  }
 
   const { data: queueItems = [], isLoading: queueLoading } = useQuery({
     queryKey: ['client-queue', clientId],
@@ -108,6 +124,7 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
     const total = batch.length
     if (failed.length < total) {
       qc.invalidateQueries({ queryKey: docsQueryKey })
+      scheduleQueueRefresh()
     }
     if (failed.length === 0) {
       toast({ title: `${total} ${total === 1 ? 'file' : 'files'} submitted — processing…` })
@@ -122,6 +139,7 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
     qc.invalidateQueries({ queryKey: docsQueryKey })
     setSelected(new Set())
     toast({ title: 'Entry submitted — processing…' })
+    scheduleQueueRefresh()
   }
 
   function handleRemoved(id: string) {
@@ -148,6 +166,22 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
     }
   }
 
+  if (!coaReady) {
+    return (
+      <div style={{ padding: '32px 28px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ maxWidth: 480, width: '100%', background: 'var(--t-card-alt)', border: '1.5px solid var(--t-line)', borderRadius: 16, padding: '28px 32px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--t-ink)', marginBottom: 8 }}>
+            Chart of accounts not set up yet
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--t-muted)', lineHeight: 1.6 }}>
+            This client hasn&apos;t completed their account setup. Uploads will be available once their chart of accounts is initialized.
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ padding: '20px 28px' }}>
       <TwoAreaUpload
@@ -172,6 +206,15 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--t-faint)', background: 'var(--t-card-alt)', border: '1px solid var(--t-line)', borderRadius: 999, padding: '1px 7px' }}>
           {queueItems.length}
         </span>
+        <button
+          onClick={handleManualRefresh}
+          disabled={queueLoading}
+          title="Refresh queue"
+          style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: '1px solid var(--t-line)', borderRadius: 7, padding: '3px 9px', fontSize: 11, fontWeight: 600, color: 'var(--t-faint)', cursor: queueLoading ? 'not-allowed' : 'pointer', opacity: queueLoading ? 0.5 : 1, fontFamily: 'inherit' }}
+        >
+          <span style={{ display: 'inline-block', transform: queueLoading ? 'rotate(360deg)' : 'none' }}>↻</span>
+          Refresh
+        </button>
       </div>
 
       {queueLoading ? (
@@ -186,7 +229,8 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
         </p>
       ) : (
         <div style={{ border: '1px solid var(--t-line)', borderRadius: 12, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', minWidth: 480, borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: 'var(--t-card-alt)' }}>
                 <th style={thStyle}>Flag</th>
@@ -237,6 +281,7 @@ export function SubmitTab({ clientId, docsQueryKey, role: _role }: Props) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
