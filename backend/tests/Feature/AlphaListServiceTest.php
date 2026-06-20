@@ -47,11 +47,11 @@ class AlphaListServiceTest extends TestCase
             'chart_of_account_id' => $coa->id,
             'code'                => $code,
             'name'                => $name,
-            'type'                => 'tax_credit',
+            'type'                => 'liability',
         ]);
     }
 
-    private function makeEwtJournalEntry(Account $ewtAccount, ?Merchant $merchant, float $ewtCredit, string $date = '2026-03-01'): void
+    private function makeEwtJournalEntry(Account $ewtAccount, ?Merchant $merchant, float $ewtCredit, string $date = '2026-03-01', float $grossAmount = 0.0): void
     {
         $doc = Document::factory()->create([
             'company_id'    => $this->company->id,
@@ -70,6 +70,23 @@ class AlphaListServiceTest extends TestCase
             'posted_by'   => $this->user->id,
             'posted_at'   => Carbon::now(),
         ]);
+
+        // Sibling expense debit line (the actual gross payment booked)
+        if ($grossAmount > 0) {
+            $expenseCoa = ChartOfAccount::factory()->create(['code' => '5000-' . uniqid(), 'name' => 'Test Expense']);
+            $expenseAccount = Account::factory()->create([
+                'company_id'          => $this->company->id,
+                'chart_of_account_id' => $expenseCoa->id,
+                'code'                => '5000-' . uniqid(),
+                'type'                => 'expense',
+            ]);
+            JournalEntryLine::create([
+                'journal_entry_id' => $entry->id,
+                'account_id'       => $expenseAccount->id,
+                'debit'            => $grossAmount,
+                'credit'           => null,
+            ]);
+        }
 
         JournalEntryLine::create([
             'journal_entry_id' => $entry->id,
@@ -95,7 +112,7 @@ class AlphaListServiceTest extends TestCase
         ]);
         $ewtAccount = $this->makeEwtAccount('2210', 'EWT — Professional Fees', 'WC010', 10.00);
 
-        $this->makeEwtJournalEntry($ewtAccount, $merchant, 500.00);
+        $this->makeEwtJournalEntry($ewtAccount, $merchant, 500.00, '2026-03-01', 5000.00);
 
         $result = (new AlphaListService())->getData($this->company, $this->start, $this->end);
 
@@ -115,8 +132,8 @@ class AlphaListServiceTest extends TestCase
         $merchant   = Merchant::factory()->create(['company_id' => $this->company->id]);
         $ewtAccount = $this->makeEwtAccount('2211', 'EWT — Rental', 'WC158', 5.00);
 
-        $this->makeEwtJournalEntry($ewtAccount, $merchant, 200.00, '2026-02-01');
-        $this->makeEwtJournalEntry($ewtAccount, $merchant, 300.00, '2026-03-01');
+        $this->makeEwtJournalEntry($ewtAccount, $merchant, 200.00, '2026-02-01', 4000.00);
+        $this->makeEwtJournalEntry($ewtAccount, $merchant, 300.00, '2026-03-01', 6000.00);
 
         $result = (new AlphaListService())->getData($this->company, $this->start, $this->end);
 

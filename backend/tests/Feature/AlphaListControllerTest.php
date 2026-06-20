@@ -43,7 +43,7 @@ class AlphaListControllerTest extends TestCase
             'company_id'          => $this->company->id,
             'chart_of_account_id' => $coa->id,
             'code'                => '2210',
-            'type'                => 'tax_credit',
+            'type'                => 'liability',
         ]);
         $merchant = Merchant::factory()->create([
             'company_id' => $this->company->id,
@@ -68,6 +68,19 @@ class AlphaListControllerTest extends TestCase
             'journal_entry_id' => $entry->id,
             'account_id'       => $account->id,
             'credit'           => 100.00,
+        ]);
+        $expenseCoa = ChartOfAccount::factory()->create(['code' => '5000', 'name' => 'Test Expense']);
+        $expenseAccount = Account::factory()->create([
+            'company_id'          => $this->company->id,
+            'chart_of_account_id' => $expenseCoa->id,
+            'code'                => '5000',
+            'type'                => 'expense',
+        ]);
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->id,
+            'account_id'       => $expenseAccount->id,
+            'debit'            => 1000.00,
+            'credit'           => null,
         ]);
     }
 

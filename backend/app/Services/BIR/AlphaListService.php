@@ -27,11 +27,19 @@ class AlphaListService
             $doc      = $entry->document;
             $merchant = $doc?->merchant;
 
-            foreach ($entry->lines as $line) {
-                $account = $line->account;
-                if (!$account || !in_array($account->code, self::EWT_CODES)) continue;
-                if (!$line->credit || (float) $line->credit <= 0) continue;
+            // Sum non-EWT debit lines — the actual gross payment for this entry
+            $entryGross = $entry->lines
+                ->filter(fn($l) => !in_array($l->account?->code ?? '', self::EWT_CODES) && (float) ($l->debit ?? 0) > 0)
+                ->sum(fn($l) => (float) $l->debit);
 
+            $ewtLines = $entry->lines->filter(
+                fn($l) => $l->account && in_array($l->account->code, self::EWT_CODES) && (float) ($l->credit ?? 0) > 0
+            );
+
+            $totalEwtCredit = $ewtLines->sum(fn($l) => (float) $l->credit);
+
+            foreach ($ewtLines as $line) {
+                $account  = $line->account;
                 $coa      = $account->chartOfAccount;
                 $payeeKey = $merchant ? $merchant->id : ('name:' . ($doc?->merchant_name ?? ''));
                 $groupKey = $payeeKey . '|' . $account->id;
@@ -44,19 +52,23 @@ class AlphaListService
                         'atcCode'        => $coa?->atc_code ?? '',
                         'natureOfIncome' => $account->name,
                         'ewtAmount'      => 0.0,
+                        'grossPayment'   => 0.0,
                         'rate'           => (float) ($coa?->ewt_rate ?? 0),
                     ];
                 }
 
-                $grouped[$groupKey]['ewtAmount'] += (float) $line->credit;
+                $ewtCredit  = (float) $line->credit;
+                $proportion = $totalEwtCredit > 0 ? $ewtCredit / $totalEwtCredit : 0;
+
+                $grouped[$groupKey]['ewtAmount']    += $ewtCredit;
+                $grouped[$groupKey]['grossPayment'] += $entryGross * $proportion;
             }
         }
 
         $rows = [];
         foreach ($grouped as $row) {
-            $rate                = $row['rate'];
-            $row['grossPayment'] = $rate > 0 ? round($row['ewtAmount'] / ($rate / 100), 2) : 0.0;
-            $rows[]              = $row;
+            $row['grossPayment'] = round($row['grossPayment'], 2);
+            $rows[] = $row;
         }
 
         usort($rows, fn ($a, $b) => [$a['payeeName'], $a['atcCode']] <=> [$b['payeeName'], $b['atcCode']]);
