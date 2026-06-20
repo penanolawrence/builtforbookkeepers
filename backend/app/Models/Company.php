@@ -22,6 +22,7 @@ class Company extends Model
         'industry_type',
         'plan',
         'accountant_id',
+        'accountant_notes',
     ];
 
     public function accountant(): BelongsTo
