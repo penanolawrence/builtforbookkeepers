@@ -90,3 +90,12 @@ export async function updateMerchant(
 export async function deleteMerchant(merchantId: string): Promise<void> {
   await api.delete(`/accountant/merchants/${merchantId}`)
 }
+
+export async function getClientNotes(id: string): Promise<{ notes: string | null }> {
+  const { data } = await api.get<{ notes: string | null }>(`/accountant/clients/${id}/notes`)
+  return data
+}
+
+export async function saveClientNotes(id: string, notes: string): Promise<void> {
+  await api.patch(`/accountant/clients/${id}/notes`, { notes })
+}

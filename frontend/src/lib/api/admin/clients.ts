@@ -128,3 +128,12 @@ export async function updateMerchant(
 export async function deleteMerchant(merchantId: string): Promise<void> {
   await api.delete(`/admin/merchants/${merchantId}`)
 }
+
+export async function getClientNotes(id: string): Promise<{ notes: string | null }> {
+  const { data } = await api.get<{ notes: string | null }>(`/admin/clients/${id}/notes`)
+  return data
+}
+
+export async function saveClientNotes(id: string, notes: string): Promise<void> {
+  await api.patch(`/admin/clients/${id}/notes`, { notes })
+}
