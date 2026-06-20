@@ -167,6 +167,20 @@ class AlphaListServiceTest extends TestCase
         $this->assertSame('', $result[0]['address']);
     }
 
+    public function test_multiple_documents_from_same_unlinked_payee_are_consolidated(): void
+    {
+        $ewtAccount = $this->makeEwtAccount('2212', 'EWT — Services', 'WC120', 2.00);
+
+        // Two documents, same merchant_name, no linked merchant
+        $this->makeEwtJournalEntry($ewtAccount, null, 50.00, '2026-02-01');
+        $this->makeEwtJournalEntry($ewtAccount, null, 75.00, '2026-03-01');
+
+        $result = (new AlphaListService())->getData($this->company, $this->start, $this->end);
+
+        $this->assertCount(1, $result);
+        $this->assertEqualsWithDelta(125.00, $result[0]['ewtAmount'], 0.01);
+    }
+
     public function test_entries_outside_date_range_are_excluded(): void
     {
         $merchant   = Merchant::factory()->create(['company_id' => $this->company->id]);

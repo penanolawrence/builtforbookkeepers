@@ -33,7 +33,8 @@ class AlphaListService
                 if (!$line->credit || (float) $line->credit <= 0) continue;
 
                 $coa      = $account->chartOfAccount;
-                $groupKey = ($merchant?->id ?? 'no-merchant-' . ($doc?->id ?? 'x')) . '|' . $account->id;
+                $payeeKey = $merchant ? $merchant->id : ('name:' . ($doc?->merchant_name ?? ''));
+                $groupKey = $payeeKey . '|' . $account->id;
 
                 if (!isset($grouped[$groupKey])) {
                     $grouped[$groupKey] = [
