@@ -46,6 +46,25 @@ export interface PaymentRecord {
   createdAt: string
 }
 
+export interface AccountantBillingRow {
+  userId: string
+  name: string
+  email: string
+  lastPaymentDate: string | null
+  lastPaymentAmount: string | null
+}
+
+export interface AccountantPaymentRecord {
+  id: string
+  userId: string
+  accountantName: string | null
+  amount: number
+  dateReceived: string
+  referenceNumber: string
+  recordedBy: string | null
+  createdAt: string
+}
+
 export interface Account {
   id: string
   code: string
