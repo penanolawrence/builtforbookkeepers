@@ -25,19 +25,19 @@ class AlphaListMigrationTest extends TestCase
         $this->seed(ChartOfAccountSeeder::class);
 
         $expected = [
-            '2210' => ['atc_code' => 'WC010', 'ewt_rate' => 10.00],
-            '2211' => ['atc_code' => 'WC158', 'ewt_rate' =>  5.00],
-            '2212' => ['atc_code' => 'WC120', 'ewt_rate' =>  2.00],
-            '2213' => ['atc_code' => 'WC100', 'ewt_rate' =>  1.00],
-            '2214' => ['atc_code' => 'WC140', 'ewt_rate' =>  2.00],
-            '2215' => ['atc_code' => 'WC160', 'ewt_rate' => 10.00],
+            '2210' => ['atc_code' => 'WC010', 'ewt_rate' => '10.00'],
+            '2211' => ['atc_code' => 'WC158', 'ewt_rate' =>  '5.00'],
+            '2212' => ['atc_code' => 'WC120', 'ewt_rate' =>  '2.00'],
+            '2213' => ['atc_code' => 'WC100', 'ewt_rate' =>  '1.00'],
+            '2214' => ['atc_code' => 'WC140', 'ewt_rate' =>  '2.00'],
+            '2215' => ['atc_code' => 'WC160', 'ewt_rate' => '10.00'],
         ];
 
         foreach ($expected as $code => $fields) {
             $coa = ChartOfAccount::where('code', $code)->first();
             $this->assertNotNull($coa, "COA {$code} not found");
             $this->assertSame($fields['atc_code'], $coa->atc_code);
-            $this->assertEquals($fields['ewt_rate'], (float) $coa->ewt_rate);
+            $this->assertSame($fields['ewt_rate'], $coa->ewt_rate);
         }
     }
 }
