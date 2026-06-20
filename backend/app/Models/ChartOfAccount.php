@@ -16,17 +16,10 @@ class ChartOfAccount extends Model
 
     protected $casts = ['is_active' => 'boolean'];
 
-    protected $appends = ['ewt_rate'];
-
     public function getEwtRateAttribute(): ?string
     {
         $value = $this->attributes['ewt_rate'] ?? null;
         return $value !== null ? number_format((float) $value, 2, '.', '') : null;
-    }
-
-    public function setEwtRateAttribute($value): void
-    {
-        $this->attributes['ewt_rate'] = $value;
     }
 
     public function accountType(): BelongsTo
