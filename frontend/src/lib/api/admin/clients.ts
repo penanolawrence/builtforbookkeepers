@@ -134,6 +134,6 @@ export async function getClientNotes(id: string): Promise<{ notes: string | null
   return data
 }
 
-export async function saveClientNotes(id: string, notes: string): Promise<void> {
+export async function saveClientNotes(id: string, notes: string | null): Promise<void> {
   await api.patch(`/admin/clients/${id}/notes`, { notes })
 }

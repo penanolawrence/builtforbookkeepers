@@ -585,7 +585,7 @@ function NotesTab({ clientId, role }: { clientId: string; role: Role }) {
   }, [data])
 
   const { mutate: save, isPending: saving } = useMutation({
-    mutationFn: () => saveFn(clientId, draft),
+    mutationFn: () => saveFn(clientId, draft || null),
     onSuccess: () => {
       setLastSaved(new Date())
       toast({ title: 'Notes saved.' })
