@@ -61,7 +61,13 @@ class ClassifyWithAI implements ShouldQueue
 
         // STEP C — Classify
         $classifier     = new TransactionClassifier();
-        $classification = $classifier->classify($inputData, $company, $this->document->note, $this->document->document_type);
+        $classification = $classifier->classify(
+            $inputData,
+            $company,
+            $this->document->note,
+            $this->document->document_type,
+            $company->accountant_notes,
+        );
 
         // STEP D — Cross-check rules (upload area mismatch, low confidence)
         if (!$this->document->is_no_receipt) {
@@ -111,6 +117,16 @@ class ClassifyWithAI implements ShouldQueue
             ]);
         }
 
+        // Compute net cash flow: exclude liability (EWT Payable) and tax_credit (EWT Withheld) lines
+        $freshLines       = $this->document->transactionLines()->with('account')->get();
+        $primaryTotal     = (float) $freshLines
+            ->filter(fn($l) => !in_array($l->account?->type ?? '', ['liability', 'tax_credit']))
+            ->sum('amount');
+        $withholdingTotal = (float) $freshLines
+            ->filter(fn($l) => in_array($l->account?->type ?? '', ['liability', 'tax_credit']))
+            ->sum('amount');
+        $this->document->amount = $primaryTotal - $withholdingTotal;
+
         // Apply vat_amount from Claude for both OCR and manual paths
         if (!empty($classification['document'])) {
             $this->document->vat_amount = $classification['document']['vat_amount'] ?? $this->document->vat_amount;
@@ -128,9 +144,6 @@ class ClassifyWithAI implements ShouldQueue
 
             if (empty($this->document->ref_number) && !empty($doc['or_number'])) {
                 $this->document->ref_number = $doc['or_number'];
-            }
-            if (!empty($doc['total_amount'])) {
-                $this->document->amount = $doc['total_amount'];
             }
 
             $merchant = (new MerchantResolverService())->resolve(
