@@ -49,10 +49,10 @@ function AlphaListContent() {
           <p className="text-[13px] text-t-muted mt-0.5">{start} to {end}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={handleCsv} disabled={csvLoading || !hasRows} className={btnCls}>
+          <button onClick={handleCsv} disabled={csvLoading || isLoading || !hasRows} className={btnCls}>
             {csvLoading ? 'Downloading…' : 'Export CSV'}
           </button>
-          <button onClick={handlePdf} disabled={pdfLoading || !hasRows} className={btnCls}>
+          <button onClick={handlePdf} disabled={pdfLoading || isLoading || !hasRows} className={btnCls}>
             {pdfLoading ? 'Downloading…' : 'Export PDF'}
           </button>
         </div>
