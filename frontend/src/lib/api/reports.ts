@@ -1,5 +1,5 @@
 import api from './client'
-import type { IncomeStatement, ExpenseBreakdown, VatReportType, VatPdfParams, Vat2550mData, Vat2550qData, VatSlsData, VatSlpData, NonVat2551qData } from '@/types/report'
+import type { IncomeStatement, ExpenseBreakdown, VatReportType, VatPdfParams, Vat2550mData, Vat2550qData, VatSlsData, VatSlpData, NonVat2551qData, AlphaListData } from '@/types/report'
 
 export async function getIncomeStatement(params: {
   clientId?: string
@@ -117,6 +117,49 @@ export async function downloadNonVatPdf(params: {
   const a        = document.createElement('a')
   a.href         = url
   a.download     = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export async function getAlphaList(params: {
+  clientId?: string
+  start: string
+  end: string
+}): Promise<AlphaListData> {
+  const { data } = await api.get<AlphaListData>('/reports/alpha-list', { params })
+  return data
+}
+
+export async function downloadAlphaListCsv(params: {
+  clientId?: string
+  start: string
+  end: string
+}): Promise<void> {
+  const { data } = await api.get('/reports/alpha-list/csv', {
+    params,
+    responseType: 'blob',
+  })
+  const url = URL.createObjectURL(new Blob([data], { type: 'text/csv' }))
+  const a   = document.createElement('a')
+  a.href     = url
+  a.download = `alpha-list-1604e-${params.start}-${params.end}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export async function downloadAlphaListPdf(params: {
+  clientId?: string
+  start: string
+  end: string
+}): Promise<void> {
+  const { data } = await api.get('/reports/alpha-list/pdf', {
+    params,
+    responseType: 'blob',
+  })
+  const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+  const a   = document.createElement('a')
+  a.href     = url
+  a.download = `alpha-list-1604e-${params.start}-${params.end}.pdf`
   a.click()
   URL.revokeObjectURL(url)
 }

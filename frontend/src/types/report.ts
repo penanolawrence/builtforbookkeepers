@@ -161,3 +161,19 @@ export interface NonVat2551qData {
   }
   company: { name: string; tin: string | null; address: string | null }
 }
+
+export interface AlphaListRow {
+  tin: string
+  payeeName: string
+  address: string
+  atcCode: string
+  natureOfIncome: string
+  grossPayment: number
+  rate: number
+  ewtAmount: number
+}
+
+export interface AlphaListData {
+  rows: AlphaListRow[]
+  period: { start: string; end: string }
+}
