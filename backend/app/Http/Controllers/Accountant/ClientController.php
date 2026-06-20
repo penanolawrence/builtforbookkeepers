@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Accountant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Accountant\CreateClientRequest;
 use App\Mail\ClientInviteMail;
+use App\Models\Account;
 use App\Models\AdjustingEntry;
 use App\Models\Company;
 use App\Models\Document;
 use App\Models\Merchant;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Accounting\ChartOfAccountsService;
 use App\Services\Auth\InviteTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -164,6 +166,10 @@ class ClientController extends Controller
                     'company_id' => $company->id,
                 ]);
 
+                if ($company->industry_type) {
+                    (new ChartOfAccountsService())->seedDefaultAccounts($company);
+                }
+
                 $rawToken   = (new InviteTokenService())->generate($user);
                 $inviteLink = config('app.frontend_url') . '/setup?token=' . $rawToken;
 
@@ -222,6 +228,7 @@ class ClientController extends Controller
             'email'          => $company->email,
             'tin'            => $company->tin,
             'contactPerson'  => $company->contact_person,
+            'industry'       => $company->industry_type,
             'birType'        => $company->bir_type,
             'plan'           => $company->plan,
             'accountantId'   => $company->accountant_id,
@@ -241,6 +248,7 @@ class ClientController extends Controller
             ],
             'pendingEntries' => $pendingEntries,
             'draftEntries'   => $draftEntries,
+            'coaReady'       => Account::where('company_id', $company->id)->exists(),
         ]);
     }
 
@@ -362,6 +370,34 @@ class ClientController extends Controller
         $merchant->delete();
 
         return response()->json(['message' => 'Merchant deleted.']);
+    }
+
+    public function notes(string $id): JsonResponse
+    {
+        $user    = auth()->user();
+        $company = Company::findOrFail($id);
+
+        if ($company->accountant_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        return response()->json(['notes' => $company->accountant_notes]);
+    }
+
+    public function updateNotes(Request $request, string $id): JsonResponse
+    {
+        $request->validate(['notes' => 'nullable|string|max:5000']);
+
+        $user    = auth()->user();
+        $company = Company::findOrFail($id);
+
+        if ($company->accountant_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        $company->update(['accountant_notes' => $request->notes]);
+
+        return response()->json(['message' => 'Saved.']);
     }
 
     public function getDocuments(Request $request, string $id): JsonResponse
