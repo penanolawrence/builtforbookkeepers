@@ -6,9 +6,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { getAccounts } from '@/lib/api/accounts'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { me } from '@/lib/api/auth'
 
-type ReportType = 'income-statement' | 'expense-breakdown' | 'bir'
+type ReportType = 'income-statement' | 'expense-breakdown' | 'bir' | 'alpha-list'
 
 function defaultStart() {
   const d = new Date()
@@ -22,11 +22,12 @@ const REPORT_LABELS: Record<ReportType, string> = {
   'income-statement':  'Income Statement',
   'expense-breakdown': 'Expense Breakdown',
   'bir':               'BIR Books',
+  'alpha-list':        'Alpha List (1604-E)',
 }
 
 export default function ClientReportsPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: me, staleTime: 60_000 })
   const [pending,   setPending]   = useState<ReportType | null>(null)
   const [start,     setStart]     = useState(defaultStart())
   const [end,       setEnd]       = useState(defaultEnd())
@@ -50,6 +51,8 @@ export default function ClientReportsPage() {
     if (pending === 'bir') {
       const acct = birBook === 'gl' && accountId ? `&accountId=${accountId}` : ''
       router.push(`/client/reports/bir${qs}&book=${birBook}${acct}`)
+    } else if (pending === 'alpha-list') {
+      router.push(`/client/reports/alpha-list${qs}`)
     } else {
       router.push(`/client/reports/${pending}${qs}`)
     }
@@ -104,6 +107,17 @@ export default function ClientReportsPage() {
             </div>
           </div>
           <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">Open Books →</div>
+        </div>
+
+        <div onClick={() => openModal('alpha-list')} className={cardCls}>
+          <div className="flex-shrink-0 text-[24px] md:text-[28px] md:mb-3">📋</div>
+          <div className="flex-1 min-w-0 md:flex-none md:w-full">
+            <div className="text-sm font-bold text-t-ink mb-1">Alpha List (1604-E)</div>
+            <div className="text-xs text-t-muted leading-relaxed">
+              Summary of expanded withholding tax withheld per payee, for BIR 1604-E filing.
+            </div>
+          </div>
+          <div className="flex-shrink-0 text-xs font-bold text-t-primary md:mt-3.5">View Report →</div>
         </div>
 
         {user?.birType === 'vat' && (
