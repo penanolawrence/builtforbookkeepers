@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getLeads, toggleLeadRead, type Lead } from '@/lib/api/admin/leads'
 import { SummaryCard } from '@/components/shared/SummaryCard'
+import { Breadcrumb } from '@/components/shared/Breadcrumb'
 
 type Filter = 'all' | 'unread' | 'read'
 
@@ -69,6 +70,7 @@ export default function AdminLeadsPage() {
 
   return (
     <div className="max-w-[1280px] mx-auto px-9 py-7">
+      <Breadcrumb crumbs={[{ label: 'Admin' }, { label: 'Leads' }]} />
       <div className="flex items-start justify-between mb-[22px]">
         <div>
           <h1
@@ -86,7 +88,7 @@ export default function AdminLeadsPage() {
       {!isLoading && (
         <div className="flex gap-[14px] mb-[22px]">
           <SummaryCard label="Total" value={String(total)}       subnote="all leads"    />
-          <SummaryCard label="New"   value={String(unreadCount)} subnote="not yet read" />
+          <SummaryCard label="Unread" value={String(unreadCount)} subnote="not yet read" />
         </div>
       )}
 

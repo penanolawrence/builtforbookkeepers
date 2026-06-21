@@ -46,19 +46,19 @@ function wrap() {
 describe('AdminLeadsPage', () => {
   it('renders page title', () => {
     wrap()
-    expect(screen.getByText('Leads')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Leads' })).toBeInTheDocument()
   })
 
   it('renders total and unread summary cards', () => {
     wrap()
     expect(screen.getByText('Total')).toBeInTheDocument()
-    expect(screen.getByText('Unread')).toBeInTheDocument()
+    expect(screen.getAllByText('Unread').length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders All / Unread / Read filter tabs', () => {
     wrap()
     expect(screen.getByText('All')).toBeInTheDocument()
-    expect(screen.getByText('Unread')).toBeInTheDocument()
+    expect(screen.getAllByText('Unread').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Read')).toBeInTheDocument()
   })
 
