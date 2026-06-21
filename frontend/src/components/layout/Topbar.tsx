@@ -19,6 +19,7 @@ const ADMIN_LINKS = [
   { href: '/admin/adjusting-entries', label: 'Adj. Entries' },
   { href: '/admin/month-end',         label: 'Month-End'    },
   { href: '/admin/reports',           label: 'Reports'      },
+  { href: '/admin/leads',             label: 'Leads'        },
 ]
 
 const ACCOUNTANT_LINKS = [
