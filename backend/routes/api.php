@@ -169,6 +169,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/adjusting-entries/{id}/approve', [AdjustingEntryController::class, 'approve']);
         Route::post('/adjusting-entries/{id}/reject',  [AdjustingEntryController::class, 'rejectEntry']);
+
+        Route::get('/admin/leads',                        [Admin\LeadController::class, 'index']);
+        Route::patch('/admin/leads/{lead}/toggle-read',   [Admin\LeadController::class, 'toggleRead']);
     });
 
 }); // end auth:sanctum
