@@ -10,5 +10,5 @@ class Lead extends Model
 {
     use HasUuids, HasFactory;
 
-    protected $fillable = ['contact', 'message'];
+    protected $fillable = ['contact', 'message', 'is_read'];
 }
